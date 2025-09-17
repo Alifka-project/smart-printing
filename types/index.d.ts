@@ -161,6 +161,7 @@ export interface OffsetCostingResult {
   run: number;
   cutting: number;
   total: number;
+  pressLabel?: string; // Dynamic press dimension label
 }
 
 // === Sales Person Types ===

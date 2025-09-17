@@ -211,7 +211,8 @@ export function calcOffsetCosting({
     mkready,
     run,
     cutting,
-    total
+    total,
+    pressLabel: press.label // Include the press label
   };
 }
 

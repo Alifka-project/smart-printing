@@ -119,10 +119,10 @@ export const PRODUCT_CONFIGS: Record<string, ProductConfig> = {
     defaultGripper: 0.9,
     defaultOtherEdges: 0.5,
     cupSizes: [
-      { oz: 4, bboxWidth: 20, bboxHeight: 8 },
-      { oz: 6, bboxWidth: 22, bboxHeight: 8.5 },
-      { oz: 8, bboxWidth: 23, bboxHeight: 9 },
-      { oz: 12, bboxWidth: 26, bboxHeight: 10 }
+      { oz: 4, bboxWidth: 18, bboxHeight: 7.5 },   // 4oz: Top 65mm, Bottom 45mm, Height 75mm
+      { oz: 6, bboxWidth: 20, bboxHeight: 8 },      // 6oz: Top 70mm, Bottom 48mm, Height 80mm  
+      { oz: 8, bboxWidth: 23, bboxHeight: 8.8 },   // 8oz: Top 75mm, Bottom 52mm, Height 88mm
+      { oz: 12, bboxWidth: 26, bboxHeight: 9.5 }    // 12oz: Top 80mm, Bottom 55mm, Height 95mm
     ],
     impositionSettings: {
       allowRotate: true,

@@ -141,7 +141,8 @@ const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({
       subtotal: 0,
       vatAmount: 0,
       totalPrice: 0
-    }
+    },
+    additionalCosts: []
   });
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -323,7 +324,8 @@ const CreateQuoteModal: React.FC<CreateQuoteModalProps> = ({
         subtotal: 0,
         vatAmount: 0,
         totalPrice: 0
-      }
+      },
+      additionalCosts: []
     });
   };
 

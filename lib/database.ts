@@ -376,6 +376,20 @@ export class DatabaseService {
         });
       }
       
+      // Create additional costs if provided
+      if (quoteData.additionalCosts && quoteData.additionalCosts.length > 0) {
+        for (const additionalCost of quoteData.additionalCosts) {
+          await tx.additionalCost.create({
+            data: {
+              description: additionalCost.description || '',
+              cost: additionalCost.cost || 0,
+              comment: additionalCost.comment || '',
+              quoteId: createdQuote.id
+            }
+          });
+        }
+      }
+      
       return createdQuote;
     });
   }
@@ -391,6 +405,7 @@ export class DatabaseService {
         // operational: true, // Removed due to linter errors
         papers: true,
         finishing: true,
+        additionalCosts: true,
       },
     });
   }
@@ -407,6 +422,7 @@ export class DatabaseService {
         // operational: true, // Removed due to linter errors
         papers: true,
         finishing: true,
+        additionalCosts: true,
       },
     });
   }
@@ -416,7 +432,7 @@ export class DatabaseService {
     
     try {
       // Extract related data
-      const { amounts, papers, finishing, operational, ...quoteData } = data;
+      const { amounts, papers, finishing, operational, additionalCosts, ...quoteData } = data;
       
       // Start a transaction
       const result = await db.$transaction(async (tx) => {
@@ -537,6 +553,26 @@ export class DatabaseService {
           }
         }
 
+        // Update additional costs if provided
+        if (additionalCosts && Array.isArray(additionalCosts)) {
+          // Delete existing additional costs
+          await tx.additionalCost.deleteMany({
+            where: { quoteId: id }
+          });
+
+          // Create new additional costs
+          for (const additionalCost of additionalCosts) {
+            await tx.additionalCost.create({
+              data: {
+                quoteId: id,
+                description: additionalCost.description || '',
+                cost: additionalCost.cost ? Number(additionalCost.cost) : 0,
+                comment: additionalCost.comment || '',
+              }
+            });
+          }
+        }
+
         // Return the updated quote with all related data
         return await tx.quote.findUnique({
           where: { id },
@@ -547,6 +583,7 @@ export class DatabaseService {
             operational: true,
             papers: true,
             finishing: true,
+            additionalCosts: true,
           },
         });
       });

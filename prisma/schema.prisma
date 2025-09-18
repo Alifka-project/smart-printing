@@ -117,6 +117,7 @@ model Quote {
   sendToCustomerEnabled Boolean?          @default(false)
   finishing             Finishing[]
   papers                Paper[]
+  additionalCosts       AdditionalCost[]
   client                Client            @relation(fields: [clientId], references: [id])
   user                  User?             @relation(fields: [userId], references: [id])
   amounts               QuoteAmount?
@@ -147,6 +148,15 @@ model Finishing {
   quoteId String
   cost    Float?
   quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model AdditionalCost {
+  id          String @id @default(cuid())
+  description String
+  cost        Float
+  comment     String
+  quoteId     String
+  quote       Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 }
 
 model QuoteAmount {

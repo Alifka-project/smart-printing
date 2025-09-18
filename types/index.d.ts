@@ -268,6 +268,13 @@ export interface QuoteFormData {
     vatAmount: number;
     totalPrice: number;
   };
+  // Additional costs for unique project expenses
+  additionalCosts?: Array<{
+    id: string;
+    description: string;
+    cost: number;
+    comment: string;
+  }>;
   // New approval workflow fields
   approval?: QuoteApproval;
   salesPersonId?: string; // Sales person ID who created the quote

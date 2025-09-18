@@ -508,6 +508,7 @@ const Step5Quotation: React.FC<Step5Props> = ({
     let totalPaperCost = 0;
     let totalPlatesCost = 0;
     let totalFinishingCost = 0;
+    let totalAdditionalCost = 0;
     let totalSubtotal = 0;
     let totalMargin = 0;
     let totalMarginAmount = 0;
@@ -543,6 +544,13 @@ const Step5Quotation: React.FC<Step5Props> = ({
       // as they are calculated proportionally from the main product
     });
 
+    // Add additional costs from Step 4
+    if (formData.additionalCosts && formData.additionalCosts.length > 0) {
+      totalAdditionalCost = formData.additionalCosts.reduce((acc, cost) => acc + (cost.cost || 0), 0);
+      grandTotal += totalAdditionalCost;
+      totalSubtotal += totalAdditionalCost;
+    }
+
     // Apply discount if enabled
     let finalTotal = grandTotal;
     let discountAmount = 0;
@@ -555,6 +563,7 @@ const Step5Quotation: React.FC<Step5Props> = ({
       totalPaperCost,
       totalPlatesCost,
       totalFinishingCost,
+      totalAdditionalCost,
       totalSubtotal,
       totalMargin: 30, // 30% margin (hidden from user)
       totalMarginAmount,
@@ -584,7 +593,7 @@ const Step5Quotation: React.FC<Step5Props> = ({
         totalPrice: finalTotal
       }
     }));
-  }, [includedProducts, otherQuantities, formData.operational.papers, formData.operational.plates, formData.operational.units, formData.operational.finishing, setFormData]);
+  }, [includedProducts, otherQuantities, formData.operational.papers, formData.operational.plates, formData.operational.units, formData.operational.finishing, formData.additionalCosts, setFormData]);
 
   // Handle product inclusion/exclusion
   const toggleProductInclusion = (productIndex: number) => {
@@ -1249,6 +1258,14 @@ const Step5Quotation: React.FC<Step5Props> = ({
                   <span className="text-lg font-semibold text-slate-700">Total Price</span>
                   <span className="text-lg font-bold text-slate-800">{currency(summaryTotals.grandTotal - summaryTotals.totalVAT)}</span>
                 </div>
+
+                {/* Additional Costs - Show when present */}
+                {summaryTotals.totalAdditionalCost > 0 && (
+                  <div className="flex justify-between items-center py-3 border-b border-slate-200">
+                    <span className="text-lg font-semibold text-slate-700">Additional Costs</span>
+                    <span className="text-lg font-bold text-blue-600">{currency(summaryTotals.totalAdditionalCost)}</span>
+                  </div>
+                )}
 
                 {/* Discount - Show when applied */}
                 {discount.isApplied && discount.percentage > 0 && (

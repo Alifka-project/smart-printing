@@ -1586,6 +1586,13 @@ function CreateQuoteContent() {
               cost: finish.cost || 0,
             })) || []
           },
+          additionalCosts: {
+            create: formData.additionalCosts?.map(cost => ({
+              description: cost.description || "",
+              cost: cost.cost || 0,
+              comment: cost.comment || "",
+            })) || []
+          },
           amounts: {
             create: {
               base: basePrice, // Use calculated values instead of formData.calculation

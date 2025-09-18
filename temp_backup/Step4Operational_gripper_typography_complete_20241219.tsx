@@ -2870,7 +2870,6 @@ function drawCircularProduct(
   ctx.lineWidth = 1;
   ctx.font = 'bold 10px Arial';
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle'; // Ensure proper text baseline
   
   // Ultra-compact label for maximum space efficiency
   const labelText = `${cupSizeOz}oz`;
@@ -2883,9 +2882,9 @@ function drawCircularProduct(
   ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
   ctx.strokeRect(labelX, labelY, labelWidth, labelHeight);
   
-  // Label text - positioned correctly in the center of the label box
+  // Label text
   ctx.fillStyle = '#3b82f6';
-  ctx.fillText(labelText, trapezoidCenterX, labelY + labelHeight/2);
+  ctx.fillText(labelText, trapezoidCenterX, labelY + 12);
   
   console.log(`🍵 GitHub Style Cup Complete:`, {
       cupSize: cupSizeOz, 
@@ -3713,19 +3712,12 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
   const [userEditedInputDimensions, setUserEditedInputDimensions] = React.useState<Set<string>>(new Set());
   
   // ===== Additional costs state =====
-  // Use formData.additionalCosts instead of local state for persistence
-  const additionalCosts = formData.additionalCosts || [];
-  const setAdditionalCosts = (newCosts: Array<{
+  const [additionalCosts, setAdditionalCosts] = React.useState<Array<{
     id: string;
     description: string;
     cost: number;
     comment: string;
-  }>) => {
-    setFormData(prev => ({
-      ...prev,
-      additionalCosts: newCosts
-    }));
-  };
+  }>>([]);
 
   // ===== Supplier database modal =====
   const [showSupplierDB, setShowSupplierDB] = React.useState(false);

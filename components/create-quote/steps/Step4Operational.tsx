@@ -94,7 +94,7 @@ function computeLayout(
   inputHeight: number | null, // Press sheet height (50) 
   outputWidth: number | null, // Product width (14.8)
   outputHeight: number | null, // Product height (21.0)
-  gripperWidth: number = 0.9,  // Fixed gripper area (top)
+  gripperWidth: number = 0.9,  // Fixed gripper area (on longest side)
   edgeMargin: number = 0.5,    // Fixed edge margins
   gapWidth: number = 0.2,      // Ultra-minimal gap for maximum packing
   bleedWidth: number = 0.3     // Fixed bleed around products
@@ -134,14 +134,31 @@ function computeLayout(
       orientation: 'normal' as 'normal' | 'rotated',
       itemsPerRow: 0,
       itemsPerCol: 0,
-      productShape: 'rectangular' as ProductShape
+      productShape: 'rectangular' as ProductShape,
+      gripperOnLongSide: true
     };
   }
 
-  // Calculate printable area (after gripper and margins)
-  // Gripper area is at the TOP of the press sheet
-  const printableWidth = inputWidth - (2 * edgeMargin);
-  const printableHeight = inputHeight - gripperWidth - edgeMargin; // Gripper at top, margin at bottom
+  // Determine which side is longer and position gripper accordingly
+  const isWidthLonger = inputWidth >= inputHeight;
+  console.log('🔧 Gripper positioning:', {
+    paperSize: `${inputWidth}×${inputHeight}`,
+    longestSide: isWidthLonger ? `width (${inputWidth})` : `height (${inputHeight})`,
+    gripperPosition: isWidthLonger ? 'along width (top/bottom)' : 'along height (left/right)'
+  });
+
+  // Calculate printable area based on gripper position
+  let printableWidth, printableHeight;
+  
+  if (isWidthLonger) {
+    // Gripper along the width (traditional top position)
+    printableWidth = inputWidth - (2 * edgeMargin);
+    printableHeight = inputHeight - gripperWidth - edgeMargin;
+  } else {
+    // Gripper along the height (side position)
+    printableWidth = inputWidth - gripperWidth - edgeMargin;
+    printableHeight = inputHeight - (2 * edgeMargin);
+  }
 
   // Calculate product dimensions with bleed and gap
   // For layout calculation, we need to account for gaps between products
@@ -426,7 +443,9 @@ function computeLayout(
     orientation,
     itemsPerRow,
     itemsPerCol,
-    productShape: 'rectangular' as ProductShape
+    productShape: 'rectangular' as ProductShape,
+    gripperOnLongSide: isWidthLonger,
+    gripperPosition: isWidthLonger ? 'top' : 'left'
   };
   
   // Debug logging as requested
@@ -1302,8 +1321,22 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
   // Calculate printable area (after margins and gripper)
   const gripperWidth = settings.gripperWidth || 0.9;
   const edgeMargin = 0.5;
-  const printableWidth = pressWidth - (2 * edgeMargin);
-  const printableHeight = pressHeight - gripperWidth - edgeMargin; // Gripper at top, margin at bottom
+  
+  // Determine gripper position based on paper orientation
+  const isWidthLonger = pressWidth >= pressHeight;
+  const gripperPosition = isWidthLonger ? 'top' : 'left';
+  
+  let printableWidth, printableHeight, printableX, printableY;
+  
+  if (isWidthLonger) {
+    // Gripper along the width (traditional top position)
+    printableWidth = pressWidth - (2 * edgeMargin);
+    printableHeight = pressHeight - gripperWidth - edgeMargin;
+  } else {
+    // Gripper along the height (side position)
+    printableWidth = pressWidth - gripperWidth - edgeMargin;
+    printableHeight = pressHeight - (2 * edgeMargin);
+  }
   
   // Calculate scaling
   const scaleX = canvasUsableWidth / pressWidth;
@@ -1327,27 +1360,54 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
   ctx.lineWidth = 4;
   ctx.strokeRect(startX, startY, scaledPressWidth, scaledPressHeight);
 
-  // Add press sheet dimensions label
-  ctx.fillStyle = 'rgba(31, 41, 55, 0.9)';
-  ctx.font = 'bold 12px Inter, system-ui, sans-serif';
+  // Add professional press sheet dimensions label with background (PRINT VIEW UPDATED)
+  const dimensionText = `${pressWidth} × ${pressHeight} cm`;
+  ctx.font = 'bold 14px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(`${pressWidth}×${pressHeight} cm`, startX + scaledPressWidth / 2, startY - 15);
-
-  // Draw gripper area
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
-  ctx.fillRect(startX, startY, scaledPressWidth, scaledGripperWidth);
+  ctx.textBaseline = 'middle';
   
+  const dimensionMetrics = ctx.measureText(dimensionText);
+  const labelX = startX + scaledPressWidth / 2;
+  const labelY = startY - 25;
+  
+  // Draw professional background for dimension label
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+  ctx.fillRect(labelX - dimensionMetrics.width / 2 - 12, labelY - 12, dimensionMetrics.width + 24, 24);
+  
+  // Add subtle border
+  ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(labelX - dimensionMetrics.width / 2 - 12, labelY - 12, dimensionMetrics.width + 24, 24);
+  
+  // Draw white text
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(dimensionText, labelX, labelY);
+
+  // Draw gripper area based on position
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
   ctx.strokeStyle = '#ef4444';
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
+  
+  if (isWidthLonger) {
+    // Gripper at top (traditional position)
+    ctx.fillRect(startX, startY, scaledPressWidth, scaledGripperWidth);
   ctx.strokeRect(startX, startY, scaledPressWidth, scaledGripperWidth);
+    printableX = startX + scaledEdgeMargin;
+    printableY = startY + scaledGripperWidth + scaledEdgeMargin;
+  } else {
+    // Gripper at left side
+    ctx.fillRect(startX, startY, scaledGripperWidth, scaledPressHeight);
+    ctx.strokeRect(startX, startY, scaledGripperWidth, scaledPressHeight);
+    printableX = startX + scaledGripperWidth + scaledEdgeMargin;
+    printableY = startY + scaledEdgeMargin;
+  }
+  
   ctx.setLineDash([]);
 
-  // Draw printable area (dashed border)
-  const printableX = startX + scaledEdgeMargin;
-  const printableY = startY + scaledGripperWidth + scaledEdgeMargin;
-  const printableW = scaledPressWidth - (2 * scaledEdgeMargin);
-  const printableH = scaledPressHeight - scaledGripperWidth - scaledEdgeMargin; // Only bottom margin
+  // Draw printable area (dashed border) - coordinates already set above based on gripper position
+  const printableW = printableWidth * scale;
+  const printableH = printableHeight * scale;
   
   ctx.strokeStyle = '#10b981';
   ctx.lineWidth = 2;
@@ -1743,11 +1803,27 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
   ctx.textAlign = 'center';
   ctx.fillText('Print Layout', canvasWidth / 2, startY - 80);
   
-  // Subtitle with proper spacing from title (responsive font size)
-  ctx.fillStyle = '#6b7280';
-  const subtitleFontSize = isMobile ? '11px' : isTablet ? '12px' : '14px';
-  ctx.font = `${subtitleFontSize} Inter, system-ui, sans-serif`;
-  ctx.fillText(`${pressWidth}×${pressHeight} • Yield ${layout.itemsPerSheet} (${layout.itemsPerRow}×${layout.itemsPerCol}) • ${orientation}`, canvasWidth / 2, startY - 55);
+  // Enhanced subtitle with better formatting and spacing
+  const subtitleText = `${pressWidth} × ${pressHeight} cm  •  Yield: ${layout.itemsPerSheet} pieces (${layout.itemsPerRow} × ${layout.itemsPerCol})  •  ${orientation}`;
+  ctx.fillStyle = '#64748b';
+  const subtitleFontSize = isMobile ? '11px' : isTablet ? '12px' : '13px';
+  ctx.font = `${subtitleFontSize} Inter, -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // Add subtle background for better readability
+  const subtitleMetrics = ctx.measureText(subtitleText);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.fillRect(canvasWidth / 2 - subtitleMetrics.width / 2 - 8, startY - 63, subtitleMetrics.width + 16, 18);
+  
+  // Add subtle border
+  ctx.strokeStyle = 'rgba(100, 116, 139, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(canvasWidth / 2 - subtitleMetrics.width / 2 - 8, startY - 63, subtitleMetrics.width + 16, 18);
+  
+  // Draw the subtitle text
+  ctx.fillStyle = '#475569';
+  ctx.fillText(subtitleText, canvasWidth / 2, startY - 54);
   
   // Information panels positioned outside the printable area
   const panelWidth = isMobile ? Math.min(140, canvasWidth * 0.35) : 
@@ -1848,11 +1924,29 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
     ctx.fillText(spec, rightPanelX + 8, rightPanelY + 45 + (index * 12));
   });
   
-  // Printable area dimensions (bottom center)
-  ctx.fillStyle = '#059669';
-  ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+  // Enhanced printable area dimensions (bottom center) with better styling
+  const printableDimensionText = `${printableWidth.toFixed(1)} × ${printableHeight.toFixed(1)} cm`;
+  ctx.font = 'bold 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(`${printableWidth.toFixed(1)}×${printableHeight.toFixed(1)} cm`, printableX + printableW / 2, printableY + printableH + 20);
+  ctx.textBaseline = 'middle';
+  
+  const printableDimMetrics = ctx.measureText(printableDimensionText);
+  const printableCenterX = printableX + printableW / 2;
+  const printableLabelY = printableY + printableH + 35; // Increased spacing for better section alignment
+  
+  // High contrast background for maximum visibility
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+  ctx.fillRect(printableCenterX - printableDimMetrics.width / 2 - 12, printableLabelY - 14, printableDimMetrics.width + 24, 28);
+  
+  // Strong border for better definition
+  ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(printableCenterX - printableDimMetrics.width / 2 - 12, printableLabelY - 14, printableDimMetrics.width + 24, 28);
+  
+  // High contrast white text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 13px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText(printableDimensionText, printableCenterX, printableLabelY);
 }
 
 // GRIPPER VIEW: Shows pressman's view with gripper area
@@ -1863,8 +1957,22 @@ function drawGripperView(ctx: CanvasRenderingContext2D, canvasWidth: number, can
   // Same as print view but with gripper area highlighted
   const gripperWidth = settings.gripperWidth || 0.9;
   const edgeMargin = 0.5;
-  const printableWidth = pressWidth - (2 * edgeMargin);
-  const printableHeight = pressHeight - gripperWidth - edgeMargin; // Gripper at top, margin at bottom
+  
+  // Determine gripper position based on paper orientation
+  const isWidthLonger = pressWidth >= pressHeight;
+  const gripperPosition = isWidthLonger ? 'top' : 'left';
+  
+  let printableWidth, printableHeight, printableX, printableY;
+  
+  if (isWidthLonger) {
+    // Gripper along the width (traditional top position)
+    printableWidth = pressWidth - (2 * edgeMargin);
+    printableHeight = pressHeight - gripperWidth - edgeMargin;
+  } else {
+    // Gripper along the height (side position)
+    printableWidth = pressWidth - gripperWidth - edgeMargin;
+    printableHeight = pressHeight - (2 * edgeMargin);
+  }
   
   const scaleX = canvasUsableWidth / pressWidth;
   const scaleY = canvasUsableHeight / pressHeight;
@@ -1887,35 +1995,155 @@ function drawGripperView(ctx: CanvasRenderingContext2D, canvasWidth: number, can
   ctx.lineWidth = 4;
   ctx.strokeRect(startX, startY, scaledPressWidth, scaledPressHeight);
 
-  // Add press sheet dimensions label
-  ctx.fillStyle = 'rgba(31, 41, 55, 0.9)';
-  ctx.font = 'bold 12px Inter, system-ui, sans-serif';
+  // Add professional press sheet dimensions label with background (UPDATED VERSION)
+  const gripperDimensionText = `${pressWidth} × ${pressHeight} cm`;
+  ctx.font = 'bold 14px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(`${pressWidth}×${pressHeight} cm`, startX + scaledPressWidth / 2, startY - 15);
-
-  // Draw professional gripper area with industry-standard markings
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'; // Subtle red tint
-  ctx.fillRect(startX, startY, scaledPressWidth, scaledGripperWidth);
+  ctx.textBaseline = 'middle';
   
-  // Professional gripper border with industry-standard styling
+  const gripperDimensionMetrics = ctx.measureText(gripperDimensionText);
+  const labelX = startX + scaledPressWidth / 2;
+  const labelY = startY - 25;
+  
+  // Draw professional background for dimension label
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+  ctx.fillRect(labelX - gripperDimensionMetrics.width / 2 - 12, labelY - 12, gripperDimensionMetrics.width + 24, 24);
+  
+  // Add subtle border
+  ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(labelX - gripperDimensionMetrics.width / 2 - 12, labelY - 12, gripperDimensionMetrics.width + 24, 24);
+  
+  // Draw white text
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(gripperDimensionText, labelX, labelY);
+
+  // Draw professional gripper area with industry-standard markings based on position
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'; // Subtle red tint
   ctx.strokeStyle = '#dc2626'; // Professional red
   ctx.lineWidth = 3;
   ctx.setLineDash([10, 5]); // Professional dashed pattern
+  
+  if (isWidthLonger) {
+    // Gripper at top (traditional position)
+    ctx.fillRect(startX, startY, scaledPressWidth, scaledGripperWidth);
   ctx.strokeRect(startX, startY, scaledPressWidth, scaledGripperWidth);
+    printableX = startX + scaledEdgeMargin;
+    printableY = startY + scaledGripperWidth + scaledEdgeMargin;
+    
+    // Add professional gripper labels for top position with enhanced styling
+    const gripperCenterX = startX + scaledPressWidth / 2;
+    const gripperCenterY = startY + scaledGripperWidth / 2;
+    
+    // Professional gripper label with printable area styling
+    const gripperText = 'GRIPPER';
+    ctx.font = 'bold 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    const gripperTextMetrics = ctx.measureText(gripperText);
+    const gripperLabelY = gripperCenterY - 2;
+    
+    // White background for gripper label
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillRect(gripperCenterX - gripperTextMetrics.width / 2 - 6, gripperLabelY - 8, gripperTextMetrics.width + 12, 16);
+    
+    // Light green dashed border
+    ctx.strokeStyle = 'rgba(5, 150, 105, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.strokeRect(gripperCenterX - gripperTextMetrics.width / 2 - 6, gripperLabelY - 8, gripperTextMetrics.width + 12, 16);
   ctx.setLineDash([]);
 
-  // Add professional gripper labels
-  ctx.fillStyle = '#dc2626';
-  ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    // Dark green text
+    ctx.fillStyle = '#059669';
+    ctx.fillText(gripperText, gripperCenterX, gripperLabelY);
+    
+    // Dimension label with same professional styling
+    const dimensionText = `${gripperWidth} cm`;
+    ctx.font = '10px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
+    const dimensionMetrics = ctx.measureText(dimensionText);
+    const dimensionLabelY = gripperCenterY + 12;
+    
+    // White background for dimension label
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillRect(gripperCenterX - dimensionMetrics.width / 2 - 4, dimensionLabelY - 6, dimensionMetrics.width + 8, 12);
+    
+    // Light green dashed border
+    ctx.strokeStyle = 'rgba(5, 150, 105, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.strokeRect(gripperCenterX - dimensionMetrics.width / 2 - 4, dimensionLabelY - 6, dimensionMetrics.width + 8, 12);
+    ctx.setLineDash([]);
+    
+    // Dark green text
+    ctx.fillStyle = '#059669';
+    ctx.fillText(dimensionText, gripperCenterX, dimensionLabelY);
+  } else {
+    // Gripper at left side
+    ctx.fillRect(startX, startY, scaledGripperWidth, scaledPressHeight);
+    ctx.strokeRect(startX, startY, scaledGripperWidth, scaledPressHeight);
+    printableX = startX + scaledGripperWidth + scaledEdgeMargin;
+    printableY = startY + scaledEdgeMargin;
+    
+    // Add professional gripper labels for left position (rotated text) with printable area styling
+    ctx.save();
+    ctx.translate(startX + scaledGripperWidth / 2, startY + scaledPressHeight / 2);
+    ctx.rotate(-Math.PI / 2);
+    
+    // Main gripper label with professional styling
+    const gripperText = 'GRIPPER';
+    ctx.font = 'bold 11px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('GRIPPER AREA', startX + scaledPressWidth / 2, startY + scaledGripperWidth / 2 + 3);
-  ctx.fillText(`${gripperWidth} cm`, startX + scaledPressWidth / 2, startY + scaledGripperWidth / 2 + 15);
+    ctx.textBaseline = 'middle';
+    
+    const gripperTextMetrics = ctx.measureText(gripperText);
+    const gripperLabelY = -2;
+    
+    // White background for gripper label
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillRect(-gripperTextMetrics.width / 2 - 6, gripperLabelY - 8, gripperTextMetrics.width + 12, 16);
+    
+    // Light green dashed border
+    ctx.strokeStyle = 'rgba(5, 150, 105, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.strokeRect(-gripperTextMetrics.width / 2 - 6, gripperLabelY - 8, gripperTextMetrics.width + 12, 16);
+    ctx.setLineDash([]);
+    
+    // Dark green text
+    ctx.fillStyle = '#059669';
+    ctx.fillText(gripperText, 0, gripperLabelY);
+    
+    // Dimension label with same professional styling
+    const dimensionText = `${gripperWidth} cm`;
+    ctx.font = '10px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
+    const dimensionMetrics = ctx.measureText(dimensionText);
+    const dimensionLabelY = 12;
+    
+    // White background for dimension label
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillRect(-dimensionMetrics.width / 2 - 4, dimensionLabelY - 6, dimensionMetrics.width + 8, 12);
+    
+    // Light green dashed border
+    ctx.strokeStyle = 'rgba(5, 150, 105, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.strokeRect(-dimensionMetrics.width / 2 - 4, dimensionLabelY - 6, dimensionMetrics.width + 8, 12);
+    ctx.setLineDash([]);
+    
+    // Dark green text
+    ctx.fillStyle = '#059669';
+    ctx.fillText(dimensionText, 0, dimensionLabelY);
+    
+    ctx.restore();
+  }
+  
+  ctx.setLineDash([]);
 
-  // Draw professional printable area with industry-standard markings
-  const printableX = startX + scaledEdgeMargin;
-  const printableY = startY + scaledGripperWidth + scaledEdgeMargin;
-  const printableW = scaledPressWidth - (2 * scaledEdgeMargin);
-  const printableH = scaledPressHeight - scaledGripperWidth - scaledEdgeMargin; // Only bottom margin
+  // Draw professional printable area with industry-standard markings - coordinates already set above
+  const printableW = printableWidth * scale;
+  const printableH = printableHeight * scale;
   
   // Professional printable area border
   ctx.strokeStyle = '#059669'; // Professional green
@@ -1924,12 +2152,45 @@ function drawGripperView(ctx: CanvasRenderingContext2D, canvasWidth: number, can
   ctx.strokeRect(printableX, printableY, printableW, printableH);
   ctx.setLineDash([]);
   
-  // Add professional printable area labels
-  ctx.fillStyle = '#059669';
-  ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+  // Add professional printable area labels with enhanced styling
+  const printableCenterX = printableX + printableW / 2;
+  
+  // Top label with background
+  const printableText = 'PRINTABLE AREA';
+  ctx.font = 'bold 10px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('PRINTABLE AREA', printableX + printableW / 2, printableY - 5);
-  ctx.fillText(`${printableWidth.toFixed(1)}×${printableHeight.toFixed(1)} cm`, printableX + printableW / 2, printableY + printableH + 15);
+  ctx.textBaseline = 'middle';
+  
+  const printableMetrics = ctx.measureText(printableText);
+  const topLabelY = printableY - 8;
+  
+  // Background for top label
+  ctx.fillStyle = 'rgba(5, 150, 105, 0.9)';
+  ctx.fillRect(printableCenterX - printableMetrics.width / 2 - 6, topLabelY - 8, printableMetrics.width + 12, 16);
+  
+  // Top label text
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(printableText, printableCenterX, topLabelY);
+  
+  // Bottom dimension label with enhanced styling
+  const bottomDimensionText = `${printableWidth.toFixed(1)} × ${printableHeight.toFixed(1)} cm`;
+  ctx.font = '11px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
+  const bottomDimensionMetrics = ctx.measureText(bottomDimensionText);
+  const bottomLabelY = printableY + printableH + 35; // Increased spacing for better section alignment
+  
+  // High contrast background for maximum visibility
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+  ctx.fillRect(printableCenterX - bottomDimensionMetrics.width / 2 - 12, bottomLabelY - 14, bottomDimensionMetrics.width + 24, 28);
+  
+  // Strong border for better definition
+  ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(printableCenterX - bottomDimensionMetrics.width / 2 - 12, bottomLabelY - 14, bottomDimensionMetrics.width + 24, 28);
+  
+  // High contrast white text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 13px Inter, -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText(bottomDimensionText, printableCenterX, bottomLabelY);
 
   // Draw products (same as print view but with gripper emphasis) using actual Step 3 dimensions
   const currentProduct = formData?.products?.[productIndex || 0];
@@ -2317,12 +2578,11 @@ function drawGripperView(ctx: CanvasRenderingContext2D, canvasWidth: number, can
   const textFontSize = isMobile ? '8px' : isTablet ? '9px' : '10px';
   ctx.font = `${textFontSize} Inter, system-ui, sans-serif`;
   const specs = [
-    `${pressWidth}×${pressHeight} cm`,
-    `Gripper: ${gripperWidth} cm (shaded)`,
-    `Gap: ${gapWidth} cm • Bleed: ${bleedWidth} cm`,
+    `Press Sheet: ${pressWidth} × ${pressHeight} cm`,
+    `Gripper: ${gripperWidth} cm`,
+    `Gap: ${gapWidth} cm  •  Bleed: ${bleedWidth} cm`,
     `Edge margins: ${edgeMargin} cm`,
-    `Safe Printable Window:`,
-    `${printableWidth.toFixed(1)}×${printableHeight.toFixed(1)} cm`
+    `Printable: ${printableWidth.toFixed(1)} × ${printableHeight.toFixed(1)} cm`
   ];
   
   specs.forEach((spec, index) => {
@@ -2375,16 +2635,9 @@ function drawGripperView(ctx: CanvasRenderingContext2D, canvasWidth: number, can
     ctx.fillText(check, rightPanelX + 8, rightPanelY + 45 + (index * 12));
   });
   
-  // Gripper area label (centered in gripper area)
-  ctx.fillStyle = '#dc2626';
-  ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(`Gripper: ${gripperWidth} cm`, startX + scaledPressWidth / 2, startY + scaledGripperWidth / 2 + 3);
+  // Old gripper label removed - now handled in main gripper drawing section with professional styling
   
-  // Safe printable window dimensions (bottom center)
-  ctx.fillStyle = '#059669';
-  ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-  ctx.fillText(`${printableWidth.toFixed(1)}×${printableHeight.toFixed(1)} cm`, printableX + printableW / 2, printableY + printableH + 20);
+  // Printable dimensions already displayed with proper styling in main views
 }
 
 // Draw product-specific shapes with professional styling

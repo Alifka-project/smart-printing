@@ -21,7 +21,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { QuoteFormData, Paper, Product, DigitalPricing, OffsetPricing, DigitalCostingResult, OffsetCostingResult } from "@/types";
 import { getProductConfig, shouldShowSpine, PRODUCT_CONFIGS, getCupSizeByOz, getShoppingBagPreset } from "@/constants/product-config";
 import { PricingService } from "@/lib/pricing-service";
@@ -180,14 +180,16 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
   const [paperDetails, setPaperDetails] = useState<any>(null);
   const [loadingPaperDetails, setLoadingPaperDetails] = useState(false);
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
+  const [showPaperSelection, setShowPaperSelection] = useState<{ [key: number]: boolean }>({});
   
-  // Paper filter states
-  const [paperFilters, setPaperFilters] = useState({
-    paperType: '',
-    gsm: '',
-    vendor: '',
-    paperName: ''
-  });
+  // Dropdown filter states
+  const [selectedPaperType, setSelectedPaperType] = useState('All');
+  const [selectedGsm, setSelectedGsm] = useState('All');
+  const [selectedVendor, setSelectedVendor] = useState('All');
+  const [selectedPaperName, setSelectedPaperName] = useState('All');
+  
+  
+  
   const [availablePapers, setAvailablePapers] = useState<Array<{
     name: string;
     gsmOptions: string[];
@@ -239,18 +241,22 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
     }
   }, [formData]); // Run when formData changes
   
-  // Ensure first product is properly initialized with config
+  // Ensure first product is properly initialized with config (only for truly empty products)
   React.useEffect(() => {
     if (formData.products.length > 0 && !hasInitializedProducts.current) {
       const firstProduct = formData.products[0];
       const config = getProductConfig(firstProduct.productName);
       
-      if (config && (
+      // Only initialize if the product has truly empty/null sizes (not just different from defaults)
+      const hasEmptySizes = 
         !firstProduct.flatSize || 
-        firstProduct.flatSize.width !== config.defaultSizes.width ||
-        firstProduct.flatSize.height !== config.defaultSizes.height
-      )) {
-        console.log('🔄 Initializing first product with config:', config);
+        firstProduct.flatSize.width === 0 || 
+        firstProduct.flatSize.width === null ||
+        firstProduct.flatSize.height === 0 || 
+        firstProduct.flatSize.height === null;
+      
+      if (config && hasEmptySizes) {
+        console.log('🔄 Initializing empty product with config:', config);
         updateProduct(0, {
           flatSize: config.defaultSizes,
           closeSize: config.defaultSizes,
@@ -451,12 +457,23 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
     console.log(`  Found config:`, config);
     
     if (config) {
+      // Only auto-populate sizes if current sizes are empty/null, otherwise preserve existing sizes
+      const currentSizes = product.flatSize;
+      const hasValidSizes = currentSizes && 
+        currentSizes.width && 
+        currentSizes.width > 0 && 
+        currentSizes.height && 
+        currentSizes.height > 0;
+      
       // Auto-populate sizes and other defaults from product config
       const updates: Partial<Product> = {
         productName,
-        flatSize: config.defaultSizes,
-        closeSize: config.defaultSizes,
-        useSameAsFlat: true,
+        // Only update sizes if current sizes are invalid/empty
+        ...(hasValidSizes ? {} : {
+          flatSize: config.defaultSizes,
+          closeSize: config.defaultSizes,
+          useSameAsFlat: true
+        }),
         printingSelection: config.defaultPrinting,
         sides: config.defaultSides,
         colors: config.defaultColors,
@@ -469,8 +486,8 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
       
       console.log(`  Updates to apply:`, updates);
       
-      // Special handling for cups
-      if (productName === 'Cups') {
+      // Special handling for cups (only if sizes are invalid)
+      if (productName === 'Cups' && !hasValidSizes) {
         updates.cupSizeOz = 8; // Default to 8oz
         const cupSize = getCupSizeByOz(8);
         if (cupSize) {
@@ -479,8 +496,8 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
         }
       }
       
-      // Special handling for shopping bags
-      if (productName === 'Shopping Bag') {
+      // Special handling for shopping bags (only if sizes are invalid)
+      if (productName === 'Shopping Bag' && !hasValidSizes) {
         updates.bagPreset = 'Medium'; // Default to Medium
         const bagPreset = getShoppingBagPreset('Medium');
         if (bagPreset) {
@@ -575,23 +592,29 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
       } : null
     });
     
-    // Safety check: If sizes are 0 or null, reset to default values
-    if (formData.products[0]?.flatSize) {
-      const needsSizeFix = 
-        formData.products[0].flatSize.width === 0 || 
-        formData.products[0].flatSize.width === null ||
-        formData.products[0].flatSize.height === 0 || 
-        formData.products[0].flatSize.height === null;
-        
-      if (needsSizeFix) {
-        console.log(`🔧 FIXING SIZES: Resetting to default 9x5.5`);
-        updateProduct(0, {
-          flatSize: { width: 9, height: 5.5, spine: 0 },
-          closeSize: { width: 9, height: 5.5, spine: 0 },
-          useSameAsFlat: true
-        });
+    // Safety check: If sizes are 0 or null, reset to product-specific default values
+    formData.products.forEach((product, idx) => {
+      if (product?.flatSize) {
+        const needsSizeFix = 
+          product.flatSize.width === 0 || 
+          product.flatSize.width === null ||
+          product.flatSize.height === 0 || 
+          product.flatSize.height === null;
+          
+        if (needsSizeFix) {
+          // Get the correct default sizes for this specific product
+          const config = getProductConfig(product.productName);
+          const defaultSizes = config?.defaultSizes || { width: 9, height: 5.5, spine: 0 };
+          
+          console.log(`🔧 FIXING SIZES for ${product.productName}: Resetting to product-specific defaults:`, defaultSizes);
+          updateProduct(idx, {
+            flatSize: defaultSizes,
+            closeSize: defaultSizes,
+            useSameAsFlat: true
+          });
+        }
       }
-    }
+    });
     
     // Detailed finishing analysis - check ALL finishing options
     if (formData.products[0]?.finishing) {
@@ -739,6 +762,15 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
     setPaperDetailsDialogOpen(true);
     setLoadingPaperDetails(true);
     
+    // Reset all dropdown filters when opening dialog
+    setSelectedPaperType('All');
+    setSelectedGsm('All');
+    setSelectedVendor('All');
+    setSelectedPaperName('All');
+    
+    // Show paper selection dropdowns for this product
+    setShowPaperSelection(prev => ({ ...prev, [productIndex]: true }));
+    
     try {
       // Fetch papers directly from API to ensure we have the latest data
       const response = await fetch('/api/materials/papers');
@@ -780,25 +812,54 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
     }
   };
 
-  // Filter papers based on current filter criteria
-  const getFilteredPapers = () => {
+  // Dropdown-based filtering
+  const filteredPapers = React.useMemo(() => {
     if (!paperDetails?.availablePapers) return [];
     
     return paperDetails.availablePapers.filter((paper: any) => {
-      const matchesPaperType = !paperFilters.paperType || 
-        (paper.paperType || 'Standard').toLowerCase().includes(paperFilters.paperType.toLowerCase());
+      // Paper Type filter
+      const paperTypeMatch = selectedPaperType === 'All' || 
+        (paper.paperType || 'Standard') === selectedPaperType;
       
-      const matchesGsm = !paperFilters.gsm || 
-        paper.gsmOptions.some((gsm: string) => gsm.toLowerCase().includes(paperFilters.gsm.toLowerCase()));
+      // GSM filter
+      const gsmMatch = selectedGsm === 'All' || 
+        paper.gsmOptions?.includes(selectedGsm);
       
-      const matchesVendor = !paperFilters.vendor || 
-        paper.suppliers.some((supplier: string) => supplier.toLowerCase().includes(paperFilters.vendor.toLowerCase()));
+      // Vendor filter
+      const vendorMatch = selectedVendor === 'All' || 
+        paper.suppliers?.includes(selectedVendor);
       
-      const matchesPaperName = !paperFilters.paperName || 
-        paper.name.toLowerCase().includes(paperFilters.paperName.toLowerCase());
+      // Paper Name filter
+      const paperNameMatch = selectedPaperName === 'All' || 
+        paper.name === selectedPaperName;
       
-      return matchesPaperType && matchesGsm && matchesVendor && matchesPaperName;
+      return paperTypeMatch && gsmMatch && vendorMatch && paperNameMatch;
     });
+  }, [paperDetails?.availablePapers, selectedPaperType, selectedGsm, selectedVendor, selectedPaperName]);
+
+  // Get unique values for dropdowns
+  const getUniquePaperTypes = () => {
+    if (!paperDetails?.availablePapers) return [];
+    const types = paperDetails.availablePapers.map((paper: any) => paper.paperType || 'Standard');
+    return ['All', ...Array.from(new Set(types))];
+  };
+
+  const getUniqueGsms = () => {
+    if (!paperDetails?.availablePapers) return [];
+    const gsms = paperDetails.availablePapers.flatMap((paper: any) => paper.gsmOptions || []);
+    return ['All', ...Array.from(new Set(gsms))];
+  };
+
+  const getUniqueVendors = () => {
+    if (!paperDetails?.availablePapers) return [];
+    const vendors = paperDetails.availablePapers.flatMap((paper: any) => paper.suppliers || []);
+    return ['All', ...Array.from(new Set(vendors))];
+  };
+
+  const getUniquePaperNames = () => {
+    if (!paperDetails?.availablePapers) return [];
+    const names = paperDetails.availablePapers.map((paper: any) => paper.name);
+    return ['All', ...Array.from(new Set(names))];
   };
 
   const handleAddPaperFromBrowse = (paperName: string, productIndex: number = 0) => {
@@ -843,7 +904,7 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
 
     return (
       <Dialog open={paperDetailsDialogOpen} onOpenChange={setPaperDetailsDialogOpen}>
-        <DialogContent className="max-w-full sm:max-w-5xl max-h-[85vh] overflow-y-auto mx-4 sm:mx-auto">
+        <DialogContent className="max-w-full sm:max-w-5xl max-h-[95vh] sm:max-h-[85vh] overflow-y-auto mx-2 sm:mx-4 lg:mx-auto p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2 text-sm sm:text-base">
               <div className="w-5 h-5 bg-[#27aae1] rounded flex items-center justify-center flex-shrink-0">
@@ -867,104 +928,112 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
             <div className="space-y-4 sm:space-y-6">
               {paperDetails.browseMode && (
                 <div className="space-y-3 sm:space-y-4">
-                  {/* Filters Section */}
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 sm:p-4 rounded-lg border border-green-200">
-                    <div className="text-center mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-green-800 mb-2">Browse All Available Papers</h3>
+
+                  {/* Filters Section - EXACT LAYOUT AS REQUESTED */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-2 sm:p-3 lg:p-4 rounded-lg border border-green-200">
+                    <div className="text-center mb-3 sm:mb-4">
+                      <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-green-800 mb-1 sm:mb-2">Browse All Available Papers</h3>
                       <p className="text-xs sm:text-sm text-green-700">
-                        Showing {getFilteredPapers().length} of {paperDetails.availablePapers?.length || 0} papers
+                        Showing {filteredPapers.length} of {paperDetails.availablePapers?.length || 0} papers
                       </p>
                     </div>
                     
-                    {/* Filter Controls */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                      {/* Paper Type Filter */}
+                    {/* Dropdown Filters - Mobile Optimized */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                      {/* Paper Type Dropdown */}
                       <div>
-                        <Label className="text-xs font-medium text-green-800 mb-1 block">Paper Type</Label>
-                        <Input
-                          placeholder="e.g., Standard, Premium"
-                          value={paperFilters.paperType}
-                          onChange={(e) => setPaperFilters(prev => ({ ...prev, paperType: e.target.value }))}
-                          className="text-xs border-green-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
-                        />
-                  </div>
-                  
-                      {/* GSM Filter */}
-                      <div>
-                        <Label className="text-xs font-medium text-green-800 mb-1 block">GSM</Label>
-                        <Input
-                          placeholder="e.g., 150, 300"
-                          value={paperFilters.gsm}
-                          onChange={(e) => setPaperFilters(prev => ({ ...prev, gsm: e.target.value }))}
-                          className="text-xs border-green-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
-                        />
+                        <Label className="text-xs sm:text-sm font-medium text-green-800 mb-1 block">Paper Type</Label>
+                        <select
+                          value={selectedPaperType}
+                          onChange={(e) => setSelectedPaperType(e.target.value)}
+                          className="w-full h-10 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                        >
+                          {getUniquePaperTypes().map((type) => (
+                            <option key={String(type)} value={String(type)}>{String(type)}</option>
+                          ))}
+                        </select>
                       </div>
-                      
-                      {/* Vendor Filter */}
+
+                      {/* GSM Dropdown */}
                       <div>
-                        <Label className="text-xs font-medium text-green-800 mb-1 block">Vendor</Label>
-                        <Input
-                          placeholder="e.g., Apex Papers"
-                          value={paperFilters.vendor}
-                          onChange={(e) => setPaperFilters(prev => ({ ...prev, vendor: e.target.value }))}
-                          className="text-xs border-green-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
-                        />
+                        <Label className="text-xs sm:text-sm font-medium text-green-800 mb-1 block">GSM</Label>
+                        <select
+                          value={selectedGsm}
+                          onChange={(e) => setSelectedGsm(e.target.value)}
+                          className="w-full h-10 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                        >
+                          {getUniqueGsms().map((gsm) => (
+                            <option key={String(gsm)} value={String(gsm)}>{String(gsm)}</option>
+                          ))}
+                        </select>
                       </div>
-                      
-                      {/* Paper Name Filter */}
+
+                      {/* Vendor Dropdown */}
                       <div>
-                        <Label className="text-xs font-medium text-green-800 mb-1 block">Paper Name</Label>
-                        <Input
-                          placeholder="e.g., Art Paper, Bond"
-                          value={paperFilters.paperName}
-                          onChange={(e) => setPaperFilters(prev => ({ ...prev, paperName: e.target.value }))}
-                          className="text-xs border-green-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
-                        />
+                        <Label className="text-xs sm:text-sm font-medium text-green-800 mb-1 block">Vendor</Label>
+                        <select
+                          value={selectedVendor}
+                          onChange={(e) => setSelectedVendor(e.target.value)}
+                          className="w-full h-10 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                        >
+                          {getUniqueVendors().map((vendor) => (
+                            <option key={String(vendor)} value={String(vendor)}>{String(vendor)}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Paper Name Dropdown */}
+                      <div>
+                        <Label className="text-xs sm:text-sm font-medium text-green-800 mb-1 block">Paper Name</Label>
+                        <select
+                          value={selectedPaperName}
+                          onChange={(e) => setSelectedPaperName(e.target.value)}
+                          className="w-full h-10 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                        >
+                          {getUniquePaperNames().map((name) => (
+                            <option key={String(name)} value={String(name)}>{String(name)}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
-                    
-                    {/* Clear Filters Button */}
-                    <div className="flex justify-center mt-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPaperFilters({ paperType: '', gsm: '', vendor: '', paperName: '' })}
-                        className="text-xs border-green-300 text-green-700 hover:bg-green-100 rounded-lg"
+
+                    {/* Clear All Filters Button - Mobile Optimized */}
+                    <div className="flex justify-center mt-2 sm:mt-3">
+                      <button
+                        onClick={() => {
+                          setSelectedPaperType('All');
+                          setSelectedGsm('All');
+                          setSelectedVendor('All');
+                          setSelectedPaperName('All');
+                        }}
+                        className="px-3 sm:px-4 py-2 sm:py-2 text-xs sm:text-sm border border-green-300 text-green-700 hover:bg-green-100 rounded-lg w-full sm:w-auto"
                       >
                         Clear All Filters
-                      </Button>
+                      </button>
                     </div>
                   </div>
                   
-                  {getFilteredPapers().length === 0 ? (
+                  {filteredPapers.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="text-gray-500 mb-2">
                         <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
                         <h4 className="text-lg font-medium">No papers found</h4>
-                        <p className="text-sm">Try adjusting your filters or clearing them to see all papers.</p>
+                        <p className="text-sm">Try adjusting your search term or clearing it to see all papers.</p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPaperFilters({ paperType: '', gsm: '', vendor: '', paperName: '' })}
-                        className="mt-3"
-                      >
-                        Clear All Filters
-                      </Button>
                     </div>
                   ) : (
-                  <div className="grid gap-3 sm:gap-4">
-                      {getFilteredPapers().map((paper, idx) => (
-                      <div key={idx} className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
+                  <div className="grid gap-2 sm:gap-3 lg:gap-4">
+                      {filteredPapers.map((paper, idx) => (
+                      <div key={idx} className="border border-gray-200 rounded-lg p-2 sm:p-3 lg:p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-start">
                           <div className="flex-1">
                             <h4 className="font-medium text-gray-900 text-sm sm:text-lg mb-2">{paper.name}</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 text-xs sm:text-sm text-gray-600">
                               <div>
                                 <span className="font-medium">Suppliers:</span>
-                                <div className="mt-1">
+                                <div className="mt-1 space-y-1">
                                   {paper.suppliers.map((supplier, sIdx) => (
-                                    <div key={sIdx} className="text-xs bg-gray-100 px-2 py-1 rounded mb-1">
+                                    <div key={sIdx} className="text-xs bg-gray-100 px-2 py-1 rounded break-words">
                                       {supplier}
                                     </div>
                                   ))}
@@ -972,9 +1041,9 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
                               </div>
                               <div>
                                 <span className="font-medium">GSM Options:</span>
-                                <div className="mt-1">
+                                <div className="mt-1 flex flex-wrap gap-1">
                                   {paper.gsmOptions.map((gsm, gIdx) => (
-                                    <div key={gIdx} className="text-xs bg-[#27aae1]/20 px-2 py-1 rounded mb-1">
+                                    <div key={gIdx} className="text-xs bg-[#27aae1]/20 px-2 py-1 rounded">
                                       {gsm} gsm
                                     </div>
                                   ))}
@@ -982,21 +1051,23 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
                               </div>
                               <div>
                                 <span className="font-medium">Paper Type:</span>
-                                <div className="mt-1 text-xs bg-[#ea078b]/20 px-2 py-1 rounded">
-                                  {paper.paperType || 'Standard'}
+                                <div className="mt-1">
+                                  <div className="text-xs bg-[#ea078b]/20 px-2 py-1 rounded inline-block">
+                                    {paper.paperType || 'Standard'}
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                          <div className="flex justify-center sm:ml-4">
+                          <div className="flex justify-center sm:justify-end sm:ml-4 mt-2 sm:mt-0">
                             <Button
                               variant="outline"
-                              className="bg-[#27aae1] text-white border-[#27aae1] hover:bg-[#1e8bc3] hover:border-[#1e8bc3] w-full sm:w-auto"
+                              className="bg-[#27aae1] text-white border-[#27aae1] hover:bg-[#1e8bc3] hover:border-[#1e8bc3] w-full sm:w-auto min-w-[100px]"
                               size="sm"
                               onClick={() => handleAddPaperFromBrowse(paper.name, currentProductIndex)}
                               title={`Add ${paper.name} to product`}
                             >
-                              <Plus className="w-4 h-4 mr-1" />
+                              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                               Add
                             </Button>
                           </div>
@@ -1591,7 +1662,7 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-4">
                     <Label className="text-xs sm:text-sm font-medium text-slate-700">Close Size (Closed)</Label>
-                    <div className="flex items-center space-x-2 px-3 py-1.5 bg-[#27aae1]/10 rounded-full border border-[#27aae1]/30 hover:bg-[#27aae1]/20 transition-colors w-fit">
+                    <div className="flex items-center space-x-3 px-4 py-2.5 bg-gradient-to-r from-[#27aae1]/8 to-[#27aae1]/12 rounded-xl border border-[#27aae1]/25 hover:bg-gradient-to-r hover:from-[#27aae1]/15 hover:to-[#27aae1]/20 hover:border-[#27aae1]/40 transition-all duration-200 w-fit shadow-sm hover:shadow-md">
                       <Checkbox
                         id={`same-${idx}`}
                         checked={product.useSameAsFlat}
@@ -1612,9 +1683,9 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
                             updateProduct(idx, { useSameAsFlat: isChecked });
                           }
                         }}
-                        className="border-[#27aae1]/50 data-[state=checked]:bg-[#27aae1] data-[state=checked]:border-[#27aae1] h-4 w-4"
+                        className="border-[#27aae1]/60 data-[state=checked]:bg-[#27aae1] data-[state=checked]:border-[#27aae1] data-[state=checked]:text-white h-5 w-5 rounded-md shadow-sm transition-all duration-200 hover:border-[#27aae1]/80 hover:shadow-sm"
                       />
-                      <Label htmlFor={`same-${idx}`} className="text-xs font-medium text-[#27aae1] cursor-pointer whitespace-nowrap">
+                      <Label htmlFor={`same-${idx}`} className="text-sm font-semibold text-[#27aae1] cursor-pointer whitespace-nowrap select-none">
                         Use same dimensions as Flat Size
                       </Label>
                     </div>
@@ -1704,16 +1775,36 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
                   </h4>
                 </div>
                 
-                <div className="space-y-3 sm:space-y-4">
-                  {product.papers.map((paper, pIndex) => (
-                    <div
-                      key={pIndex}
-                      className="border border-slate-200 p-3 sm:p-4 rounded-xl bg-slate-50"
+                {/* Show Add Paper Button first - positioned on the left - only for new quotes */}
+                {!showPaperSelection[idx] && !isTemplateQuote && (
+                  <div className="flex justify-start pt-2 mb-6">
+                    <Button
+                      variant="outline"
+                      className="group relative bg-gradient-to-r from-[#27aae1]/5 to-[#27aae1]/10 border-2 border-[#27aae1] hover:border-[#1e8bc3] hover:from-[#27aae1]/10 hover:to-[#27aae1]/20 text-[#27aae1] hover:text-[#1e8bc3] font-medium py-3 px-6 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-[#27aae1]/20 text-sm sm:text-base min-w-[140px] flex items-center justify-center"
+                      onClick={() => handleBrowseAvailablePapers(idx)}
+                      title="Browse and select papers to add"
                     >
-                      <div className="flex items-center justify-between mb-3 sm:mb-4">
-                        <h5 className="font-medium text-slate-700 text-sm sm:text-base">Paper {pIndex + 1}</h5>
-                        <div className="flex items-center space-x-2">
-                          {product.papers.length > 1 && (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-5 h-5 bg-[#27aae1] rounded-full flex items-center justify-center group-hover:bg-[#1e8bc3] transition-colors duration-300">
+                          <Plus className="h-3 w-3 text-white" />
+                        </div>
+                        <span>Add Paper</span>
+                      </div>
+                    </Button>
+                  </div>
+                )}
+
+                {/* Paper Selection Dropdowns - show when Add Paper is clicked OR when it's a template quote with existing data */}
+                {(showPaperSelection[idx] || isTemplateQuote) && (
+                  <div className="space-y-3 sm:space-y-4">
+                    {product.papers.map((paper, pIndex) => (
+                      <div
+                        key={pIndex}
+                        className="border border-slate-200 p-3 sm:p-4 rounded-xl bg-slate-50"
+                      >
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                          <h5 className="font-medium text-slate-700 text-sm sm:text-base">Paper {pIndex + 1}</h5>
+                          <div className="flex items-center space-x-2">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1723,10 +1814,9 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
                             >
                               <X className="h-4 w-4" />
                             </Button>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                           <Label className="mb-2 block text-xs sm:text-sm font-medium text-slate-700">Paper Name</Label>
                           <Select
@@ -1833,23 +1923,30 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
                             </SelectContent>
                           </Select>
                         </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Add Paper Button at Bottom */}
-                <div className="flex justify-center pt-2">
-                  <Button
-                    variant="outline"
-                    className="border-[#27aae1] text-[#27aae1] hover:bg-[#27aae1]/10 rounded-xl text-sm px-4 py-2"
-                    size="sm"
-                    onClick={() => handleBrowseAvailablePapers(idx)}
-                    title="Browse and select papers to add"
-                  >
-                    <Plus className="h-4 w-4 mr-2" /> Add Paper
-                  </Button>
-                </div>
+                    ))}
+                    
+                    {/* Add Paper Button - shown within the paper selection area - only for new quotes */}
+                    {!isTemplateQuote && (
+                      <div className="flex justify-start pt-4">
+                        <Button
+                          variant="outline"
+                          className="group relative bg-gradient-to-r from-[#27aae1]/5 to-[#27aae1]/10 border-2 border-[#27aae1] hover:border-[#1e8bc3] hover:from-[#27aae1]/10 hover:to-[#27aae1]/20 text-[#27aae1] hover:text-[#1e8bc3] font-medium py-2.5 px-5 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-[#27aae1]/20 text-sm min-w-[120px] flex items-center justify-center"
+                          onClick={() => handleBrowseAvailablePapers(idx)}
+                          title="Browse and select papers to add"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <div className="w-4 h-4 bg-[#27aae1] rounded-full flex items-center justify-center group-hover:bg-[#1e8bc3] transition-colors duration-300">
+                              <Plus className="h-2.5 w-2.5 text-white" />
+                            </div>
+                            <span>Add Paper</span>
+                          </div>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Finishing Options */}
@@ -1979,10 +2076,6 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
                     Use this field to specify exact finishing details like foil colors, lamination types, or specific areas for spot treatments.
                   </p>
                 </div>
-
-
-
-
               </div>
             </CardContent>
           </Card>

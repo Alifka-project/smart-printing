@@ -3,8 +3,7 @@ import { DatabaseService } from '@/lib/database';
 
 export async function GET() {
   try {
-    const dbService = new DatabaseService();
-    const history = await dbService.getSearchHistory();
+    const history = await DatabaseService.getSearchHistory();
     return NextResponse.json(history);
   } catch (error) {
     console.error('Error fetching search history:', error);
@@ -24,8 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });
     }
     
-    const dbService = new DatabaseService();
-    await dbService.saveSearchHistory(query, userId);
+    await DatabaseService.saveSearchHistory(query, userId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error saving search history:', error);

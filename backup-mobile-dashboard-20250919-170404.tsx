@@ -64,10 +64,6 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{ name: string; role: string } | null>({ name: "Demo User", role: "admin" });
   
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
-  
   const router = useRouter();
 
   // Check authentication
@@ -247,17 +243,6 @@ export default function DashboardPage() {
     
     return sorted;
   }, [allQuotes, statusFilter, keywordFilter, minAmount, maxAmount, from, to]);
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredQuotes.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedQuotes = filteredQuotes.slice(startIndex, endIndex);
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, keywordFilter, minAmount, maxAmount, from, to]);
 
   // Calculate metrics - these will now update automatically when allQuotes changes
   const totalQuotes = useMemo(() => allQuotes.length, [allQuotes]);
@@ -564,51 +549,7 @@ export default function DashboardPage() {
                 <div>
                   <label className="text-sm font-medium text-slate-600">Phone</label>
                   <p className="text-base text-slate-700">
-                    {selectedQuote?.client?.countryCode || ''}{selectedQuote?.client?.phone || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Client Type</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.client?.clientType || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Role</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.client?.role || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Address</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.client?.address || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Location</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.client?.city && selectedQuote?.client?.state 
-                      ? `${selectedQuote.client.city}, ${selectedQuote.client.state}` 
-                      : selectedQuote?.client?.city || selectedQuote?.client?.state || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Country</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.client?.country || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Status</label>
-                  <p className="text-base text-slate-700">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedQuote?.client?.status === "Active" 
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}>
-                      {selectedQuote?.client?.status || 'N/A'}
-                    </span>
+                    {selectedQuote?.client?.phone || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -657,12 +598,6 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-600">Product Name</label>
-                  <p className="text-base font-semibold text-slate-900">
-                    {selectedQuote?.productName || 'N/A'}
-                  </p>
-                </div>
-                <div>
                   <label className="text-sm font-medium text-slate-600">Quantity</label>
                   <p className="text-base font-semibold text-slate-900">
                     {selectedQuote?.quantity || 'N/A'} units
@@ -675,62 +610,9 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-600">Printing Selection</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.printingSelection || 'N/A'}
-                  </p>
-                </div>
-                <div>
                   <label className="text-sm font-medium text-slate-600">Sides</label>
                   <p className="text-base text-slate-700">
                     {selectedQuote?.sides || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Colors</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.colors || 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Sales Person ID</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.salesPersonId || 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Size Specifications */}
-            <div className="bg-orange-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-slate-900 mb-3">Size Specifications</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Flat Size</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.flatSizeWidth && selectedQuote?.flatSizeHeight 
-                      ? `${selectedQuote.flatSizeWidth} × ${selectedQuote.flatSizeHeight}${selectedQuote?.flatSizeSpine ? ` × ${selectedQuote.flatSizeSpine}` : ''}`
-                      : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Close Size</label>
-                  <p className="text-base text-slate-700">
-                    {selectedQuote?.closeSizeWidth && selectedQuote?.closeSizeHeight 
-                      ? `${selectedQuote.closeSizeWidth} × ${selectedQuote.closeSizeHeight}${selectedQuote?.closeSizeSpine ? ` × ${selectedQuote.closeSizeSpine}` : ''}`
-                      : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-600">Use Same as Flat</label>
-                  <p className="text-base text-slate-700">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedQuote?.useSameAsFlat 
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}>
-                      {selectedQuote?.useSameAsFlat ? 'Yes' : 'No'}
-                    </span>
                   </p>
                 </div>
               </div>
@@ -755,42 +637,6 @@ export default function DashboardPage() {
                         <div>
                           <label className="text-sm font-medium text-slate-600">Price per Sheet</label>
                           <p className="text-sm text-slate-900">AED {paper.pricePerSheet || '0.00'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-600">Price per Packet</label>
-                          <p className="text-sm text-slate-900">AED {paper.pricePerPacket || '0.00'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-600">Sheets per Packet</label>
-                          <p className="text-sm text-slate-900">{paper.sheetsPerPacket || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-600">Recommended Sheets</label>
-                          <p className="text-sm text-slate-900">{paper.recommendedSheets || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-600">Entered Sheets</label>
-                          <p className="text-sm text-slate-900">{paper.enteredSheets || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-600">Input Size</label>
-                          <p className="text-sm text-slate-900">
-                            {paper.inputWidth && paper.inputHeight 
-                              ? `${paper.inputWidth} × ${paper.inputHeight}`
-                              : 'N/A'}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-600">Output Size</label>
-                          <p className="text-sm text-slate-900">
-                            {paper.outputWidth && paper.outputHeight 
-                              ? `${paper.outputWidth} × ${paper.outputHeight}`
-                              : 'N/A'}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-600">Selected Colors</label>
-                          <p className="text-sm text-slate-900">{paper.selectedColors || 'N/A'}</p>
                         </div>
                       </div>
                     </div>
@@ -860,160 +706,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Discounts & Margins */}
-            {(selectedQuote?.discountPercentage || selectedQuote?.discountAmount || selectedQuote?.marginPercentage || selectedQuote?.marginAmount) && (
-              <div className="bg-indigo-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Discounts & Margins</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Discount Percentage</label>
-                    <p className="text-base font-semibold text-slate-900">
-                      {selectedQuote?.discountPercentage ? `${selectedQuote.discountPercentage}%` : 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Discount Amount</label>
-                    <p className="text-base font-semibold text-slate-900">
-                      AED {selectedQuote?.discountAmount?.toFixed(2) || '0.00'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Margin Percentage</label>
-                    <p className="text-base font-semibold text-slate-900">
-                      {selectedQuote?.marginPercentage ? `${selectedQuote.marginPercentage}%` : 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Margin Amount</label>
-                    <p className="text-base font-semibold text-slate-900">
-                      AED {selectedQuote?.marginAmount?.toFixed(2) || '0.00'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Approval Information */}
-            {(selectedQuote?.requiresApproval || selectedQuote?.approvalStatus || selectedQuote?.approvedBy) && (
-              <div className="bg-amber-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Approval Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Requires Approval</label>
-                    <p className="text-base text-slate-700">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedQuote?.requiresApproval 
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}>
-                        {selectedQuote?.requiresApproval ? 'Yes' : 'No'}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Approval Status</label>
-                    <p className="text-base text-slate-700">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedQuote?.approvalStatus === "Approved" 
-                          ? "bg-green-100 text-green-700"
-                          : selectedQuote?.approvalStatus === "Pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : selectedQuote?.approvalStatus === "Rejected"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}>
-                        {selectedQuote?.approvalStatus || 'N/A'}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Approval Reason</label>
-                    <p className="text-base text-slate-700">
-                      {selectedQuote?.approvalReason || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Approved By</label>
-                    <p className="text-base text-slate-700">
-                      {selectedQuote?.approvedBy || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Approved At</label>
-                    <p className="text-base text-slate-700">
-                      {selectedQuote?.approvedAt ? formatDate(selectedQuote.approvedAt) : 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Approval Notes</label>
-                    <p className="text-base text-slate-700">
-                      {selectedQuote?.approvalNotes || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Operational Details */}
-            {selectedQuote?.QuoteOperational && (
-              <div className="bg-teal-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Operational Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Plates</label>
-                    <p className="text-base font-semibold text-slate-900">
-                      {selectedQuote.QuoteOperational.plates || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Units</label>
-                    <p className="text-base font-semibold text-slate-900">
-                      {selectedQuote.QuoteOperational.units || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Additional Information */}
-            {(selectedQuote?.finishingComments || selectedQuote?.customerPdfEnabled || selectedQuote?.sendToCustomerEnabled) && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Additional Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Finishing Comments</label>
-                    <p className="text-base text-slate-700">
-                      {selectedQuote?.finishingComments || 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Customer PDF Enabled</label>
-                    <p className="text-base text-slate-700">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedQuote?.customerPdfEnabled 
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}>
-                        {selectedQuote?.customerPdfEnabled ? 'Yes' : 'No'}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-600">Send to Customer Enabled</label>
-                    <p className="text-base text-slate-700">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        selectedQuote?.sendToCustomerEnabled 
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}>
-                        {selectedQuote?.sendToCustomerEnabled ? 'Yes' : 'No'}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Staff Information */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold text-slate-900 mb-3">Staff Information</h3>
@@ -1056,15 +748,14 @@ export default function DashboardPage() {
                 <Edit className="w-4 h-4" />
                 <span>Edit Quote</span>
               </Button>
-              {/* Download PDF Button - Hidden as requested */}
-              {/* <Button 
+              <Button 
                 variant="outline"
                 onClick={() => handleDownloadPDF(selectedQuote)}
                 className="flex items-center space-x-2"
               >
                 <Download className="w-4 h-4" />
                 <span>Download PDF</span>
-              </Button> */}
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -1452,7 +1143,7 @@ export default function DashboardPage() {
                         </td>
                       </tr>
                     ) : (
-                      paginatedQuotes.map((quote: any, index: number) => (
+                      filteredQuotes.map((quote: any, index: number) => (
                       <tr key={`${quote.id}-${quote.status}`} className="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-200">
                         <td className="p-4 w-36">
                           <div className="truncate">
@@ -1555,7 +1246,7 @@ export default function DashboardPage() {
                     No quotes found. {statusFilter !== "All" && `No quotes with status "${statusFilter}".`}
                   </div>
                 ) : (
-                  paginatedQuotes.map((quote: any, index: number) => (
+                  filteredQuotes.map((quote: any, index: number) => (
                     <Card key={`${quote.id}-${quote.status}`} className="p-4 border-slate-200">
                       <div className="space-y-3">
                         {/* Header with Quote ID and Status */}
@@ -1642,43 +1333,6 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Pagination Controls */}
-          {filteredQuotes.length > itemsPerPage && (
-            <div className="flex items-center justify-between mt-6 px-4">
-              <div className="text-sm text-slate-600">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredQuotes.length)} of {filteredQuotes.length} quotes
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="flex items-center space-x-1"
-                >
-                  <span>Previous</span>
-                </Button>
-                
-                <div className="flex items-center space-x-1">
-                  <span className="text-sm text-slate-600">Page</span>
-                  <span className="text-sm font-medium text-slate-900">{currentPage}</span>
-                  <span className="text-sm text-slate-600">of</span>
-                  <span className="text-sm font-medium text-slate-900">{totalPages}</span>
-                </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="flex items-center space-x-1"
-                >
-                  <span>Next</span>
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

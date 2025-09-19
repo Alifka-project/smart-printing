@@ -299,7 +299,7 @@ export default function GlobalSearch() {
             }
           }}
         >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto max-h-[85vh] sm:max-h-[80vh] overflow-hidden border border-gray-100">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto max-h-[85vh] sm:max-h-[80vh] overflow-hidden border border-gray-100 flex flex-col">
             {/* Search Input */}
             <div className="p-4 sm:p-6 border-b border-gray-100">
               <div className="flex items-center justify-between mb-4">
@@ -366,7 +366,7 @@ export default function GlobalSearch() {
             </div>
 
             {/* Search Results */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto max-h-[60vh] min-h-[200px]">
               {searchError ? (
                 <div className="p-12 text-center text-gray-500">
                   <div className="space-y-3">
@@ -500,7 +500,7 @@ export default function GlobalSearch() {
             </div>
 
             {/* Footer */}
-            <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50">
+            <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50 flex-shrink-0">
               <div className="text-center text-xs text-gray-500">
                 <span>Press <kbd className="px-2 py-1 bg-gray-200 rounded text-xs font-mono">Esc</kbd> to close or click the <X className="w-3 h-3 inline" /> button</span>
               </div>

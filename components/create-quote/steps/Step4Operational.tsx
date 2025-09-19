@@ -13,7 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Calculator, Settings, BarChart3, Edit3, AlertTriangle, Database, Palette, Info, Clock, DollarSign, Search, Building, Plus, Minus, Printer, Scissors, GripHorizontal } from "lucide-react";
+import { Package, Calculator, Settings, BarChart3, Edit3, AlertTriangle, Database, Palette, Info, Clock, DollarSign, Search, Building, Plus, Minus, Printer, Scissors, GripHorizontal, ChevronDown, ChevronUp } from "lucide-react";
 import { getProductConfig, getShoppingBagPreset } from "@/constants/product-config";
 import type { QuoteFormData, DigitalPricing, OffsetPricing, DigitalCostingResult, OffsetCostingResult } from "@/types";
 import { PricingService } from "@/lib/pricing-service";
@@ -3346,6 +3346,11 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
   // ===== Professional Visualization State =====
   const [visualizationType, setVisualizationType] = React.useState<VisualizationType>('print');
   
+  // ===== Dashboard Cards Collapse State =====
+  const [isAdvancedSheetAnalysisCollapsed, setIsAdvancedSheetAnalysisCollapsed] = React.useState(true);
+  const [isProductionIntelligenceCollapsed, setIsProductionIntelligenceCollapsed] = React.useState(true);
+  const [isOperationsDashboardCollapsed, setIsOperationsDashboardCollapsed] = React.useState(true);
+  
   // ===== Costing Analysis State =====
   const [digitalPricing, setDigitalPricing] = React.useState<DigitalPricing | null>(null);
   const [offsetPricing, setOffsetPricing] = React.useState<OffsetPricing | null>(null);
@@ -5982,10 +5987,26 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                 step="0.01"
                                 min="0"
                                 className="w-full sm:w-32 border-slate-300 focus:border-[#27aae1] focus:ring-[#27aae1] rounded-lg"
-                                value={cost.cost}
+                                value={cost.cost === 0 ? "" : cost.cost}
                                 onChange={(e) => {
                                   const newCosts = [...additionalCosts];
-                                  newCosts[index].cost = parseFloat(e.target.value) || 0;
+                                  const inputValue = e.target.value;
+                                  // Allow empty string for flexible input, convert to 0 only when needed
+                                  if (inputValue === "" || inputValue === null || inputValue === undefined) {
+                                    newCosts[index].cost = 0;
+                                  } else {
+                                    const parsedValue = parseFloat(inputValue);
+                                    newCosts[index].cost = isNaN(parsedValue) ? 0 : parsedValue;
+                                  }
+                                  setAdditionalCosts(newCosts);
+                                }}
+                                onBlur={(e) => {
+                                  // Ensure we have a valid number when the field loses focus
+                                  const newCosts = [...additionalCosts];
+                                  const inputValue = e.target.value;
+                                  if (inputValue === "" || inputValue === null || inputValue === undefined) {
+                                    newCosts[index].cost = 0;
+                                  }
                                   setAdditionalCosts(newCosts);
                                 }}
                               />
@@ -6445,14 +6466,32 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                   </div>
 
                   {/* Enhanced Information Cards - Below Canvas */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 items-start">
                     {/* Advanced Sheet Analysis */}
-                    <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                      <h6 className="font-semibold text-slate-800 mb-3 text-center flex items-center justify-center">
-                        <Package className="w-4 h-4 mr-2 text-[#27aae1]" />
-                        Advanced Sheet Analysis
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                      <div className={`bg-gradient-to-r from-slate-50 to-white border-b border-slate-100 transition-all duration-300 ${
+                        isAdvancedSheetAnalysisCollapsed ? 'p-3' : 'p-4'
+                      }`}>
+                        <h6 className="font-semibold text-slate-800 flex items-center justify-between cursor-pointer group" onClick={() => setIsAdvancedSheetAnalysisCollapsed(!isAdvancedSheetAnalysisCollapsed)}>
+                          <div className="flex items-center">
+                            <div className="p-2 bg-[#27aae1]/10 rounded-lg mr-3 group-hover:bg-[#27aae1]/20 transition-colors duration-200">
+                              <Package className="w-4 h-4 text-[#27aae1]" />
+                            </div>
+                            <span className="group-hover:text-[#27aae1] transition-colors duration-200">Advanced Sheet Analysis</span>
+                          </div>
+                          <div className="flex items-center">
+                            <button className="p-2 hover:bg-slate-200 rounded-lg transition-all duration-200 group-hover:bg-[#27aae1]/10">
+                              {isAdvancedSheetAnalysisCollapsed ? (
+                                <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-[#27aae1] transition-colors duration-200" />
+                              ) : (
+                                <ChevronUp className="w-4 h-4 text-slate-500 group-hover:text-[#27aae1] transition-colors duration-200" />
+                              )}
+                            </button>
+                          </div>
                       </h6>
-                      <div className="space-y-3">
+                      </div>
+                      {!isAdvancedSheetAnalysisCollapsed && (
+                        <div className="p-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
                         <div className="flex justify-between">
                           <span className="text-slate-600">Input Sheet:</span>
                           <span className="font-semibold">
@@ -6472,7 +6511,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                           </span>
                         </div>
                         
-                        {/* Waste Analysis */}
+                        {/* Waste Analysis - FIXED: Use printable area for consistency with layout.efficiency */}
                         <div className="border-t pt-2 mt-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-slate-600">Used Area:</span>
@@ -6489,6 +6528,10 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                 ? ((inputWidth * inputHeight) - (layout.itemsPerSheet * outputDimensions[productIndex].width * outputDimensions[productIndex].height)).toFixed(1) 
                                 : "–"} cm²
                             </span>
+                          </div>
+                          <div className="flex justify-between text-xs text-slate-500">
+                            <span>Base Area:</span>
+                            <span>{inputWidth && inputHeight ? (inputWidth * inputHeight).toFixed(1) : "–"} cm² (Full Sheet)</span>
                           </div>
                         </div>
 
@@ -6517,15 +6560,34 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                           </div>
                         </div>
                       </div>
+                      )}
                     </div>
 
                     {/* Production Intelligence */}
-                    <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                      <h6 className="font-semibold text-slate-800 mb-3 text-center flex items-center justify-center">
-                        <Edit3 className="w-4 h-4 mr-2 text-[#27aae1]" />
-                        Production Intelligence
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                      <div className={`bg-gradient-to-r from-slate-50 to-white border-b border-slate-100 transition-all duration-300 ${
+                        isProductionIntelligenceCollapsed ? 'p-3' : 'p-4'
+                      }`}>
+                        <h6 className="font-semibold text-slate-800 flex items-center justify-between cursor-pointer group" onClick={() => setIsProductionIntelligenceCollapsed(!isProductionIntelligenceCollapsed)}>
+                          <div className="flex items-center">
+                            <div className="p-2 bg-[#27aae1]/10 rounded-lg mr-3 group-hover:bg-[#27aae1]/20 transition-colors duration-200">
+                              <Edit3 className="w-4 h-4 text-[#27aae1]" />
+                            </div>
+                            <span className="group-hover:text-[#27aae1] transition-colors duration-200">Production Intelligence</span>
+                          </div>
+                          <div className="flex items-center">
+                            <button className="p-2 hover:bg-slate-200 rounded-lg transition-all duration-200 group-hover:bg-[#27aae1]/10">
+                              {isProductionIntelligenceCollapsed ? (
+                                <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-[#27aae1] transition-colors duration-200" />
+                              ) : (
+                                <ChevronUp className="w-4 h-4 text-slate-500 group-hover:text-[#27aae1] transition-colors duration-200" />
+                              )}
+                            </button>
+                          </div>
                       </h6>
-                      <div className="space-y-3">
+                      </div>
+                      {!isProductionIntelligenceCollapsed && (
+                        <div className="p-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
                         <div className="flex justify-between">
                           <span className="text-slate-600">Item Size:</span>
                           <span className="font-semibold text-[#27aae1]">
@@ -6577,28 +6639,53 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                 : "–"}%
                             </span>
                           </div>
+                          <div className="flex justify-between text-xs text-slate-500">
+                            <span>Grid Layout:</span>
+                            <span>{layout.itemsPerRow} × {layout.itemsPerCol} items</span>
+                          </div>
                         </div>
 
-                        {/* Optimization Recommendations */}
+                        {/* Optimization Recommendations - ENHANCED */}
                         <div className="bg-[#27aae1]/10 p-2 rounded-lg">
                           <p className="text-xs text-[#27aae1] font-medium">
                             {layout.efficiency > 85 
                               ? "✓ Optimal layout achieved"
                               : layout.efficiency > 70
-                              ? "⚡ Consider alternative orientations"
-                              : "⚠️ Low efficiency - review dimensions"}
+                              ? "⚡ Consider alternative orientations for better efficiency"
+                              : layout.efficiency > 50
+                              ? "⚠️ Moderate efficiency - review sheet size or item dimensions"
+                              : "🚨 Low efficiency - significant material waste, consider optimization"}
                           </p>
                         </div>
                       </div>
+                      )}
                     </div>
 
                     {/* Operations Dashboard */}
-                    <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                      <h6 className="font-semibold text-slate-800 mb-3 text-center flex items-center justify-center">
-                        <BarChart3 className="w-4 h-4 mr-2 text-[#27aae1]" />
-                        Operations Dashboard
-                      </h6>
-                      <div className="space-y-3">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                      <div className={`bg-gradient-to-r from-slate-50 to-white border-b border-slate-100 transition-all duration-300 ${
+                        isOperationsDashboardCollapsed ? 'p-3' : 'p-4'
+                      }`}>
+                        <h6 className="font-semibold text-slate-800 flex items-center justify-between cursor-pointer group" onClick={() => setIsOperationsDashboardCollapsed(!isOperationsDashboardCollapsed)}>
+                          <div className="flex items-center">
+                            <div className="p-2 bg-[#27aae1]/10 rounded-lg mr-3 group-hover:bg-[#27aae1]/20 transition-colors duration-200">
+                              <BarChart3 className="w-4 h-4 text-[#27aae1]" />
+                            </div>
+                            <span className="group-hover:text-[#27aae1] transition-colors duration-200">Operations Dashboard</span>
+                          </div>
+                          <div className="flex items-center">
+                            <button className="p-2 hover:bg-slate-200 rounded-lg transition-all duration-200 group-hover:bg-[#27aae1]/10">
+                              {isOperationsDashboardCollapsed ? (
+                                <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-[#27aae1] transition-colors duration-200" />
+                              ) : (
+                                <ChevronUp className="w-4 h-4 text-slate-500 group-hover:text-[#27aae1] transition-colors duration-200" />
+                              )}
+                            </button>
+                          </div>
+                        </h6>
+                      </div>
+                      {!isOperationsDashboardCollapsed && (
+                        <div className="p-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
                         {/* Production Metrics */}
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div className="bg-[#27aae1]/10 p-2 rounded">
@@ -6632,8 +6719,16 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                 <span className="font-bold text-amber-800">{totalItemsPossible - qty}</span>
                               </div>
                               <div className="flex justify-between text-xs">
-                                <span className="text-slate-600">Waste Rate:</span>
+                                <span className="text-slate-600">Material Waste:</span>
                                 <span className="font-semibold text-red-600">
+                                  {inputWidth && inputHeight && outputDimensions[productIndex]?.width && outputDimensions[productIndex]?.height && layout.itemsPerSheet
+                                    ? (100 - layout.efficiency).toFixed(1)
+                                    : "–"}%
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-slate-600">Overproduction:</span>
+                                <span className="font-semibold text-amber-600">
                                   {((totalItemsPossible - qty) / totalItemsPossible * 100).toFixed(1)}%
                                 </span>
                               </div>
@@ -6641,34 +6736,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                           )}
                         </div>
 
-                        {/* Cost Efficiency Indicator */}
-                        <div className="bg-slate-50 p-2 rounded">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-slate-700">Cost Efficiency:</span>
-                            <div className="text-right">
-                              <div className="font-bold text-slate-800">
-                                {pricePerSheet ? `${(pricePerSheet * actualSheetsNeeded / qty).toFixed(4)}` : "–"}
                               </div>
-                              <div className="text-xs text-slate-500">per item</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Operational Recommendations */}
-                        <div className={`p-2 rounded text-xs font-medium ${
-                          layout.efficiency > 85 && totalItemsPossible - qty < qty * 0.1
-                            ? 'bg-green-50 text-green-800'
-                            : totalItemsPossible - qty > qty * 0.2
-                            ? 'bg-red-50 text-red-800'
-                            : 'bg-yellow-50 text-yellow-800'
-                        }`}>
-                          {layout.efficiency > 85 && totalItemsPossible - qty < qty * 0.1
-                            ? "🎯 Optimal production setup"
-                            : totalItemsPossible - qty > qty * 0.2
-                            ? "⚠️ High waste - consider reducing sheets"
-                            : "📊 Review setup for optimization"}
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>

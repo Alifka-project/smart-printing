@@ -457,23 +457,16 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
     console.log(`  Found config:`, config);
     
     if (config) {
-      // Only auto-populate sizes if current sizes are empty/null, otherwise preserve existing sizes
-      const currentSizes = product.flatSize;
-      const hasValidSizes = currentSizes && 
-        currentSizes.width && 
-        currentSizes.width > 0 && 
-        currentSizes.height && 
-        currentSizes.height > 0;
+      // FIXED: Always auto-populate sizes when product name changes to match new product defaults
+      console.log(`  Auto-updating sizes for ${productName}:`, config.defaultSizes);
       
       // Auto-populate sizes and other defaults from product config
       const updates: Partial<Product> = {
         productName,
-        // Only update sizes if current sizes are invalid/empty
-        ...(hasValidSizes ? {} : {
-          flatSize: config.defaultSizes,
-          closeSize: config.defaultSizes,
-          useSameAsFlat: true
-        }),
+        // ALWAYS update sizes when product name changes to match new product defaults
+        flatSize: config.defaultSizes,
+        closeSize: config.defaultSizes,
+        useSameAsFlat: true,
         printingSelection: config.defaultPrinting,
         sides: config.defaultSides,
         colors: config.defaultColors,
@@ -486,8 +479,8 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
       
       console.log(`  Updates to apply:`, updates);
       
-      // Special handling for cups (only if sizes are invalid)
-      if (productName === 'Cups' && !hasValidSizes) {
+      // Special handling for cups - always update when product changes to Cups
+      if (productName === 'Cups') {
         updates.cupSizeOz = 8; // Default to 8oz
         const cupSize = getCupSizeByOz(8);
         if (cupSize) {
@@ -496,8 +489,8 @@ const Step3ProductSpec: FC<Step3Props> = ({ formData, setFormData }) => {
         }
       }
       
-      // Special handling for shopping bags (only if sizes are invalid)
-      if (productName === 'Shopping Bag' && !hasValidSizes) {
+      // Special handling for shopping bags - always update when product changes to Shopping Bag
+      if (productName === 'Shopping Bag') {
         updates.bagPreset = 'Medium'; // Default to Medium
         const bagPreset = getShoppingBagPreset('Medium');
         if (bagPreset) {

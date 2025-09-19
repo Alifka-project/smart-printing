@@ -1146,7 +1146,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-3 xs:p-4 sm:p-6 lg:p-8">
       <style dangerouslySetInnerHTML={{
         __html: `
           .date-input::-webkit-calendar-picker-indicator {
@@ -1166,13 +1166,271 @@ export default function DashboardPage() {
           .date-input {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%2364748b'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5'/%3e%3c/svg%3e") !important;
             background-repeat: no-repeat !important;
-            background-position: right 8px center !important;
+            background-position: right 12px center !important;
             background-size: 18px 18px !important;
-            padding-right: 40px !important;
+            padding-right: 44px !important;
+          }
+          
+          /* Mobile-specific date input improvements */
+          @media (max-width: 1023px) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
+          }
+          
+          /* Extra small screens (5-inch phones: 320px-375px) */
+          @media (max-width: 375px) {
+            .date-input {
+              background-position: right 8px center !important;
+              padding-right: 36px !important;
+              font-size: 12px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 18px !important;
+              height: 18px !important;
+              margin-left: 8px !important;
+            }
+          }
+          
+          /* Small screens (6-inch phones: 375px-414px) */
+          @media (min-width: 376px) and (max-width: 414px) {
+            .date-input {
+              background-position: right 10px center !important;
+              padding-right: 40px !important;
+              font-size: 13px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 20px !important;
+              height: 20px !important;
+              margin-left: 10px !important;
+            }
+          }
+          
+          /* Medium screens (larger phones: 414px-480px) */
+          @media (min-width: 415px) and (max-width: 480px) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
+          }
+          
+          /* Force single column layout on all mobile devices */
+          @media (max-width: 1023px) {
+            .mobile-filter-container .grid {
+              grid-template-columns: 1fr !important;
+            }
+            .mobile-filter-container .grid-cols-2 {
+              grid-template-columns: 1fr !important;
+            }
+            .mobile-filter-container .xs\\:grid-cols-2 {
+              grid-template-columns: 1fr !important;
+            }
+            .mobile-filter-container .sm\\:grid-cols-2 {
+              grid-template-columns: 1fr !important;
+            }
+          }
+          
+          /* iPhone Safari specific fixes */
+          @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .mobile-filter-container {
+              display: flex !important;
+              flex-direction: column !important;
+            }
+            .mobile-filter-container .grid {
+              grid-template-columns: 1fr !important;
+            }
+            .mobile-filter-container .grid-cols-2 {
+              grid-template-columns: 1fr !important;
+            }
+            .mobile-filter-container .xs\\:grid-cols-2 {
+              grid-template-columns: 1fr !important;
+            }
+          }
+          
+          /* iPhone specific media queries */
+          @media only screen 
+            and (device-width: 375px) 
+            and (device-height: 667px) 
+            and (-webkit-device-pixel-ratio: 2) {
+            .date-input {
+              background-position: right 8px center !important;
+              padding-right: 36px !important;
+              font-size: 12px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 18px !important;
+              height: 18px !important;
+              margin-left: 8px !important;
+            }
+          }
+          
+          @media only screen 
+            and (device-width: 414px) 
+            and (device-height: 896px) 
+            and (-webkit-device-pixel-ratio: 2) {
+            .date-input {
+              background-position: right 10px center !important;
+              padding-right: 40px !important;
+              font-size: 13px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 20px !important;
+              height: 20px !important;
+              margin-left: 10px !important;
+            }
+          }
+          
+          /* iPhone 15 (393px × 852px) */
+          @media only screen 
+            and (device-width: 393px) 
+            and (device-height: 852px) 
+            and (-webkit-device-pixel-ratio: 3) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
+          }
+          
+          /* iPhone 15 Plus (428px × 926px) */
+          @media only screen 
+            and (device-width: 428px) 
+            and (device-height: 926px) 
+            and (-webkit-device-pixel-ratio: 3) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
+          }
+          
+          /* iPhone 15 Pro (393px × 852px) */
+          @media only screen 
+            and (device-width: 393px) 
+            and (device-height: 852px) 
+            and (-webkit-device-pixel-ratio: 3) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
+          }
+          
+          /* iPhone 15 Pro Max (430px × 932px) */
+          @media only screen 
+            and (device-width: 430px) 
+            and (device-height: 932px) 
+            and (-webkit-device-pixel-ratio: 3) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
+          }
+          
+          /* iPhone 16 (393px × 852px) */
+          @media only screen 
+            and (device-width: 393px) 
+            and (device-height: 852px) 
+            and (-webkit-device-pixel-ratio: 3) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
+          }
+          
+          /* iPhone 16 Plus (428px × 926px) */
+          @media only screen 
+            and (device-width: 428px) 
+            and (device-height: 926px) 
+            and (-webkit-device-pixel-ratio: 3) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
+          }
+          
+          /* iPhone 16 Pro (393px × 852px) */
+          @media only screen 
+            and (device-width: 393px) 
+            and (device-height: 852px) 
+            and (-webkit-device-pixel-ratio: 3) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
+          }
+          
+          /* iPhone 16 Pro Max (430px × 932px) */
+          @media only screen 
+            and (device-width: 430px) 
+            and (device-height: 932px) 
+            and (-webkit-device-pixel-ratio: 3) {
+            .date-input {
+              background-position: right 12px center !important;
+              padding-right: 44px !important;
+              font-size: 14px !important;
+            }
+            .date-input::-webkit-calendar-picker-indicator {
+              width: 22px !important;
+              height: 22px !important;
+              margin-left: 12px !important;
+            }
           }
         `
       }} />
-      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 lg:space-y-12">
+      <div className="max-w-7xl mx-auto space-y-4 xs:space-y-6 sm:space-y-8 lg:space-y-12">
         {/* Success Message */}
         {showSuccessMessage && (
           <div className="fixed top-4 right-4 z-[9999] bg-green-500 text-white px-4 sm:px-6 py-3 rounded-lg shadow-lg max-w-sm sm:max-w-md">
@@ -1184,8 +1442,8 @@ export default function DashboardPage() {
         )}
 
 
-        {/* Metric Cards - Now Clickable */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+        {/* Metric Cards - Now Clickable - Responsive for all mobile sizes */}
+        <div className="grid grid-cols-2 gap-3 xs:gap-4 sm:gap-6 lg:grid-cols-4 lg:gap-8">
           {metricCards.map((metric, index) => {
             const IconComponent = metric.icon;
             const isActive = statusFilter === metric.filterValue;
@@ -1197,14 +1455,14 @@ export default function DashboardPage() {
                 }`}
                 onClick={() => handleCardClick(metric.filterValue)}
               >
-                <CardContent className="p-4 sm:p-6 lg:p-8">
+                <CardContent className="p-3 xs:p-4 sm:p-6 lg:p-8">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm font-medium text-slate-600 mb-2">{metric.title}</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">{metric.value}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs xs:text-sm font-medium text-slate-600 mb-1 xs:mb-2 truncate">{metric.title}</p>
+                      <p className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 truncate">{metric.value}</p>
                     </div>
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl ${metric.color} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                      <IconComponent className={`w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 ${metric.iconColor}`} />
+                    <div className={`w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl ${metric.color} flex items-center justify-center flex-shrink-0 shadow-sm ml-2`}>
+                      <IconComponent className={`w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 ${metric.iconColor}`} />
                     </div>
                   </div>
                 </CardContent>
@@ -1214,99 +1472,104 @@ export default function DashboardPage() {
         </div>
 
         {/* Filters and Create Quote Button */}
-        <div className="space-y-4">
-          {/* Mobile Layout */}
-          <div className="lg:hidden space-y-3">
+        <div className="space-y-3 sm:space-y-4">
+          {/* Mobile Layout - Responsive for all phone sizes */}
+          <div className="lg:hidden space-y-3 sm:space-y-4 mobile-filter-container">
             {/* Search Bar - Full Width */}
             <div className="w-full">
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Search</label>
+              <label className="text-xs sm:text-sm font-medium text-slate-700 mb-1 sm:mb-2 block">Search</label>
               <Input
                 placeholder="Search quotes, clients, products..."
                 value={keywordFilter}
                 onChange={(e) => setKeywordFilter(e.target.value)}
-                className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-9 text-sm"
+                className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-9 sm:h-10 text-xs sm:text-sm px-2 sm:px-3"
               />
             </div>
 
-            {/* Filter Row 1: Status and Amount */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Status</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-8 text-xs px-2 py-1">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    <SelectItem value="All">All Status</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Amount Range</label>
-                <div className="grid grid-cols-2 gap-2">
+            {/* Filter Row 1: Status */}
+            <div>
+              <label className="text-xs sm:text-sm font-medium text-slate-700 mb-1 sm:mb-2 block">Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-9 sm:h-10 text-xs sm:text-sm px-2 sm:px-3">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  <SelectItem value="All">All Status</SelectItem>
+                  <SelectItem value="Approved">Approved</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Filter Row 2: Amount Range - Always single column on mobile */}
+            <div>
+              <label className="text-xs sm:text-sm font-medium text-slate-700 mb-1 sm:mb-2 block">Amount Range</label>
+              <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Min Amount</label>
                   <Input
                     type="number"
-                    placeholder="Min"
+                    placeholder="Min Amount"
                     value={minAmount}
                     onChange={(e) => setMinAmount(e.target.value)}
-                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-8 text-xs px-2"
+                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-9 sm:h-10 text-xs sm:text-sm px-2 sm:px-3"
                   />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">Max Amount</label>
                   <Input
                     type="number"
-                    placeholder="Max"
+                    placeholder="Max Amount"
                     value={maxAmount}
                     onChange={(e) => setMaxAmount(e.target.value)}
-                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-8 text-xs px-2"
+                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-9 sm:h-10 text-xs sm:text-sm px-2 sm:px-3"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Filter Row 2: Date Range */}
+            {/* Filter Row 3: Date Range */}
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Date Range</label>
-              <div className="grid grid-cols-2 gap-3">
+              <label className="text-xs sm:text-sm font-medium text-slate-700 mb-1 sm:mb-2 block">Date Range</label>
+              <div className="grid grid-cols-1 gap-2 sm:gap-3">
                 <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">From</label>
+                  <label className="text-xs sm:text-sm font-medium text-slate-600 mb-1 sm:mb-2 block">From Date</label>
                   <Input
                     type="date"
                     value={from}
                     onChange={(e) => setFrom(e.target.value)}
-                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-8 text-xs date-input px-2"
+                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-9 sm:h-10 text-xs sm:text-sm date-input px-2 sm:px-3"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">To</label>
+                  <label className="text-xs sm:text-sm font-medium text-slate-600 mb-1 sm:mb-2 block">To Date</label>
                   <Input
                     type="date"
                     value={to}
                     onChange={(e) => setTo(e.target.value)}
-                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-8 text-xs date-input px-2"
+                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-9 sm:h-10 text-xs sm:text-sm date-input px-2 sm:px-3"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
+            {/* Action Buttons - Responsive sizing */}
+            <div className="grid grid-cols-1 gap-2 sm:gap-3 pt-1 sm:pt-2">
               <Button 
                 onClick={clearAllFilters}
                 variant="outline"
-                className="border-slate-300 text-slate-600 hover:bg-slate-50 px-2 py-1 rounded-lg font-medium shadow-sm hover:shadow-md transition-all duration-200 h-8 text-xs"
+                className="border-slate-300 text-slate-600 hover:bg-slate-50 px-3 sm:px-4 py-2 rounded-lg font-medium shadow-sm hover:shadow-md transition-all duration-200 h-9 sm:h-10 text-xs sm:text-sm"
               >
-                <Filter className="h-3 w-3 mr-1" />
+                <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Clear Filters
               </Button>
               
               <Link href="/create-quote" className="block">
                 <Button 
-                  className="bg-[#27aae1] hover:bg-[#1e8bc3] text-white px-2 py-1 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 h-8 text-xs w-full"
+                  className="bg-[#27aae1] hover:bg-[#1e8bc3] text-white px-3 sm:px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 h-9 sm:h-10 text-xs sm:text-sm w-full"
                 >
-                  <Plus className="h-3 w-3 mr-1" />
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   New Quote
                 </Button>
               </Link>
@@ -1542,7 +1805,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Mobile Cards */}
-              <div className="lg:hidden space-y-4 p-4">
+              <div className="lg:hidden space-y-3 xs:space-y-4 p-3 xs:p-4">
                 {isLoading ? (
                   <div className="text-center py-16 text-slate-500">
                     <div className="flex items-center justify-center space-x-2">

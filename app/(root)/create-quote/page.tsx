@@ -319,6 +319,24 @@ function CreateQuoteContent() {
   const nextStep = () => setCurrentStep((s) => Math.min(5, s + 1));
   const prevStep = () => setCurrentStep((s) => Math.max(1, s - 1));
 
+  // Scroll to top whenever step changes
+  useEffect(() => {
+    // Scroll to top immediately and smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Also ensure the main container is at the top
+    const mainContainer = document.querySelector('.min-h-screen');
+    if (mainContainer) {
+      mainContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // Remove focus from any auto-focused elements to prevent scroll
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && activeElement.blur) {
+      activeElement.blur();
+    }
+  }, [currentStep]);
+
   // Add validation functions for Next button
   const canProceedFromStep1 = () => {
     return quoteMode !== null; // User must select either new or existing quote mode

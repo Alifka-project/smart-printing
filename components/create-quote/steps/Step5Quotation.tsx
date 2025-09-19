@@ -647,6 +647,7 @@ const Step5Quotation: React.FC<Step5Props> = ({
   // Check if final price is >= 5000 AED to disable download buttons
   const isDownloadDisabled = summaryTotals.finalTotal >= 5000;
 
+
   return (
     <div className="space-y-6 sm:space-y-8 px-2 sm:px-0">
       {/* Page Header */}
@@ -979,28 +980,28 @@ const Step5Quotation: React.FC<Step5Props> = ({
             </div>
           )}
 
-          {/* Discount Summary */}
+          {/* Enhanced Mobile-Friendly Discount Summary */}
           {discount.isApplied && discount.percentage > 0 && (
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200">
-              <h5 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
-                <Calculator className="w-5 h-5 mr-2" />
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 sm:p-6 border border-green-200">
+              <h5 className="text-base sm:text-lg font-semibold text-green-800 mb-3 sm:mb-4 flex items-center">
+                <Calculator className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Discount Summary
               </h5>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div className="bg-white rounded-lg p-4 border border-green-200">
-                  <div className="text-sm text-green-600 mb-1">Original Total</div>
-                  <div className="text-xl font-bold text-slate-800">{currency(summaryTotals.grandTotal)}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+                <div className="bg-white rounded-lg p-3 sm:p-4 border border-green-200">
+                  <div className="text-xs sm:text-sm text-green-600 mb-1">Original Total</div>
+                  <div className="text-lg sm:text-xl font-bold text-slate-800 break-all">{currency(summaryTotals.grandTotal)}</div>
                 </div>
                 
-                <div className="bg-white rounded-lg p-4 border border-green-200">
-                  <div className="text-sm text-green-600 mb-1">Discount ({discount.percentage}%)</div>
-                  <div className="text-xl font-bold text-red-600">-{currency(summaryTotals.discountAmount)}</div>
+                <div className="bg-white rounded-lg p-3 sm:p-4 border border-green-200">
+                  <div className="text-xs sm:text-sm text-green-600 mb-1">Discount ({discount.percentage}%)</div>
+                  <div className="text-lg sm:text-xl font-bold text-red-600 break-all">-{currency(summaryTotals.discountAmount)}</div>
                 </div>
                 
-                <div className="bg-white rounded-lg p-4 border border-green-200">
-                  <div className="text-sm text-green-600 mb-1">Final Total</div>
-                  <div className="text-xl font-bold text-green-600">{currency(summaryTotals.finalTotal)}</div>
+                <div className="bg-white rounded-lg p-3 sm:p-4 border border-green-200 sm:col-span-2 lg:col-span-1">
+                  <div className="text-xs sm:text-sm text-green-600 mb-1">Final Total</div>
+                  <div className="text-lg sm:text-xl font-bold text-green-600 break-all">{currency(summaryTotals.finalTotal)}</div>
                 </div>
               </div>
             </div>
@@ -1118,48 +1119,48 @@ const Step5Quotation: React.FC<Step5Props> = ({
           </Table>
         </div>
 
-        {/* Mobile Cards - Visible only on mobile */}
-        <div className="lg:hidden space-y-4">
+        {/* Enhanced Mobile Cards - Visible only on mobile */}
+        <div className="lg:hidden space-y-3 sm:space-y-4">
           {/* Main Products */}
           {formData.products.map((product, index) => {
             const costs = calculateProductCosts(index);
             const isIncluded = includedProducts.has(index);
             
             return (
-              <div key={`product-${index}`} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+              <div key={`product-${index}`} className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 shadow-sm">
                 {/* Header with checkbox and product name */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
-                  <div className="flex items-center space-x-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 space-y-2 sm:space-y-0">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
                     <Checkbox
                       checked={isIncluded}
                       onCheckedChange={() => toggleProductInclusion(index)}
                     />
                     <h4 className="font-medium text-slate-800 text-sm sm:text-base">{product.productName}</h4>
                   </div>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-[#f89d1d]/20 text-[#f89d1d]">
+                  <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-[#f89d1d]/20 text-[#f89d1d]">
                     Qty: {product.quantity || 0}
                   </span>
                 </div>
                 
-                {/* Simplified cost breakdown */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Total Price:</span>
-                    <span className="font-medium">{isIncluded ? currency(costs.total - costs.vat) : "—"}</span>
+                {/* Enhanced cost breakdown for mobile */}
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-600 text-xs sm:text-sm">Base Price:</span>
+                    <span className="font-medium text-xs sm:text-sm break-all">{isIncluded ? currency(costs.total - costs.vat) : "—"}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">VAT (5%):</span>
-                    <span className="font-medium">{isIncluded ? (
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-600 text-xs sm:text-sm">VAT (5%):</span>
+                    <span className="font-medium text-xs sm:text-sm break-all">{isIncluded ? (
                       <span className="text-green-600">{currency(costs.vat)}</span>
                     ) : "—"}</span>
                   </div>
                 </div>
                 
-                {/* Total Price */}
+                {/* Enhanced Total Price */}
                 <div className="mt-3 pt-3 border-t border-slate-200">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-700 font-semibold text-sm sm:text-base">Total Price:</span>
-                    <span className="text-base sm:text-lg font-bold text-[#ea078b]">
+                    <span className="text-base sm:text-lg font-bold text-[#ea078b] break-all">
                       {isIncluded ? currency(costs.total) : "—"}
                     </span>
                   </div>
@@ -1168,47 +1169,47 @@ const Step5Quotation: React.FC<Step5Props> = ({
             );
           })}
           
-          {/* Supplementary Quantities */}
+          {/* Enhanced Supplementary Quantities */}
           {otherQuantities.map((otherQty, index) => {
             const prices = calculateOtherQtyPrice(otherQty);
             
             return (
-              <div key={`other-${index}`} className="bg-blue-50/30 rounded-xl border border-blue-200 p-4 shadow-sm">
+              <div key={`other-${index}`} className="bg-blue-50/30 rounded-xl border border-blue-200 p-3 sm:p-4 shadow-sm">
                 {/* Header with indicator and product name */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-4 h-4 rounded border-2 border-blue-300 bg-blue-100 flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 space-y-2 sm:space-y-0">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded border-2 border-blue-300 bg-blue-100 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-500"></div>
                     </div>
                     <div>
                       <h4 className="font-medium text-blue-700 text-sm sm:text-base">{otherQty.productName}</h4>
                       <span className="text-xs text-blue-600">(Supplementary)</span>
                     </div>
                   </div>
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-blue-700">
+                  <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-blue-700">
                     Qty: {otherQty.quantity || 0}
                   </span>
                 </div>
                 
-                {/* Simplified cost breakdown */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Total Price:</span>
-                    <span className="font-medium">{currency(prices.base)}</span>
+                {/* Enhanced cost breakdown for mobile */}
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-600 text-xs sm:text-sm">Base Price:</span>
+                    <span className="font-medium text-xs sm:text-sm break-all">{currency(prices.base)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">VAT (5%):</span>
-                    <span className="font-medium">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-600 text-xs sm:text-sm">VAT (5%):</span>
+                    <span className="font-medium text-xs sm:text-sm break-all">
                       <span className="text-green-600">{currency(prices.vat)}</span>
                     </span>
                   </div>
                 </div>
                 
-                {/* Total Price */}
+                {/* Enhanced Total Price */}
                 <div className="mt-3 pt-3 border-t border-blue-200">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-700 font-semibold text-sm sm:text-base">Total Price:</span>
-                    <span className="text-base sm:text-lg font-bold text-[#ea078b]">
+                    <span className="text-base sm:text-lg font-bold text-[#ea078b] break-all">
                       {currency(prices.total)}
                     </span>
                   </div>
@@ -1218,59 +1219,59 @@ const Step5Quotation: React.FC<Step5Props> = ({
           })}
         </div>
 
-        {/* Simplified Price Summary */}
-        <div className="mt-8 space-y-4">
-          <div className="bg-[#27aae1]/10 rounded-2xl p-4 sm:p-6 lg:p-8 border border-[#27aae1]/30 shadow-lg">
-            <h5 className="text-lg sm:text-xl font-bold text-slate-800 mb-6 flex items-center justify-center text-center">
-              <Calculator className="w-6 h-6 mr-3 text-[#27aae1]" />
+        {/* Enhanced Mobile-Friendly Price Summary */}
+        <div className="mt-6 sm:mt-8 space-y-4">
+          <div className="bg-[#27aae1]/10 rounded-2xl p-3 sm:p-6 lg:p-8 border border-[#27aae1]/30 shadow-lg">
+            <h5 className="text-lg sm:text-xl font-bold text-slate-800 mb-4 sm:mb-6 flex items-center justify-center text-center">
+              <Calculator className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-[#27aae1]" />
               Price Summary
             </h5>
             
-            {/* Simplified Price Breakdown */}
-            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-              <div className="space-y-4">
+            {/* Mobile-Optimized Price Breakdown */}
+            <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-200 shadow-sm">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Total Price */}
-                <div className="flex justify-between items-center py-3 border-b border-slate-200">
-                  <span className="text-lg font-semibold text-slate-700">Total Price</span>
-                  <span className="text-lg font-bold text-slate-800">{currency(summaryTotals.grandTotal - summaryTotals.totalVAT)}</span>
+                <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-200">
+                  <span className="text-base sm:text-lg font-semibold text-slate-700">Total Price</span>
+                  <span className="text-base sm:text-lg font-bold text-slate-800 break-all">{currency(summaryTotals.grandTotal - summaryTotals.totalVAT)}</span>
                 </div>
 
                 {/* Additional Costs - Show when present */}
                 {summaryTotals.totalAdditionalCost > 0 && (
-                  <div className="flex justify-between items-center py-3 border-b border-slate-200">
-                    <span className="text-lg font-semibold text-slate-700">Additional Costs</span>
-                    <span className="text-lg font-bold text-blue-600">{currency(summaryTotals.totalAdditionalCost)}</span>
+                  <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-200">
+                    <span className="text-base sm:text-lg font-semibold text-slate-700">Additional Costs</span>
+                    <span className="text-base sm:text-lg font-bold text-blue-600 break-all">{currency(summaryTotals.totalAdditionalCost)}</span>
                   </div>
                 )}
 
                 {/* Discount - Show when applied */}
                 {discount.isApplied && discount.percentage > 0 && (
-                  <div className="flex justify-between items-center py-3 border-b border-slate-200">
-                    <span className="text-lg font-semibold text-slate-700">Discount ({discount.percentage}%)</span>
-                    <span className="text-lg font-bold text-red-600">-{currency(summaryTotals.discountAmount)}</span>
+                  <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-200">
+                    <span className="text-base sm:text-lg font-semibold text-slate-700">Discount ({discount.percentage}%)</span>
+                    <span className="text-base sm:text-lg font-bold text-red-600 break-all">-{currency(summaryTotals.discountAmount)}</span>
                   </div>
                 )}
 
                 {/* VAT */}
-                <div className="flex justify-between items-center py-3 border-b border-slate-200">
-                  <span className="text-lg font-semibold text-slate-700">VAT (5%)</span>
-                  <span className="text-lg font-bold text-green-600">{currency(summaryTotals.totalVAT)}</span>
+                <div className="flex justify-between items-center py-2 sm:py-3 border-b border-slate-200">
+                  <span className="text-base sm:text-lg font-semibold text-slate-700">VAT (5%)</span>
+                  <span className="text-base sm:text-lg font-bold text-green-600 break-all">{currency(summaryTotals.totalVAT)}</span>
                 </div>
 
-                {/* Final Total */}
-                <div className="flex justify-between items-center py-4 border-t-2 border-slate-300 bg-slate-50 rounded-lg px-4">
-                  <span className="text-xl font-bold text-slate-800">Final Price</span>
-                  <span className="text-2xl font-bold text-[#ea078b]">{currency(summaryTotals.finalTotal)}</span>
+                {/* Final Total - Enhanced Mobile Styling */}
+                <div className="flex justify-between items-center py-3 sm:py-4 border-t-2 border-slate-300 bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg px-3 sm:px-4">
+                  <span className="text-lg sm:text-xl font-bold text-slate-800">Final Price</span>
+                  <span className="text-xl sm:text-2xl font-bold text-[#ea078b] break-all">{currency(summaryTotals.finalTotal)}</span>
                 </div>
               </div>
             </div>
 
-            {/* Additional Info */}
-            <div className="mt-4 text-center">
-              <div className="text-xs text-slate-500">
+            {/* Mobile-Optimized Additional Info */}
+            <div className="mt-3 sm:mt-4 text-center space-y-1">
+              <div className="text-xs sm:text-sm text-slate-500 px-2">
                 * All prices are in AED (UAE Dirham) and include applicable taxes
               </div>
-              <div className="text-xs text-slate-500 mt-1">
+              <div className="text-xs sm:text-sm text-slate-500 px-2">
                 ** Quote valid for 30 days from date of issue
               </div>
             </div>

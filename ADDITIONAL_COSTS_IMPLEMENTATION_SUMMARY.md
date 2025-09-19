@@ -100,3 +100,4 @@ The additional costs functionality is now **fully operational** and provides:
 ---
 
 *This implementation successfully addresses the user's requirement for functional additional costs that integrate with the pricing system.*
+

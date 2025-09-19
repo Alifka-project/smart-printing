@@ -768,15 +768,15 @@ export default function ClientManagementPage() {
               <Table>
                 <TableHeader className="bg-slate-50">
                   <TableRow className="border-slate-200">
-                    <TableHead className="text-slate-700 font-semibold p-4 w-28">Client ID</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-24">Type</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-40">Company Name</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-36">Contact Person</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-40">Email</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-32">Phone</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-28">Quotes</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-24">Status</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-32">Actions</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[100px]">Client ID</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[80px]">Type</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[180px]">Company Name</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[160px] max-w-[160px]">Contact Person</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[200px]">Email</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[120px]">Phone</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[100px]">Quotes</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[80px]">Status</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[120px] sticky right-0 bg-slate-50">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -803,12 +803,12 @@ export default function ClientManagementPage() {
                       
                       return (
                         <TableRow key={client.id} className="hover:bg-slate-50 transition-colors duration-200 border-slate-100">
-                          <TableCell className="p-4">
+                          <TableCell className="p-4 w-[100px]">
                             <span className="font-mono text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">
                               {getClientDisplayId(client.id)}
                             </span>
                           </TableCell>
-                          <TableCell className="p-4">
+                          <TableCell className="p-4 w-[80px]">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               client.clientType === "Company" 
                                 ? "bg-[#27aae1]/20 text-[#27aae1] border-[#27aae1]/30"
@@ -817,21 +817,34 @@ export default function ClientManagementPage() {
                               {client.clientType}
                             </span>
                           </TableCell>
-                          <TableCell className="p-4">
-                            <div className="font-medium text-slate-900">
+                          <TableCell className="p-4 w-[180px]">
+                            <div 
+                              className="font-medium text-slate-900 truncate" 
+                              title={client.clientType === "Company" ? client.companyName : `${client.firstName} ${client.lastName}`}
+                            >
                               {client.clientType === "Company" ? client.companyName : `${client.firstName} ${client.lastName}`}
                             </div>
                           </TableCell>
-                          <TableCell className="p-4">
-                            <div className="text-sm text-slate-900">{client.contactPerson || client.role || 'N/A'}</div>
+                          <TableCell className="p-4 w-[160px] max-w-[160px]">
+                            <div 
+                              className="text-sm text-slate-900 truncate" 
+                              title={client.contactPerson || client.role || 'N/A'}
+                            >
+                              {client.contactPerson || client.role || 'N/A'}
+                            </div>
                           </TableCell>
-                          <TableCell className="p-4">
-                            <div className="text-sm text-slate-900">{client.email}</div>
+                          <TableCell className="p-4 w-[200px]">
+                            <div 
+                              className="text-sm text-slate-900 truncate" 
+                              title={client.email}
+                            >
+                              {client.email}
+                            </div>
                           </TableCell>
-                          <TableCell className="p-4">
+                          <TableCell className="p-4 w-[120px]">
                             <div className="text-sm text-slate-900">{client.phone}</div>
                           </TableCell>
-                          <TableCell className="p-4">
+                          <TableCell className="p-4 w-[100px]">
                             <div className="text-center">
                               {quoteCount > 0 ? (
                                 <Link 
@@ -857,7 +870,7 @@ export default function ClientManagementPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="p-4">
+                          <TableCell className="p-4 w-[80px]">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                               client.status === "Active" 
                                 ? "bg-green-100 text-green-700 border-green-200"
@@ -866,7 +879,7 @@ export default function ClientManagementPage() {
                               {client.status}
                             </span>
                           </TableCell>
-                          <TableCell className="text-center p-4">
+                          <TableCell className="text-center p-4 w-[120px] sticky right-0 bg-white">
                           <div className="flex items-center justify-center space-x-2">
                             <Button
                               variant="ghost"

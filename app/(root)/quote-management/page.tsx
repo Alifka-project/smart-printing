@@ -900,14 +900,14 @@ export default function QuoteManagementPage() {
               <Table className="min-w-full">
                 <TableHeader className="bg-slate-50">
                   <TableRow className="border-slate-200">
-                    <TableHead className="text-slate-700 font-semibold p-4 min-w-[120px]">Quote ID</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 min-w-[160px]">Client Details</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 min-w-[100px]">Date</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 min-w-[120px]">Product</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 min-w-[80px]">Quantity</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 min-w-[100px]">Amount</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 min-w-[80px]">Status</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 min-w-[120px] sticky right-0 bg-slate-50">Actions</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[180px]">Quote ID</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[180px] max-w-[180px]">Client Details</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[140px]">Date</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[120px]">Product</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[80px]">Quantity</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[120px]">Amount</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[100px]">Status</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-4 w-[120px] sticky right-0 bg-slate-50">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -929,27 +929,37 @@ export default function QuoteManagementPage() {
                   ) : (
                     current.map((row, index) => (
                       <TableRow key={row.id} className="hover:bg-slate-50 transition-colors duration-200 border-slate-100">
-                        <TableCell className="p-4">
+                        <TableCell className="p-4 w-[180px]">
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                             {row.quoteId}
                           </span>
                         </TableCell>
-                        <TableCell className="p-4">
+                        <TableCell className="p-4 w-[180px] max-w-[180px]">
                           <div className="space-y-1">
-                            <div className="font-medium text-slate-900">{row.clientName || 'N/A'}</div>
-                            <div className="text-sm text-slate-500">{row.contactPerson || 'N/A'}</div>
+                            <div 
+                              className="font-medium text-slate-900 truncate" 
+                              title={row.clientName || 'N/A'}
+                            >
+                              {row.clientName || 'N/A'}
+                            </div>
+                            <div 
+                              className="text-sm text-slate-500 truncate" 
+                              title={row.contactPerson || 'N/A'}
+                            >
+                              {row.contactPerson || 'N/A'}
+                            </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-slate-700 p-4">{fmtDate(row.date)}</TableCell>
-                        <TableCell className="text-sm text-slate-700 p-4">{row.productName || row.product || 'N/A'}</TableCell>
-                        <TableCell className="text-sm text-slate-700 p-4">{row.quantity || 0}</TableCell>
-                        <TableCell className="p-4">
+                        <TableCell className="text-sm text-slate-700 p-4 w-[140px]">{fmtDate(row.date)}</TableCell>
+                        <TableCell className="text-sm text-slate-700 p-4 w-[120px]">{row.productName || row.product || 'N/A'}</TableCell>
+                        <TableCell className="text-sm text-slate-700 p-4 w-[80px]">{row.quantity || 0}</TableCell>
+                        <TableCell className="p-4 w-[120px]">
                           <span className="font-semibold text-slate-900">AED {row.amount ? row.amount.toFixed(2) : '0.00'}</span>
                         </TableCell>
-                        <TableCell className="p-4">
+                        <TableCell className="p-4 w-[100px]">
                           <StatusBadge value={row.status} />
                         </TableCell>
-                        <TableCell className="text-center p-4 sticky right-0 bg-white">
+                        <TableCell className="text-center p-4 w-[120px] sticky right-0 bg-white">
                           <div className="flex items-center justify-center space-x-2">
                             <Button
                               variant="ghost"

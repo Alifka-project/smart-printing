@@ -589,7 +589,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                   <div className="flex items-center space-x-2">
                     <DollarSign className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-gray-600">Total Amount:</span>
-                                            <span className="font-bold text-lg text-[#27aae1]">AED {(quoteForModal.amounts && quoteForModal.amounts.length > 0 ? quoteForModal.amounts[0].total : 0).toFixed(2)}</span>
+                                            <span className="font-bold text-lg text-[#27aae1]">AED {(quoteForModal.amounts?.total || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-600">Status:</span>
@@ -665,7 +665,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                       <div className="space-y-3">
                         {quoteItems.map((item, idx) => {
                           // Calculate individual item price if available
-                          const itemPrice = item.amounts && item.amounts.length > 0 ? item.amounts[0].total : 0;
+                          const itemPrice = item.amounts?.total || 0;
                           
                           // Parse colors if they exist as JSON string
                           let colorInfo = '';
@@ -754,7 +754,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                       <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
                         <span className="font-semibold text-gray-900">Total:</span>
                         <span className="font-bold text-lg text-[#27aae1]">
-                          AED {quoteItems.reduce((total, item) => total + (item.amounts && item.amounts.length > 0 ? item.amounts[0].total : 0), 0).toFixed(2)}
+                          AED {quoteItems.reduce((total, item) => total + (item.amounts?.total || 0), 0).toFixed(2)}
                         </span>
                       </div>
                     </>
@@ -894,7 +894,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                     <label className="block text-sm font-medium text-gray-700 mb-1">Quote Date</label>
                     <Input
                       type="date"
-                      value={new Date(quoteForModal.date).toISOString().slice(0, 10)}
+                      value={new Date(editingQuote.date).toISOString().slice(0, 10)}
                       onChange={(e) => {
                         console.log("Date updated:", e.target.value);
                       }}
@@ -904,7 +904,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select
-                      value={quoteForModal.status}
+                      value={editingQuote.status}
                       onChange={(e) => {
                         console.log("Status updated:", e.target.value);
                       }}
@@ -919,7 +919,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Total Amount</label>
                     <Input
-                                              value={`AED ${(quoteForModal.amounts && quoteForModal.amounts.length > 0 ? quoteForModal.amounts[0].total : 0).toFixed(2)}`}
+                      value={`AED ${(editingQuote.amounts?.total || 0).toFixed(2)}`}
                       onChange={(e) => {
                         console.log("Amount updated:", e.target.value);
                       }}
@@ -936,7 +936,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
                     <Input
-                      value={quoteForModal.productName || quoteForModal.product || ''}
+                      value={editingQuote.productName || editingQuote.product || ''}
                       onChange={(e) => {
                         console.log("Product name updated:", e.target.value);
                       }}
@@ -947,7 +947,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Printing Selection</label>
                     <select
-                      value={quoteForModal.printingSelection || quoteForModal.printing || 'Digital'}
+                      value={editingQuote.printingSelection || editingQuote.printing || 'Digital'}
                       onChange={(e) => {
                         console.log("Printing selection updated:", e.target.value);
                       }}
@@ -963,7 +963,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                     <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
                     <Input
                       type="number"
-                      value={quoteForModal.quantity}
+                      value={editingQuote.quantity}
                       onChange={(e) => {
                         console.log("Quantity updated:", e.target.value);
                       }}
@@ -974,7 +974,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Sides</label>
                     <select
-                      value={quoteForModal.sides}
+                      value={editingQuote.sides}
                       onChange={(e) => {
                         console.log("Sides updated:", e.target.value);
                       }}
@@ -995,7 +995,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                       <Input
                         type="number"
                         step="0.1"
-                        value={quoteForModal.flatSizeWidth || ''}
+                        value={editingQuote.flatSizeWidth || ''}
                         onChange={(e) => {
                           console.log("Flat size width updated:", e.target.value);
                         }}
@@ -1008,7 +1008,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                       <Input
                         type="number"
                         step="0.1"
-                        value={quoteForModal.flatSizeHeight || ''}
+                        value={editingQuote.flatSizeHeight || ''}
                         onChange={(e) => {
                           console.log("Flat size height updated:", e.target.value);
                         }}
@@ -1021,7 +1021,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                       <Input
                         type="number"
                         step="0.1"
-                        value={quoteForModal.flatSizeSpine || ''}
+                        value={editingQuote.flatSizeSpine || ''}
                         onChange={(e) => {
                           console.log("Flat size spine updated:", e.target.value);
                         }}
@@ -1035,7 +1035,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
-                        checked={quoteForModal.useSameAsFlat || false}
+                        checked={editingQuote.useSameAsFlat || false}
                         onChange={(e) => {
                           console.log("Use same as flat updated:", e.target.checked);
                         }}
@@ -1045,14 +1045,14 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                     </label>
                   </div>
 
-                  {!quoteForModal.useSameAsFlat && (
+                  {!editingQuote.useSameAsFlat && (
                     <div className="grid md:grid-cols-3 gap-4 mt-3">
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">Close Size Width (cm)</label>
                         <Input
                           type="number"
                           step="0.1"
-                          value={quoteForModal.closeSizeWidth || ''}
+                          value={editingQuote.closeSizeWidth || ''}
                           onChange={(e) => {
                             console.log("Close size width updated:", e.target.value);
                           }}
@@ -1065,7 +1065,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                         <Input
                           type="number"
                           step="0.1"
-                          value={quoteForModal.closeSizeHeight || ''}
+                          value={editingQuote.closeSizeHeight || ''}
                           onChange={(e) => {
                             console.log("Close size height updated:", e.target.value);
                           }}
@@ -1078,7 +1078,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                         <Input
                           type="number"
                           step="0.1"
-                          value={quoteForModal.closeSizeSpine || ''}
+                          value={editingQuote.closeSizeSpine || ''}
                           onChange={(e) => {
                             console.log("Close size spine updated:", e.target.value);
                           }}
@@ -1117,7 +1117,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Product Name</label>
                           <Input
-                            value={quoteForModal.productName || quoteForModal.product || ''}
+                            value={editingQuote.productName || editingQuote.product || ''}
                             onChange={(e) => {
                               console.log(`Product name updated:`, e.target.value);
                             }}
@@ -1129,7 +1129,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                           <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
                           <Input
                             type="number"
-                            value={quoteForModal.quantity}
+                            value={editingQuote.quantity}
                             onChange={(e) => {
                               console.log(`Quantity updated:`, e.target.value);
                             }}
@@ -1140,7 +1140,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Total Price</label>
                           <Input
-                            value={`AED ${(quoteForModal.amounts && quoteForModal.amounts.length > 0 ? quoteForModal.amounts[0].total : 0).toFixed(2)}`}
+                            value={`AED ${(editingQuote.amounts?.total || 0).toFixed(2)}`}
                             onChange={(e) => {
                               console.log(`Price updated:`, e.target.value);
                             }}
@@ -1151,14 +1151,14 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                       </div>
 
                       {/* Paper Specifications */}
-                      {quoteForModal.papers && quoteForModal.papers.length > 0 && (
+                      {editingQuote.papers && editingQuote.papers.length > 0 && (
                         <div className="border-t border-gray-100 pt-3">
                           <h6 className="text-xs font-medium text-gray-700 mb-2">Paper Specifications</h6>
                           <div className="grid md:grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-medium text-gray-500 mb-1">Paper Type</label>
                               <Input
-                                value={quoteForModal.papers[0].name}
+                                value={editingQuote.papers[0].name}
                                 onChange={(e) => {
                                   console.log(`Paper name updated:`, e.target.value);
                                 }}
@@ -1169,7 +1169,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                             <div>
                               <label className="block text-xs font-medium text-gray-500 mb-1">GSM</label>
                               <Input
-                                value={quoteForModal.papers[0].gsm}
+                                value={editingQuote.papers[0].gsm}
                                 onChange={(e) => {
                                   console.log(`GSM updated:`, e.target.value);
                                 }}
@@ -1183,7 +1183,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                                 <Input
                                   type="number"
                                   step="0.1"
-                                  value={quoteForModal.papers[0].inputWidth || ''}
+                                  value={editingQuote.papers[0].inputWidth || ''}
                                   onChange={(e) => {
                                     console.log(`Input width updated:`, e.target.value);
                                   }}
@@ -1193,7 +1193,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                                 <Input
                                   type="number"
                                   step="0.1"
-                                  value={quoteForModal.papers[0].inputHeight || ''}
+                                  value={editingQuote.papers[0].inputHeight || ''}
                                   onChange={(e) => {
                                     console.log(`Input height updated:`, e.target.value);
                                   }}
@@ -1207,7 +1207,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                               <Input
                                 type="number"
                                 step="0.01"
-                                value={quoteForModal.papers[0].pricePerSheet || ''}
+                                value={editingQuote.papers[0].pricePerSheet || ''}
                                 onChange={(e) => {
                                   console.log(`Price per sheet updated:`, e.target.value);
                                 }}
@@ -1220,14 +1220,14 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                       )}
 
                       {/* Finishing Specifications */}
-                      {quoteForModal.finishing && quoteForModal.finishing.length > 0 && (
+                      {editingQuote.finishing && editingQuote.finishing.length > 0 && (
                         <div className="border-t border-gray-100 pt-3">
                           <h6 className="text-xs font-medium text-gray-700 mb-2">Finishing Specifications</h6>
                           <div className="grid md:grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-medium text-gray-500 mb-1">Finishing Type</label>
                               <Input
-                                value={quoteForModal.finishing[0].name}
+                                value={editingQuote.finishing[0].name}
                                 onChange={(e) => {
                                   console.log(`Finishing name updated:`, e.target.value);
                                 }}
@@ -1240,7 +1240,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                               <Input
                                 type="number"
                                 step="0.01"
-                                value={quoteForModal.finishing[0].cost || ''}
+                                value={editingQuote.finishing[0].cost || ''}
                                 onChange={(e) => {
                                   console.log(`Finishing cost updated:`, e.target.value);
                                 }}
@@ -1278,7 +1278,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                     <label className="block text-sm font-medium text-gray-700 mb-1">Plates</label>
                     <Input
                       type="number"
-                      value={quoteForModal.operational?.plates || ''}
+                      value={editingQuote.operational?.plates || ''}
                       onChange={(e) => {
                         console.log("Plates updated:", e.target.value);
                       }}
@@ -1290,7 +1290,7 @@ const Step2CustomerChoose: FC<Step2Props> = ({ formData, setFormData, onCustomer
                     <label className="block text-sm font-medium text-gray-700 mb-1">Units</label>
                     <Input
                       type="number"
-                      value={quoteForModal.operational?.units || ''}
+                      value={editingQuote.operational?.units || ''}
                       onChange={(e) => {
                         console.log("Units updated:", e.target.value);
                       }}

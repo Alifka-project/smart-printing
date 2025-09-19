@@ -19,24 +19,15 @@ const StepIndicator: FC<StepIndicatorProps> = ({ activeStep, quoteMode }) => {
         { number: 5, label: "Quotation", shortLabel: "Quote" },
     ];
 
-    // Determine colors based on quote mode
+    // Determine colors based on quote mode - now both use magenta/pink
     const getColors = () => {
-        if (quoteMode === "existing") {
-            return {
-                active: "bg-gradient-to-br from-[#ea078b] to-[#d4067a] text-white shadow-lg shadow-pink-200",
-                glow: "bg-pink-400",
-                text: "text-pink-700",
-                arrow: "text-pink-500"
-            };
-        } else {
-            // Default to blue for "new" or when no mode is selected
-            return {
-                active: "bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-200",
-                glow: "bg-blue-400",
-                text: "text-blue-700",
-                arrow: "text-blue-500"
-            };
-        }
+        // Both new and existing quote modes now use magenta/pink colors
+        return {
+            active: "bg-gradient-to-br from-[#ea078b] to-[#d4067a] text-white shadow-lg shadow-pink-200",
+            glow: "bg-pink-400",
+            text: "text-pink-700",
+            arrow: "text-pink-500"
+        };
     };
 
     const colors = getColors();

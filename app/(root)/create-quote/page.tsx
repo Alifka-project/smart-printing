@@ -1847,7 +1847,7 @@ function CreateQuoteContent() {
               {/* Existing Quote Card */}
               <Card 
                 className={`border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group ${
-                  quoteMode === "existing" ? "ring-4 ring-[#ea078b] ring-opacity-50 bg-pink-50" : ""
+                  quoteMode === "existing" ? "ring-4 ring-blue-500 ring-opacity-50 bg-blue-50" : ""
                 }`}
                 onClick={() => {
                   // Clear default product data when entering existing quote mode
@@ -1862,7 +1862,7 @@ function CreateQuoteContent() {
                 }}
               >
                 <CardContent className="p-4 sm:p-6 lg:p-8 text-center space-y-4 sm:space-y-6">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#ea078b] to-[#d4067a] rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300">
                     <Copy className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </div>
                   <div className="space-y-2 sm:space-y-3">
@@ -1873,7 +1873,7 @@ function CreateQuoteContent() {
                   </div>
                   <div className="pt-2 sm:pt-4">
                     <Button 
-                      className="w-full bg-[#ea078b] hover:bg-[#d4067a] text-white py-2 sm:py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
+                      className="w-full bg-[#27aae1] hover:bg-[#1e8bc3] text-white py-2 sm:py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
                       onClick={() => {
                         // Clear default product data when entering existing quote mode
                         setFormData((prev) => ({ 

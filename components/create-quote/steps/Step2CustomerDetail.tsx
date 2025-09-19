@@ -637,6 +637,16 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
   const { client } = formData;
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  
+  // Individual search states for each field
+  const [companySearchTerm, setCompanySearchTerm] = useState("");
+  const [showCompanySuggestions, setShowCompanySuggestions] = useState(false);
+  
+  const [firstNameSearchTerm, setFirstNameSearchTerm] = useState("");
+  const [showFirstNameSuggestions, setShowFirstNameSuggestions] = useState(false);
+  
+  const [emailSearchTerm, setEmailSearchTerm] = useState("");
+  const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
   const [isNewCustomer, setIsNewCustomer] = useState(true);
   const [emails, setEmails] = useState<string[]>([""]); // Multiple emails array
   const [hasNoTrn, setHasNoTrn] = useState(false); // TRN option
@@ -781,14 +791,46 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
     }
   };
 
-  // Filter customers based on search term
-  const getFilteredCustomers = () => {
-    if (!searchTerm || searchTerm.length < 2) return [];
+  // Filter customers for Company field
+  const getFilteredCompanyCustomers = () => {
+    if (!companySearchTerm || companySearchTerm.length < 2) return [];
     
-    return customers.filter(customer => 
-      customer.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return customers.filter(customer => {
+      const searchLower = companySearchTerm.toLowerCase();
+      
+      return customer.companyName?.toLowerCase().includes(searchLower) ||
+             customer.contactPerson?.toLowerCase().includes(searchLower) ||
+             customer.email?.toLowerCase().includes(searchLower);
+    });
+  };
+
+  // Filter customers for First Name field
+  const getFilteredFirstNameCustomers = () => {
+    if (!firstNameSearchTerm || firstNameSearchTerm.length < 2) return [];
+    
+    return customers.filter(customer => {
+      const searchLower = firstNameSearchTerm.toLowerCase();
+      
+      return customer.firstName?.toLowerCase().includes(searchLower) ||
+             customer.lastName?.toLowerCase().includes(searchLower) ||
+             customer.contactPerson?.toLowerCase().includes(searchLower) ||
+             customer.email?.toLowerCase().includes(searchLower);
+    });
+  };
+
+  // Filter customers for Email field
+  const getFilteredEmailCustomers = () => {
+    if (!emailSearchTerm || emailSearchTerm.length < 2) return [];
+    
+    return customers.filter(customer => {
+      const searchLower = emailSearchTerm.toLowerCase();
+      
+      return customer.email?.toLowerCase().includes(searchLower) ||
+             customer.firstName?.toLowerCase().includes(searchLower) ||
+             customer.lastName?.toLowerCase().includes(searchLower) ||
+             customer.companyName?.toLowerCase().includes(searchLower) ||
+             customer.contactPerson?.toLowerCase().includes(searchLower);
+    });
   };
 
   // Filter country codes based on search term
@@ -801,16 +843,24 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
     );
   };
 
-  // Auto-fill functionality
+  // Company field handler
   const handleCompanyNameChange = (value: string) => {
     setClient({ companyName: value });
-    setSearchTerm(value);
-    
-    if (value.length > 0) {
-      setShowSuggestions(true);
-    } else {
-      setShowSuggestions(false);
-    }
+    setCompanySearchTerm(value);
+    setShowCompanySuggestions(value.length > 0);
+  };
+
+  // First Name field handler
+  const handleFirstNameChange = (value: string) => {
+    setClient({ firstName: value });
+    setFirstNameSearchTerm(value);
+    setShowFirstNameSuggestions(value.length > 0);
+  };
+
+  // Email field handler
+  const handleEmailChange = (value: string) => {
+    setEmailSearchTerm(value);
+    setShowEmailSuggestions(value.length > 0);
   };
 
   // Handle customer selection for auto-population
@@ -818,8 +868,8 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
     setClient({
       companyName: customer.companyName || '',
       contactPerson: customer.contactPerson || '',
-      firstName: customer.contactPerson?.split(' ')[0] || '',
-      lastName: customer.contactPerson?.split(' ').slice(1).join(' ') || '',
+      firstName: customer.firstName || customer.contactPerson?.split(' ')[0] || '',
+      lastName: customer.lastName || customer.contactPerson?.split(' ').slice(1).join(' ') || '',
       email: customer.email || '',
       phone: customer.phone || '',
       countryCode: customer.countryCode || '+971',
@@ -838,8 +888,13 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
       setEmails([customer.email]);
     }
     
-    setShowSuggestions(false);
-    setSearchTerm(customer.companyName || '');
+    // Close all suggestion dropdowns
+    setShowCompanySuggestions(false);
+    setShowFirstNameSuggestions(false);
+    setShowEmailSuggestions(false);
+    setCompanySearchTerm('');
+    setFirstNameSearchTerm('');
+    setEmailSearchTerm('');
   };
 
   // Fetch customers when component mounts
@@ -1079,15 +1134,15 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
                 }`}
               />
               
-              {/* Auto-complete suggestions */}
-              {showSuggestions && searchTerm && (
+              {/* Auto-complete suggestions for Company */}
+              {showCompanySuggestions && companySearchTerm && client.clientType === "Company" && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {isLoadingCustomers ? (
                     <div className="px-4 py-3 text-center text-gray-500">
                       Loading customers...
                     </div>
-                  ) : getFilteredCustomers().length > 0 ? (
-                    getFilteredCustomers().map((customer) => (
+                  ) : getFilteredCompanyCustomers().length > 0 ? (
+                    getFilteredCompanyCustomers().map((customer) => (
                       <div
                         key={customer.id}
                         className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
@@ -1095,19 +1150,34 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-medium text-gray-900">{customer.companyName || 'No Company Name'}</div>
-                            <div className="text-sm text-gray-600">{customer.contactPerson || 'No Contact Person'}</div>
-                            <div className="text-xs text-gray-500">{customer.email || 'No Email'}</div>
+                            {customer.clientType === 'Company' ? (
+                              <>
+                                <div className="font-medium text-gray-900">{customer.companyName || 'No Company Name'}</div>
+                                <div className="text-sm text-gray-600">{customer.contactPerson || 'No Contact Person'}</div>
+                                <div className="text-xs text-gray-500">{customer.email || 'No Email'}</div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="font-medium text-gray-900">
+                                  {customer.firstName && customer.lastName 
+                                    ? `${customer.firstName} ${customer.lastName}` 
+                                    : customer.contactPerson || 'No Name'
+                                  }
+                                </div>
+                                <div className="text-sm text-gray-600">{customer.email || 'No Email'}</div>
+                                <div className="text-xs text-gray-500">Individual Customer</div>
+                              </>
+                            )}
                           </div>
                           <div className="text-xs text-gray-400">
-                            {customer.role || 'No Role'}
+                            {customer.clientType === 'Company' ? (customer.role || 'Company') : 'Individual'}
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
                     <div className="px-4 py-3 text-center text-gray-500">
-                      No customers found matching "{searchTerm}"
+                      No customers found matching "{companySearchTerm}"
                     </div>
                   )}
                 </div>
@@ -1135,7 +1205,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
 
         {/* First Name and Last Name */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-x-8 sm:gap-y-6">
-          <div>
+          <div className="relative">
             <Label htmlFor="firstName" className="mb-2 block text-sm sm:text-base">
               First Name: <span className="text-red-500">*</span>
             </Label>
@@ -1145,6 +1215,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
               onChange={(e) => {
                 setHasInteracted(true);
                 handlePersonNameChange("firstName", e.target.value);
+                handleFirstNameChange(e.target.value);
               }}
               placeholder="First Name"
               className={`inputForm w-full ${
@@ -1153,6 +1224,56 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
                   : ""
               }`}
             />
+            
+            {/* Auto-complete suggestions for First Name */}
+            {showFirstNameSuggestions && firstNameSearchTerm && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {isLoadingCustomers ? (
+                  <div className="px-4 py-3 text-center text-gray-500">
+                    Loading customers...
+                  </div>
+                ) : getFilteredFirstNameCustomers().length > 0 ? (
+                    getFilteredFirstNameCustomers().map((customer) => (
+                    <div
+                      key={customer.id}
+                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                      onClick={() => handleCustomerSelect(customer)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          {customer.clientType === 'Company' ? (
+                            <>
+                              <div className="font-medium text-gray-900">{customer.companyName || 'No Company Name'}</div>
+                              <div className="text-sm text-gray-600">{customer.contactPerson || 'No Contact Person'}</div>
+                              <div className="text-xs text-gray-500">{customer.email || 'No Email'}</div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="font-medium text-gray-900">
+                                {customer.firstName && customer.lastName 
+                                  ? `${customer.firstName} ${customer.lastName}` 
+                                  : customer.contactPerson || 'No Name'
+                                }
+                              </div>
+                              <div className="text-sm text-gray-600">{customer.email || 'No Email'}</div>
+                              <div className="text-xs text-gray-500">Individual Customer</div>
+                            </>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {customer.clientType === 'Company' ? (customer.role || 'Company') : 'Individual'}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-center text-gray-500">
+                    No customers found matching "{firstNameSearchTerm}"
+                  </div>
+                )}
+              </div>
+            )}
+            
             {hasInteracted && !client.firstName?.trim() && (
               <p className="text-red-500 text-xs sm:text-sm mt-1">First name is required</p>
             )}
@@ -1182,20 +1303,76 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
           
           {emails.map((email, index) => (
             <div key={index} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setHasInteracted(true);
-                  updateEmail(index, e.target.value);
-                }}
-                placeholder={`Email ${index + 1}`}
-                className={`inputForm flex-1 w-full ${
-                  hasInteracted && index === 0 && !email.trim()
-                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                    : ""
-                }`}
-              />
+              <div className="relative flex-1">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setHasInteracted(true);
+                    updateEmail(index, e.target.value);
+                    // Enable search for email field (first email only)
+                    if (index === 0) {
+                      handleEmailChange(e.target.value);
+                    }
+                  }}
+                  placeholder={`Email ${index + 1}`}
+                  className={`inputForm w-full ${
+                    hasInteracted && index === 0 && !email.trim()
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                      : ""
+                  }`}
+                />
+                
+                {/* Auto-complete suggestions for Email */}
+                {showEmailSuggestions && emailSearchTerm && index === 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {isLoadingCustomers ? (
+                      <div className="px-4 py-3 text-center text-gray-500">
+                        Loading customers...
+                      </div>
+                    ) : getFilteredEmailCustomers().length > 0 ? (
+                      getFilteredEmailCustomers().map((customer) => (
+                        <div
+                          key={customer.id}
+                          className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          onClick={() => handleCustomerSelect(customer)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              {customer.clientType === 'Company' ? (
+                                <>
+                                  <div className="font-medium text-gray-900">{customer.companyName || 'No Company Name'}</div>
+                                  <div className="text-sm text-gray-600">{customer.contactPerson || 'No Contact Person'}</div>
+                                  <div className="text-xs text-gray-500">{customer.email || 'No Email'}</div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="font-medium text-gray-900">
+                                    {customer.firstName && customer.lastName 
+                                      ? `${customer.firstName} ${customer.lastName}` 
+                                      : customer.contactPerson || 'No Name'
+                                    }
+                                  </div>
+                                  <div className="text-sm text-gray-600">{customer.email || 'No Email'}</div>
+                                  <div className="text-xs text-gray-500">Individual Customer</div>
+                                </>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {customer.clientType === 'Company' ? (customer.role || 'Company') : 'Individual'}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-center text-gray-500">
+                        No customers found matching "{emailSearchTerm}"
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+              </div>
               {emails.length > 1 && (
                 <button
                   type="button"
@@ -1222,6 +1399,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
             <p className="text-red-500 text-xs sm:text-sm">At least one email is required</p>
           )}
         </div>
+
 
         {/* Phone */}
         <div className="grid grid-cols-1 gap-y-4 sm:gap-y-6">

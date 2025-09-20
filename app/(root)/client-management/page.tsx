@@ -614,6 +614,178 @@ export default function ClientManagementPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 sm:p-6 lg:p-8">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          /* Tablet Orientation-based Responsive Design */
+          @media (min-width: 768px) and (max-width: 1024px) {
+            /* Portrait mode - use EXACT mobile layout */
+            @media (orientation: portrait) {
+              .tablet-landscape\\:lg\\:hidden {
+                display: block !important;
+              }
+              .tablet-landscape\\:lg\\:block {
+                display: none !important;
+              }
+            }
+            
+            /* iPad Mini Portrait (768px × 1024px) - fix header overlap */
+            @media (orientation: portrait) and (min-width: 768px) and (max-width: 768px) {
+              .min-h-screen {
+                padding-top: 3rem !important;
+              }
+            }
+            
+            /* iPad Air Portrait (820px × 1180px) - fix header overlap */
+            @media (orientation: portrait) and (min-width: 820px) and (max-width: 820px) {
+              .min-h-screen {
+                padding-top: 3rem !important;
+              }
+            }
+            
+            /* iPad Mini Landscape (1024px × 768px) - use mobile layout */
+            @media (orientation: landscape) and (min-width: 1024px) and (max-width: 1024px) {
+              .tablet-landscape\\:lg\\:hidden {
+                display: block !important;
+              }
+              .tablet-landscape\\:lg\\:block {
+                display: none !important;
+              }
+            }
+            
+            /* iPad Air and larger tablets landscape - use desktop layout */
+            @media (orientation: landscape) and (min-width: 1025px) {
+              .tablet-landscape\\:lg\\:hidden {
+                display: none !important;
+              }
+              .tablet-landscape\\:lg\\:block {
+                display: block !important;
+              }
+            }
+            
+            /* General Tablet Landscape - horizontal scrollable table layout */
+            @media (orientation: landscape) and (min-width: 1024px) and (max-width: 1366px) {
+              /* Compact but readable table column widths */
+              .w-\\[100px\\] { width: 80px !important; min-width: 80px !important; }
+              .w-\\[80px\\] { width: 70px !important; min-width: 70px !important; }
+              .w-\\[180px\\] { width: 140px !important; min-width: 140px !important; }
+              .w-\\[160px\\] { width: 120px !important; min-width: 120px !important; }
+              .w-\\[200px\\] { width: 160px !important; min-width: 160px !important; }
+              .w-\\[120px\\] { width: 100px !important; min-width: 100px !important; }
+              
+              /* Compact table padding */
+              .p-4 { padding: 0.5rem !important; }
+              .px-4 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+              .py-4 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+              
+              /* Readable text sizes */
+              .text-sm { font-size: 0.75rem !important; }
+              .text-base { font-size: 0.75rem !important; }
+              .text-xs { font-size: 0.65rem !important; }
+              
+              /* Force horizontal scroll for table container */
+              .overflow-x-auto { 
+                overflow-x: auto !important; 
+                overflow-y: visible !important;
+                -webkit-overflow-scrolling: touch !important;
+              }
+              
+              /* Table width and scroll behavior */
+              table { 
+                width: 100% !important; 
+                min-width: 900px !important; 
+                table-layout: fixed !important; 
+              }
+              
+              /* Enhanced scroll indicators */
+              .overflow-x-auto::-webkit-scrollbar {
+                height: 8px !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-track {
+                background: #f1f5f9 !important;
+                border-radius: 4px !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-thumb {
+                background: #cbd5e1 !important;
+                border-radius: 4px !important;
+                border: 1px solid #e2e8f0 !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8 !important;
+              }
+              
+              /* Ensure sticky action column works with scroll */
+              .sticky.right-0 {
+                position: sticky !important;
+                right: 0 !important;
+                z-index: 10 !important;
+                background: white !important;
+                box-shadow: -2px 0 4px rgba(0,0,0,0.1) !important;
+              }
+            }
+            
+            /* iPad Air Landscape (1180px × 820px) - horizontal scrollable table layout */
+            @media (orientation: landscape) and (min-width: 1180px) and (max-width: 1180px) {
+              /* Compact but readable table column widths */
+              .w-\\[100px\\] { width: 80px !important; min-width: 80px !important; }
+              .w-\\[80px\\] { width: 70px !important; min-width: 70px !important; }
+              .w-\\[180px\\] { width: 140px !important; min-width: 140px !important; }
+              .w-\\[160px\\] { width: 120px !important; min-width: 120px !important; }
+              .w-\\[200px\\] { width: 160px !important; min-width: 160px !important; }
+              .w-\\[120px\\] { width: 100px !important; min-width: 100px !important; }
+              
+              /* Compact table padding */
+              .p-4 { padding: 0.5rem !important; }
+              .px-4 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+              .py-4 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+              
+              /* Readable text sizes */
+              .text-sm { font-size: 0.75rem !important; }
+              .text-base { font-size: 0.75rem !important; }
+              .text-xs { font-size: 0.65rem !important; }
+              
+              /* Force horizontal scroll for table container */
+              .overflow-x-auto { 
+                overflow-x: auto !important; 
+                overflow-y: visible !important;
+                -webkit-overflow-scrolling: touch !important;
+              }
+              
+              /* Table width and scroll behavior */
+              table { 
+                width: 100% !important; 
+                min-width: 900px !important; 
+                table-layout: fixed !important; 
+              }
+              
+              /* Enhanced scroll indicators */
+              .overflow-x-auto::-webkit-scrollbar {
+                height: 8px !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-track {
+                background: #f1f5f9 !important;
+                border-radius: 4px !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-thumb {
+                background: #cbd5e1 !important;
+                border-radius: 4px !important;
+                border: 1px solid #e2e8f0 !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8 !important;
+              }
+              
+              /* Ensure sticky action column works with scroll */
+              .sticky.right-0 {
+                position: sticky !important;
+                right: 0 !important;
+                z-index: 10 !important;
+                background: white !important;
+                box-shadow: -2px 0 4px rgba(0,0,0,0.1) !important;
+              }
+            }
+          }
+        `
+      }} />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -764,7 +936,7 @@ export default function ClientManagementPage() {
         <Card className="shadow-xl border-0 bg-white">
           <CardContent className="p-0">
             {/* Desktop Table */}
-            <div className="hidden lg:block tablet-landscape-show overflow-x-auto">
+            <div className="hidden lg:block tablet-landscape:lg:block overflow-x-auto" style={{overflowX: 'auto'}}>
               <Table className="min-w-full lg:min-w-[1100px]">
                 <TableHeader className="bg-slate-50">
                   <TableRow className="border-slate-200">
@@ -908,7 +1080,7 @@ export default function ClientManagementPage() {
             </div>
 
             {/* Mobile Cards */}
-            <div className="lg:hidden tablet-landscape-hide space-y-4 p-4">
+            <div className="lg:hidden tablet-landscape:lg:hidden space-y-4 p-4">
               {loading ? (
                 <div className="text-center py-16 text-slate-500">
                   <div className="flex items-center justify-center space-x-2">

@@ -234,6 +234,176 @@ const DatabasePage: React.FC<DatabasePageProps> = () => {
 
   return (
     <div className="container mx-auto p-6">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          /* Tablet Orientation-based Responsive Design */
+          @media (min-width: 768px) and (max-width: 1024px) {
+            /* Portrait mode - use EXACT mobile layout */
+            @media (orientation: portrait) {
+              .tablet-landscape\\:lg\\:hidden {
+                display: block !important;
+              }
+              .tablet-landscape\\:lg\\:block {
+                display: none !important;
+              }
+            }
+            
+            /* iPad Mini Portrait (768px × 1024px) - fix header overlap */
+            @media (orientation: portrait) and (min-width: 768px) and (max-width: 768px) {
+              .container {
+                padding-top: 3rem !important;
+              }
+            }
+            
+            /* iPad Air Portrait (820px × 1180px) - fix header overlap */
+            @media (orientation: portrait) and (min-width: 820px) and (max-width: 820px) {
+              .container {
+                padding-top: 3rem !important;
+              }
+            }
+            
+            /* iPad Mini Landscape (1024px × 768px) - use mobile layout */
+            @media (orientation: landscape) and (min-width: 1024px) and (max-width: 1024px) {
+              .tablet-landscape\\:lg\\:hidden {
+                display: block !important;
+              }
+              .tablet-landscape\\:lg\\:block {
+                display: none !important;
+              }
+            }
+            
+            /* iPad Air and larger tablets landscape - use desktop layout */
+            @media (orientation: landscape) and (min-width: 1025px) {
+              .tablet-landscape\\:lg\\:hidden {
+                display: none !important;
+              }
+              .tablet-landscape\\:lg\\:block {
+                display: block !important;
+              }
+            }
+            
+            /* General Tablet Landscape - horizontal scrollable table layout */
+            @media (orientation: landscape) and (min-width: 1024px) and (max-width: 1366px) {
+              /* Compact but readable table column widths */
+              .w-\\[100px\\] { width: 80px !important; min-width: 80px !important; }
+              .w-\\[80px\\] { width: 70px !important; min-width: 70px !important; }
+              .w-\\[120px\\] { width: 100px !important; min-width: 100px !important; }
+              .w-\\[140px\\] { width: 120px !important; min-width: 120px !important; }
+              .w-\\[160px\\] { width: 140px !important; min-width: 140px !important; }
+              
+              /* Compact table padding */
+              .p-4 { padding: 0.5rem !important; }
+              .px-4 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+              .py-4 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+              
+              /* Readable text sizes */
+              .text-sm { font-size: 0.75rem !important; }
+              .text-base { font-size: 0.75rem !important; }
+              .text-xs { font-size: 0.65rem !important; }
+              
+              /* Force horizontal scroll for table container */
+              .overflow-x-auto { 
+                overflow-x: auto !important; 
+                overflow-y: visible !important;
+                -webkit-overflow-scrolling: touch !important;
+              }
+              
+              /* Table width and scroll behavior */
+              table { 
+                width: 100% !important; 
+                min-width: 800px !important; 
+                table-layout: fixed !important; 
+              }
+              
+              /* Enhanced scroll indicators */
+              .overflow-x-auto::-webkit-scrollbar {
+                height: 8px !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-track {
+                background: #f1f5f9 !important;
+                border-radius: 4px !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-thumb {
+                background: #cbd5e1 !important;
+                border-radius: 4px !important;
+                border: 1px solid #e2e8f0 !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8 !important;
+              }
+              
+              /* Ensure sticky action column works with scroll */
+              .sticky.right-0 {
+                position: sticky !important;
+                right: 0 !important;
+                z-index: 10 !important;
+                background: white !important;
+                box-shadow: -2px 0 4px rgba(0,0,0,0.1) !important;
+              }
+            }
+            
+            /* iPad Air Landscape (1180px × 820px) - horizontal scrollable table layout */
+            @media (orientation: landscape) and (min-width: 1180px) and (max-width: 1180px) {
+              /* Compact but readable table column widths */
+              .w-\\[100px\\] { width: 80px !important; min-width: 80px !important; }
+              .w-\\[80px\\] { width: 70px !important; min-width: 70px !important; }
+              .w-\\[120px\\] { width: 100px !important; min-width: 100px !important; }
+              .w-\\[140px\\] { width: 120px !important; min-width: 120px !important; }
+              .w-\\[160px\\] { width: 140px !important; min-width: 140px !important; }
+              
+              /* Compact table padding */
+              .p-4 { padding: 0.5rem !important; }
+              .px-4 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+              .py-4 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+              
+              /* Readable text sizes */
+              .text-sm { font-size: 0.75rem !important; }
+              .text-base { font-size: 0.75rem !important; }
+              .text-xs { font-size: 0.65rem !important; }
+              
+              /* Force horizontal scroll for table container */
+              .overflow-x-auto { 
+                overflow-x: auto !important; 
+                overflow-y: visible !important;
+                -webkit-overflow-scrolling: touch !important;
+              }
+              
+              /* Table width and scroll behavior */
+              table { 
+                width: 100% !important; 
+                min-width: 800px !important; 
+                table-layout: fixed !important; 
+              }
+              
+              /* Enhanced scroll indicators */
+              .overflow-x-auto::-webkit-scrollbar {
+                height: 8px !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-track {
+                background: #f1f5f9 !important;
+                border-radius: 4px !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-thumb {
+                background: #cbd5e1 !important;
+                border-radius: 4px !important;
+                border: 1px solid #e2e8f0 !important;
+              }
+              .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8 !important;
+              }
+              
+              /* Ensure sticky action column works with scroll */
+              .sticky.right-0 {
+                position: sticky !important;
+                right: 0 !important;
+                z-index: 10 !important;
+                background: white !important;
+                box-shadow: -2px 0 4px rgba(0,0,0,0.1) !important;
+              }
+            }
+          }
+        `
+      }} />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div className="flex items-center space-x-2">
           <Database className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
@@ -496,7 +666,7 @@ const DatabasePage: React.FC<DatabasePageProps> = () => {
           </CardHeader>
           <CardContent>
             {/* Desktop Table View */}
-            <div className="hidden lg:block tablet-landscape-show overflow-x-auto">
+            <div className="hidden lg:block tablet-landscape:lg:block overflow-x-auto" style={{overflowX: 'auto'}}>
               <Table className="min-w-full lg:min-w-[1000px]">
                 <TableHeader>
                   <TableRow>
@@ -555,7 +725,7 @@ const DatabasePage: React.FC<DatabasePageProps> = () => {
             </div>
 
             {/* Mobile Card View */}
-            <div className="lg:hidden tablet-landscape-hide space-y-4">
+            <div className="lg:hidden tablet-landscape:lg:hidden space-y-4">
               {tableData.map((row, rowIndex) => (
                 <Card key={rowIndex} className="p-4 border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow">
                   <div className="space-y-4">

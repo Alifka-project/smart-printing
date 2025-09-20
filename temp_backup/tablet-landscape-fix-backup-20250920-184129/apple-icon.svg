@@ -1,0 +1,41 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5B5BD6;stop-opacity:1" />
+      <stop offset="55%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22D3EE;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main Circle Background -->
+  <circle cx="90" cy="90" r="85" fill="url(#logoGradient)" stroke="white" stroke-width="8"/>
+  
+  <!-- Printer Icon -->
+  <g fill="white">
+    <!-- Printer Body -->
+    <rect x="45" y="62" width="90" height="56" rx="8" fill="white"/>
+    
+    <!-- Printer Top -->
+    <rect x="50" y="45" width="80" height="22" rx="4" fill="white"/>
+    
+    <!-- Paper Output -->
+    <rect x="62" y="118" width="56" height="8" rx="4" fill="white"/>
+    
+    <!-- Print Head -->
+    <rect x="62" y="68" width="56" height="8" rx="4" fill="white"/>
+    
+    <!-- Status Light -->
+    <circle cx="73" cy="53" r="4" fill="#22D3EE"/>
+  </g>
+  
+  <!-- Smart Elements -->
+  <g fill="white" opacity="0.9">
+    <!-- Circuit Lines -->
+    <path d="M96 73 L113 73 M96 84 L113 84 M96 95 L113 95" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- Data Points -->
+    <circle cx="104" cy="98" r="2" fill="white"/>
+    <circle cx="113" cy="98" r="2" fill="white"/>
+    <circle cx="122" cy="98" r="2" fill="white"/>
+  </g>
+</svg>

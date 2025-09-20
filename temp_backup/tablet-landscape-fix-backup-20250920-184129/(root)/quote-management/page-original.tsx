@@ -20,12 +20,11 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { downloadCustomerPdf, downloadOpsPdf, downloadTestPdf, downloadSimplePdf } from "@/lib/quote-pdf";
+import { downloadCustomerPdf, generateOperationalPDF } from "@/lib/quote-pdf";
 
 
 type Status = "Approved" | "Pending" | "Rejected";
 type StatusFilter = "all" | Status;
-type MultiStatusFilter = Status[];
 type UserFilter = "all" | string;
 
 
@@ -77,7 +76,6 @@ export default function QuoteManagementPage() {
   const [showNewQuoteNotification, setShowNewQuoteNotification] = React.useState(false);
   const [newQuoteCount, setNewQuoteCount] = React.useState(0);
   const [downloadingPDF, setDownloadingPDF] = React.useState<string | null>(null);
-  const [downloadSuccess, setDownloadSuccess] = React.useState<string | null>(null);
   const [isCreateQuoteModalOpen, setIsCreateQuoteModalOpen] = React.useState(false);
 
   // ===== filter & paging =====
@@ -87,12 +85,10 @@ export default function QuoteManagementPage() {
   const [status, setStatus] = React.useState<StatusFilter>("all");
   const [contactPerson, setContactPerson] = React.useState<UserFilter>("all");
   const [minAmount, setMinAmount] = React.useState<string>("");
-  const [maxAmount, setMaxAmount] = React.useState<string>("");
-  const [keywordFilter, setKeywordFilter] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [showAll, setShowAll] = React.useState(false); // New state for show more option
 
-  React.useEffect(() => setPage(1), [search, from, to, status, contactPerson, minAmount, maxAmount, keywordFilter]);
+  React.useEffect(() => setPage(1), [search, from, to, status, contactPerson, minAmount]);
 
   // Load contact persons for filter dropdown
   const [filterContactPersons, setFilterContactPersons] = React.useState<Array<{id: string, name: string}>>([]);
@@ -139,19 +135,15 @@ export default function QuoteManagementPage() {
     const loadQuotes = async () => {
       try {
         setLoading(true);
-        // Add cache-busting to ensure fresh data
-        const response = await fetch('/api/quotes?t=' + Date.now());
-        console.log('🔍 DEBUG: API Response status:', response.status, response.statusText);
+        const response = await fetch('/api/quotes');
         if (response.ok) {
           const quotes = await response.json();
           console.log('Raw quotes from database:', quotes);
-          console.log('🔍 DEBUG: First quote client data:', quotes[0]?.client);
-          console.log('🔍 DEBUG: First quote clientName should be:', quotes[0]?.client?.companyName || quotes[0]?.client?.contactPerson || "N/A");
           // Transform database quotes to match Row format
           const transformedQuotes = quotes.map((quote: any) => ({
             id: quote.id, // Use database ID for operations
             quoteId: quote.quoteId || `QT-${new Date(quote.date).getFullYear()}-${String(new Date(quote.date).getMonth() + 1).padStart(2, '0')}-${String(new Date(quote.date).getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`, // Generate quote ID if missing
-            clientName: (quote.client?.companyName && quote.client.companyName.trim() !== "") ? quote.client.companyName : (quote.client?.contactPerson && quote.client.contactPerson.trim() !== "") ? quote.client.contactPerson : "N/A",
+            clientName: quote.client?.companyName || quote.client?.contactPerson || "Unknown Client",
             contactPerson: quote.client?.contactPerson || "Unknown Contact",
             date: quote.date.split('T')[0], // Convert ISO date to YYYY-MM-DD
             amount: quote.amounts?.total || 0,
@@ -182,17 +174,16 @@ export default function QuoteManagementPage() {
             originalClientId: quote.clientId || null,
           }));
           console.log('Transformed quotes:', transformedQuotes);
-          console.log('🔍 DEBUG: First transformed quote clientName:', transformedQuotes[0]?.clientName);
           setRows(transformedQuotes);
         } else {
-          console.error('Failed to load quotes - API returned non-OK status');
-          // Don't fallback to dummy data - show empty state instead
-          setRows([]);
+          console.error('Failed to load quotes');
+          // Fallback to dummy data if API fails
+          setRows(QUOTES);
         }
       } catch (error) {
         console.error('Error loading quotes:', error);
-        // Don't fallback to dummy data - show empty state instead
-        setRows([]);
+        // Fallback to dummy data if API fails
+        setRows(QUOTES);
       } finally {
         setLoading(false);
       }
@@ -207,8 +198,6 @@ export default function QuoteManagementPage() {
   const filtered = React.useMemo(() => {
     const filteredQuotes = rows.filter((q) => {
       const s = search.trim().toLowerCase();
-      const k = keywordFilter.trim().toLowerCase();
-      
       // Enhanced search to include quote number, client name, and person name as per requirements
       const hitSearch =
         s === "" || 
@@ -216,29 +205,14 @@ export default function QuoteManagementPage() {
         q.clientName.toLowerCase().includes(s) ||
         q.contactPerson.toLowerCase().includes(s);
 
-      // Keyword filter for client, quotation number, product, date, and amount
-      const hitKeyword = k === "" || 
-        q.clientName.toLowerCase().includes(k) ||
-        q.contactPerson.toLowerCase().includes(k) ||
-        q.quoteId?.toLowerCase().includes(k) ||
-        q.productName?.toLowerCase().includes(k) ||
-        q.product?.toLowerCase().includes(k) ||
-        q.date.toLowerCase().includes(k) ||
-        q.amount.toString().includes(k);
-
-      // Status filter
       const hitStatus = status === "all" || q.status === status;
-      
       const hitContactPerson = contactPerson === "all" || q.contactPerson === contactPerson;
-      
-      // Amount range filter
-      const hitMinAmount = minAmount === "" || q.amount >= Number(minAmount);
-      const hitMaxAmount = maxAmount === "" || q.amount <= Number(maxAmount);
+      const hitAmount = minAmount === "" || q.amount >= Number(minAmount);
 
       const hitFrom = from === "" || q.date >= from;
       const hitTo = to === "" || q.date <= to;
 
-      return hitSearch && hitKeyword && hitStatus && hitContactPerson && hitMinAmount && hitMaxAmount && hitFrom && hitTo;
+      return hitSearch && hitStatus && hitContactPerson && hitAmount && hitFrom && hitTo;
     });
 
     // Sort by newest first (most recent date first)
@@ -249,7 +223,7 @@ export default function QuoteManagementPage() {
     });
 
     return sorted;
-  }, [rows, search, keywordFilter, from, to, status, contactPerson, minAmount, maxAmount]);
+  }, [rows, search, from, to, status, contactPerson, minAmount]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const start = (page - 1) * PAGE_SIZE;
@@ -465,9 +439,10 @@ export default function QuoteManagementPage() {
       // Update quote in database with correct schema mapping
       const updateData = {
         clientId: clientId,
-        date: new Date(draft.date + 'T00:00:00.000Z'), // Convert to Date object
+        date: new Date(draft.date + 'T00:00:00.000Z').toISOString(), // Ensure proper date format
         status: draft.status,
-        userId: draft.userId || null, // Include userId
+        // Temporarily exclude userId to debug foreign key issue
+        // userId: draft.userId || null, // Allow null if no user assigned
         product: draft.productName?.trim() || "Printing Product",
         quantity: draft.quantity === "" ? 0 : Number(draft.quantity),
         sides: draft.sides || "1", // Default to 1 side since not in edit form
@@ -482,7 +457,9 @@ export default function QuoteManagementPage() {
         closeSizeSpine: draft.closeSize?.spine || null,
         useSameAsFlat: draft.useSameAsFlat,
         colors: draft.colors ? JSON.stringify(draft.colors) : null,
-        // Handle amounts separately - this will be processed by the API
+        // Temporarily exclude papers and finishing to debug foreign key issue
+        // papers: draft.papers || [],
+        // finishing: draft.finishing || [],
         amounts: {
           base: Number(draft.amount) * 0.8, // Calculate base amount (80% of total)
           vat: Number(draft.amount) * 0.2,  // Calculate VAT (20% of total)
@@ -545,23 +522,7 @@ export default function QuoteManagementPage() {
       setOpenEdit(false);
     } catch (error) {
       console.error('Error updating quote:', error);
-      
-      // Show more specific error message
-      let errorMessage = 'Please try again.';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        
-        // Handle specific error cases
-        if (error.message.includes('Client ID not found')) {
-          errorMessage = 'Client information is missing. Please refresh the page and try again.';
-        } else if (error.message.includes('Failed to update quote')) {
-          errorMessage = 'Database update failed. Please check your internet connection and try again.';
-        } else if (error.message.includes('Foreign key constraint')) {
-          errorMessage = 'Invalid data reference. Please refresh the page and try again.';
-        }
-      }
-      
-      alert(`Error updating quote: ${errorMessage}`);
+      alert(`Error updating quote: ${error instanceof Error ? error.message : 'Please try again.'}`);
     }
   };
 
@@ -577,42 +538,12 @@ export default function QuoteManagementPage() {
   const viewTotal = (row: Row | null) => (row ? currency.format(row.amount) : "—");
 
   // Function to handle PDF download for approved quotes
-  const handleCalculateAmount = async (quoteId: string) => {
-    try {
-      console.log('🔢 Calculating amount for quote:', quoteId);
-      const response = await fetch('/api/quotes/calculate-amounts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ quoteId })
-      });
-      
-      if (response.ok) {
-        console.log('✅ Amount calculated successfully');
-        // Refresh the quotes to show updated amounts
-        window.location.reload();
-      } else {
-        console.error('❌ Failed to calculate amount');
-      }
-    } catch (error) {
-      console.error('❌ Error calculating amount:', error);
-    }
-  };
-
   const handleDownloadPDF = async (quote: Row, type: 'customer' | 'operations') => {
     const downloadId = `${quote.id}-${type}`;
-    
-    // Prevent concurrent downloads
-    if (downloadingPDF) {
-      console.log('Download already in progress, please wait...');
-      return;
-    }
-    
     setDownloadingPDF(downloadId);
     
     try {
-      // Create a comprehensive QuoteFormData structure for PDF generation
+      // Create a mock QuoteFormData structure for PDF generation
       const mockFormData = {
         client: {
           clientType: "Company" as const,
@@ -629,9 +560,9 @@ export default function QuoteManagementPage() {
           country: "UAE"
         },
         products: [{
-          productName: String(quote.product || quote.productName || "Printing Product"),
+          productName: quote.product || quote.productName || "Printing Product",
           paperName: "Premium Paper",
-          quantity: Number(quote.quantity) || 100,
+          quantity: quote.quantity || 0,
           sides: "2" as const,
           printingSelection: "Offset" as const,
           flatSize: { width: 21, height: 29.7, spine: 0 },
@@ -662,46 +593,35 @@ export default function QuoteManagementPage() {
             cost: 0.25
           }],
           plates: 2,
-          units: Number(quote.quantity) || 100
+          units: quote.quantity || 100
         },
         calculation: {
-          basePrice: Number(quote.amount) || 1000,
+          basePrice: quote.amount,
           marginAmount: 0,
-          marginPercentage: 0,
-          subtotal: Number(quote.amount) || 1000,
-          finalSubtotal: Number(quote.amount) || 1000,
+          subtotal: quote.amount,
           vatAmount: 0,
-          totalPrice: Number(quote.amount) || 1000
+          totalPrice: quote.amount
         }
       };
 
-      console.log("Starting PDF download for:", { type, quoteId: quote.id });
-      
-      // Call the appropriate PDF generation function
       if (type === 'customer') {
         await downloadCustomerPdf(mockFormData, []);
-        setDownloadSuccess(`${quote.id} - Customer PDF downloaded successfully!`);
-      } else if (type === 'operations') {
-        await downloadOpsPdf(mockFormData, []);
-        setDownloadSuccess(`${quote.id} - Operations PDF downloaded successfully!`);
+      } else {
+        // Use the operational PDF for operations team
+        const pdfBytes = await generateOperationalPDF(quote.id, mockFormData);
+        
+        // Create and download PDF
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `operational-job-order-${quote.id}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
       }
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setDownloadSuccess(null);
-      }, 3000);
-      
     } catch (error) {
-      console.error('❌ Error downloading PDF:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        type: typeof error
-      });
-      
-      // Show more specific error message
-      const errorMessage = error.message || 'Unknown error occurred';
-      alert(`Failed to download PDF: ${errorMessage}\n\nPlease check the browser console for more details.`);
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF. Please try again.');
     } finally {
       setDownloadingPDF(null);
     }
@@ -727,7 +647,7 @@ export default function QuoteManagementPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-[#27aae1] to-[#ea078b] bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
             Quote Management
           </h1>
           <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto">
@@ -747,7 +667,7 @@ export default function QuoteManagementPage() {
           </div>
           <Button
             onClick={() => setIsCreateQuoteModalOpen(true)}
-            className="bg-[#27aae1] hover:bg-[#1e8bc3] text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 h-12 w-full sm:w-auto"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 h-12 w-full sm:w-auto"
           >
             <Plus className="h-5 w-5 mr-2" />
             Create a New Quote
@@ -755,19 +675,7 @@ export default function QuoteManagementPage() {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {/* Keyword Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Keyword Filter</label>
-            <Input
-              placeholder="Client, quote, product, date, amount..."
-              value={keywordFilter}
-              onChange={(e) => setKeywordFilter(e.target.value)}
-              className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-10"
-            />
-          </div>
-
-          {/* Date Range */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">From Date</label>
             <Input
@@ -788,30 +696,28 @@ export default function QuoteManagementPage() {
             />
           </div>
           
-             {/* Status Filter */}
-             <div className="space-y-2">
-               <label className="text-sm font-medium text-slate-700">Status</label>
-               <Select value={status} onValueChange={(v: StatusFilter) => setStatus(v)}>
-                 <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-10">
-                   <SelectValue placeholder="All Status" />
-                 </SelectTrigger>
-                 <SelectContent className="max-h-60">
-                   <SelectItem value="all">All Status</SelectItem>
-                   <SelectItem value="Approved">Approved</SelectItem>
-                   <SelectItem value="Pending">Pending</SelectItem>
-                   <SelectItem value="Rejected">Rejected</SelectItem>
-                 </SelectContent>
-               </Select>
-             </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Status</label>
+            <Select value={status} onValueChange={(v: StatusFilter) => setStatus(v)}>
+              <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-10">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Approved">Approved</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
-          {/* Contact Person */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">Contact Person</label>
             <Select value={contactPerson} onValueChange={(v: UserFilter) => setContactPerson(v)}>
               <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-10">
                 <SelectValue placeholder="All Contact Persons" />
               </SelectTrigger>
-              <SelectContent className="max-h-60">
+              <SelectContent>
                 <SelectItem value="all">All Contact Persons</SelectItem>
                 {filterContactPersons.map((person) => (
                   <SelectItem key={person.id} value={person.id}>
@@ -822,25 +728,15 @@ export default function QuoteManagementPage() {
             </Select>
           </div>
           
-          {/* Amount Range */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Amount Range</label>
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                type="number"
-                placeholder="Min AED"
-                value={minAmount}
-                onChange={(e) => setMinAmount(e.target.value)}
-                className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-10 text-sm"
-              />
-              <Input
-                type="number"
-                placeholder="Max AED"
-                value={maxAmount}
-                onChange={(e) => setMaxAmount(e.target.value)}
-                className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-10 text-sm"
-              />
-            </div>
+            <label className="text-sm font-medium text-slate-700">Minimum Amount</label>
+            <Input
+              type="number"
+              placeholder="AED 0.00"
+              value={minAmount}
+              onChange={(e) => setMinAmount(e.target.value)}
+              className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-10"
+            />
           </div>
         </div>
 
@@ -870,7 +766,7 @@ export default function QuoteManagementPage() {
 
         {/* Quote Summary */}
         <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
               <div className="text-sm text-slate-600">Approved</div>
@@ -895,21 +791,21 @@ export default function QuoteManagementPage() {
         </div>
 
         {/* Quotes Table - Mobile Responsive */}
-        <Card className="shadow-xl border-0 bg-white">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardContent className="p-0">
             {/* Desktop Table */}
-            <div className="hidden lg:block tablet-landscape-show overflow-x-auto">
-              <Table className="min-w-full lg:min-w-[1000px]">
+            <div className="hidden lg:block overflow-x-auto">
+              <Table>
                 <TableHeader className="bg-slate-50">
                   <TableRow className="border-slate-200">
-                    <TableHead className="text-slate-700 font-semibold p-4 w-[180px]">Quote ID</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-[180px] max-w-[180px]">Client Details</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-[140px]">Date</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-[120px]">Product</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-[80px]">Quantity</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-[120px]">Amount</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-[100px]">Status</TableHead>
-                    <TableHead className="text-slate-700 font-semibold p-4 w-[120px] sticky right-0 bg-slate-50">Actions</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-6 w-32">Quote ID</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-6 w-48">Client Details</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-6 w-28">Date</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-6 w-32">Product</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-6 w-24">Quantity</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-6 w-32">Amount</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-6 w-24">Status</TableHead>
+                    <TableHead className="text-slate-700 font-semibold p-6 w-32">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -930,38 +826,28 @@ export default function QuoteManagementPage() {
                     </TableRow>
                   ) : (
                     current.map((row, index) => (
-                      <TableRow key={row.id} className="hover:bg-slate-50 transition-colors duration-200 border-slate-100">
-                        <TableCell className="p-4 w-[180px]">
+                      <TableRow key={row.id} className="hover:bg-slate-50/80 transition-colors duration-200 border-slate-100">
+                        <TableCell className="p-6">
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                             {row.quoteId}
                           </span>
                         </TableCell>
-                        <TableCell className="p-4 w-[180px] max-w-[180px]">
+                        <TableCell className="p-6">
                           <div className="space-y-1">
-                            <div 
-                              className="font-medium text-slate-900 truncate" 
-                              title={row.clientName || 'N/A'}
-                            >
-                              {row.clientName || 'N/A'}
-                            </div>
-                            <div 
-                              className="text-sm text-slate-500 truncate" 
-                              title={row.contactPerson || 'N/A'}
-                            >
-                              {row.contactPerson || 'N/A'}
-                            </div>
+                            <div className="font-medium text-slate-900">{row.client?.companyName || 'N/A'}</div>
+                            <div className="text-sm text-slate-500">{row.client?.contactPerson || 'N/A'}</div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-slate-700 p-4 w-[140px]">{fmtDate(row.date)}</TableCell>
-                        <TableCell className="text-sm text-slate-700 p-4 w-[120px]">{row.productName || row.product || 'N/A'}</TableCell>
-                        <TableCell className="text-sm text-slate-700 p-4 w-[80px]">{row.quantity || 0}</TableCell>
-                        <TableCell className="p-4 w-[120px]">
+                        <TableCell className="text-sm text-slate-700 p-6">{fmtDate(row.date)}</TableCell>
+                        <TableCell className="text-sm text-slate-700 p-6">{row.productName || row.product || 'N/A'}</TableCell>
+                        <TableCell className="text-sm text-slate-700 p-6">{row.quantity || 0}</TableCell>
+                        <TableCell className="p-6">
                           <span className="font-semibold text-slate-900">AED {row.amount ? row.amount.toFixed(2) : '0.00'}</span>
                         </TableCell>
-                        <TableCell className="p-4 w-[100px]">
-                          <StatusBadge value={row.status} />
-                        </TableCell>
-                        <TableCell className="text-center p-4 w-[120px] sticky right-0 bg-white">
+                                                 <TableCell className="p-6">
+                           <StatusBadge value={row.status} />
+                         </TableCell>
+                        <TableCell className="text-center p-6">
                           <div className="flex items-center justify-center space-x-2">
                             <Button
                               variant="ghost"
@@ -985,6 +871,7 @@ export default function QuoteManagementPage() {
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
+                                    onClick={() => handleDownloadPDF(row, 'customer')}
                                     className="text-purple-600 hover:bg-purple-50 rounded-lg p-2"
                                   >
                                     <Download className="h-4 w-4" />
@@ -996,34 +883,16 @@ export default function QuoteManagementPage() {
                                     disabled={downloadingPDF === `${row.id}-customer`}
                                     className="text-green-700 hover:text-green-800 hover:bg-green-50"
                                   >
-                                    {downloadingPDF === `${row.id}-customer` ? (
-                                      <>
-                                        <div className="h-3 w-3 mr-2 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
-                                        Downloading...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Download className="h-3 w-3 mr-2" />
-                                        Customer PDF
-                                      </>
-                                    )}
+                                    <Download className="h-3 w-3 mr-2" />
+                                    Customer PDF
                                   </DropdownMenuItem>
                                   <DropdownMenuItem 
                                     onClick={() => handleDownloadPDF(row, 'operations')}
                                     disabled={downloadingPDF === `${row.id}-operations`}
                                     className="text-orange-700 hover:text-orange-800 hover:bg-orange-50"
                                   >
-                                    {downloadingPDF === `${row.id}-operations` ? (
-                                      <>
-                                        <div className="h-3 w-3 mr-2 border-2 border-orange-700 border-t-transparent rounded-full animate-spin" />
-                                        Downloading...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Download className="h-3 w-3 mr-2" />
-                                        Operations PDF
-                                      </>
-                                    )}
+                                    <Download className="h-3 w-3 mr-2" />
+                                    Operations PDF
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -1038,7 +907,7 @@ export default function QuoteManagementPage() {
             </div>
 
             {/* Mobile Cards */}
-            <div className="lg:hidden tablet-landscape-hide space-y-4 p-4">
+            <div className="lg:hidden space-y-4 p-4">
               {loading ? (
                 <div className="text-center py-16 text-slate-500">
                   <div className="flex items-center justify-center space-x-2">
@@ -1052,93 +921,65 @@ export default function QuoteManagementPage() {
                 </div>
               ) : (
                 current.map((row, index) => (
-                  <Card key={row.id} className="p-4 border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="space-y-4">
+                  <Card key={row.id} className="p-4 border-slate-200">
+                    <div className="space-y-3">
                       {/* Header with Quote ID and Status */}
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-sm font-medium text-slate-900 bg-slate-100 px-3 py-1.5 rounded-lg">
+                        <span className="font-mono text-sm font-medium text-slate-900 bg-slate-100 px-2 py-1 rounded">
                           {row.quoteId}
                         </span>
-                        <StatusBadge value={row.status} />
+                                                 <StatusBadge value={row.status} />
                       </div>
                       
                       {/* Client Info */}
-                      <div className="space-y-1.5">
-                        <div className="font-semibold text-slate-900 text-base">{row.clientName || 'N/A'}</div>
-                        <div className="text-sm text-slate-600 flex items-center">
-                          <User className="w-4 h-4 mr-1.5" />
-                          {row.contactPerson || 'N/A'}
-                        </div>
+                      <div className="space-y-1">
+                        <div className="font-medium text-slate-900">{row.clientName || 'N/A'}</div>
+                        <div className="text-sm text-slate-500">{row.contactPerson || 'N/A'}</div>
                       </div>
                       
                       {/* Product and Quantity */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Product</span>
-                          <div className="text-sm text-slate-700 font-medium">{row.productName || row.product || 'N/A'}</div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm text-slate-500">Product:</span>
+                          <div className="text-sm text-slate-700">{row.productName || row.product || 'N/A'}</div>
                         </div>
-                        <div className="space-y-1">
-                          <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Quantity</span>
-                          <div className="text-sm text-slate-700 font-medium">{row.quantity || 0}</div>
+                        <div>
+                          <span className="text-sm text-slate-500">Quantity:</span>
+                          <div className="text-sm text-slate-700">{row.quantity || 0}</div>
                         </div>
                       </div>
                       
                       {/* Date and Amount */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Date</span>
-                          <div className="text-sm text-slate-700 font-medium flex items-center">
-                            <Calendar className="w-4 h-4 mr-1.5" />
-                            {fmtDate(row.date)}
-                          </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm text-slate-500">Date:</span>
+                          <div className="text-sm text-slate-700">{fmtDate(row.date)}</div>
                         </div>
-                        <div className="space-y-1">
-                          <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Amount</span>
-                          <div className="font-semibold text-slate-900">
-                            {row.amount && row.amount > 0 ? (
-                              <div className="flex items-center">
-                                <DollarSign className="w-4 h-4 mr-1.5" />
-                                AED {row.amount.toFixed(2)}
-                              </div>
-                            ) : (
-                              <div className="flex items-center space-x-2">
-                                <span className="text-red-500 flex items-center">
-                                  <DollarSign className="w-4 h-4 mr-1.5" />
-                                  AED 0.00
-                                </span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleCalculateAmount(row.id)}
-                                  className="text-xs px-3 py-1.5 h-7"
-                                >
-                                  Calculate
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+                        <div>
+                          <span className="text-sm text-slate-500">Amount:</span>
+                          <div className="font-semibold text-slate-900">AED {row.amount ? row.amount.toFixed(2) : '0.00'}</div>
                         </div>
                       </div>
                       
                       {/* Actions */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-4 border-t border-slate-100 gap-3">
-                        <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                        <div className="flex space-x-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => onView(row)}
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50 flex-1 sm:flex-none"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
                           >
-                            <Eye className="w-4 h-4 mr-1.5" />
+                            <Eye className="w-4 h-4 mr-1" />
                             View
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => onEdit(row.id)}
-                            className="text-green-600 border-green-200 hover:bg-green-50 flex-1 sm:flex-none"
+                            className="text-green-600 border-green-200 hover:bg-green-50"
                           >
-                            <Pencil className="w-4 h-4 mr-1.5" />
+                            <Pencil className="w-4 h-4 mr-1" />
                             Edit
                           </Button>
                         </div>
@@ -1148,9 +989,10 @@ export default function QuoteManagementPage() {
                               <Button 
                                 variant="outline"
                                 size="sm"
-                                className="text-purple-600 border-purple-200 hover:bg-purple-50 w-full sm:w-auto"
+                                onClick={() => handleDownloadPDF(row, 'customer')}
+                                className="text-purple-600 border-purple-200 hover:bg-purple-50"
                               >
-                                <Download className="w-4 h-4 mr-1.5" />
+                                <Download className="w-4 h-4 mr-1" />
                                 PDF
                               </Button>
                             </DropdownMenuTrigger>
@@ -1160,34 +1002,16 @@ export default function QuoteManagementPage() {
                                 disabled={downloadingPDF === `${row.id}-customer`}
                                 className="text-green-700 hover:text-green-800 hover:bg-green-50"
                               >
-                                {downloadingPDF === `${row.id}-customer` ? (
-                                  <>
-                                    <div className="h-3 w-3 mr-2 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
-                                    Downloading...
-                                  </>
-                                ) : (
-                                  <>
                                 <Download className="h-3 w-3 mr-2" />
                                 Customer PDF
-                                  </>
-                                )}
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => handleDownloadPDF(row, 'operations')}
                                 disabled={downloadingPDF === `${row.id}-operations`}
                                 className="text-orange-700 hover:text-orange-800 hover:bg-orange-50"
                               >
-                                {downloadingPDF === `${row.id}-operations` ? (
-                                  <>
-                                    <div className="h-3 w-3 mr-2 border-2 border-orange-700 border-t-transparent rounded-full animate-spin" />
-                                    Downloading...
-                                  </>
-                                ) : (
-                                  <>
                                 <Download className="h-3 w-3 mr-2" />
                                 Operations PDF
-                                  </>
-                                )}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1204,7 +1028,7 @@ export default function QuoteManagementPage() {
 
       {/* ===== Modal View ===== */}
       <Dialog open={openView} onOpenChange={setOpenView}>
-        <DialogContent className="sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[800px] rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-900">Quote Details</DialogTitle>
           </DialogHeader>
@@ -1231,7 +1055,7 @@ export default function QuoteManagementPage() {
 
                   <div className="col-span-1 px-4 py-3 text-slate-500 border-b border-slate-200 bg-slate-50">Status:</div>
                   <div className="col-span-2 px-4 py-3 border-b border-slate-200 font-semibold text-slate-900">
-                    <StatusBadge value={viewRow?.status as Status} />
+                    <StatusBadge status={viewRow?.status as Status} />
                   </div>
 
                   <div className="col-span-1 px-4 py-3 text-slate-500 bg-slate-50">Total Amount:</div>
@@ -1350,7 +1174,7 @@ export default function QuoteManagementPage() {
 
       {/* ===== Modal Edit ===== */}
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-        <DialogContent className="sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[800px] rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-900">Edit Quote</DialogTitle>
           </DialogHeader>
@@ -1362,7 +1186,7 @@ export default function QuoteManagementPage() {
               <div className="grid gap-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <label className="text-right text-sm text-slate-600 font-medium">Quote ID</label>
-                  <Input className="col-span-3 bg-slate-100 border-slate-300 rounded-xl" readOnly value={draft.id} />
+                  <Input className="col-span-3 bg-slate-100 border-slate-300 rounded-xl" readOnly value={draft.quoteId || draft.id} />
                 </div>
 
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -1457,8 +1281,8 @@ export default function QuoteManagementPage() {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <label className="text-right text-sm font-medium text-slate-700">Printing Method</label>
                   <Select
-                    value={draft.printingSelection ?? "Digital"}
-                    onValueChange={(v) => setDraft((d) => ({ ...d, printingSelection: v }))}
+                    value={draft.printingSelection ?? draft.printing ?? "Digital"}
+                    onValueChange={(v) => setDraft((d) => ({ ...d, printingSelection: v, printing: v }))}
                   >
                     <SelectTrigger className="col-span-3 border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-xl">
                       <SelectValue />
@@ -1762,14 +1586,6 @@ export default function QuoteManagementPage() {
         onClose={() => setIsCreateQuoteModalOpen(false)}
         onSubmit={handleCreateQuote}
       />
-
-      {/* Download Success Message */}
-      {downloadSuccess && (
-        <div className="fixed top-4 left-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-2">
-          <Download className="w-5 h-5" />
-          <span>{downloadSuccess}</span>
-        </div>
-      )}
     </div>
   );
 }

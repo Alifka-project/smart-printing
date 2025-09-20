@@ -63,6 +63,7 @@ export default function DashboardPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{ name: string; role: string } | null>({ name: "Demo User", role: "admin" });
+  const [isIpadLandscape, setIsIpadLandscape] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,6 +83,26 @@ export default function DashboardPage() {
       setUser({ name: "Demo User", role: "admin" });
     }
   }, []); // Remove router dependency to run immediately
+
+  // Detect iPad landscape
+  useEffect(() => {
+    const checkIpadLandscape = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const isLandscape = width > height;
+      
+      // Check if it's iPad Mini (1024px) or iPad Air (1180px) in landscape
+      const isIpadMini = width === 1024 && height === 768 && isLandscape;
+      const isIpadAir = width === 1180 && height === 820 && isLandscape;
+      
+      setIsIpadLandscape(isIpadMini || isIpadAir);
+    };
+
+    checkIpadLandscape();
+    window.addEventListener('resize', checkIpadLandscape);
+    
+    return () => window.removeEventListener('resize', checkIpadLandscape);
+  }, []);
 
   // Cleanup effect for update modal
   useEffect(() => {
@@ -1544,19 +1565,16 @@ export default function DashboardPage() {
                 width: 4.5rem !important;
               }
               
-              /* iPad Landscape - Force 2-line filter layout */
-              @media (min-width: 1024px) and (max-width: 1300px) and (orientation: landscape) {
+              /* iPad Mini Landscape - Force 2-line filter layout */
+              @media (min-width: 1024px) and (max-width: 1024px) and (orientation: landscape) {
                 /* Target the specific filter container */
                 .ipad-filter-container {
                   flex-wrap: wrap !important;
                   height: auto !important;
                 }
                 
-                /* Remove min-width constraints */
-                .ipad-filter-container .min-w-\\[200px\\],
-                .ipad-filter-container .min-w-\\[140px\\],
-                .ipad-filter-container .min-w-\\[120px\\],
-                .ipad-filter-container .min-w-\\[160px\\] {
+                /* Remove min-width constraints - use attribute selectors */
+                .ipad-filter-container [class*="min-w-"] {
                   min-width: 0 !important;
                 }
                 
@@ -1574,6 +1592,52 @@ export default function DashboardPage() {
                 .ipad-filter-container > div:nth-child(6),
                 .ipad-filter-container > div:nth-child(7) {
                   flex: 0 0 24% !important;
+                }
+              }
+              
+              /* iPad Air Landscape - Apply same 2-line filter layout */
+              @media (min-width: 1180px) and (max-width: 1180px) and (orientation: landscape) {
+                /* Target the specific filter container */
+                .ipad-filter-container {
+                  flex-wrap: wrap !important;
+                  height: auto !important;
+                }
+                
+                /* Remove min-width constraints - use attribute selectors */
+                .ipad-filter-container [class*="min-w-"] {
+                  min-width: 0 !important;
+                }
+                
+                /* First row: Keyword, Date From, Date To */
+                .ipad-filter-container > div:nth-child(1),
+                .ipad-filter-container > div:nth-child(2),
+                .ipad-filter-container > div:nth-child(3) {
+                  flex: 0 0 32% !important;
+                  margin-bottom: 0.5rem !important;
+                }
+                
+                /* Second row: Status, Amount Range, Clear Filters, Create Quote */
+                .ipad-filter-container > div:nth-child(4),
+                .ipad-filter-container > div:nth-child(5),
+                .ipad-filter-container > div:nth-child(6),
+                .ipad-filter-container > div:nth-child(7) {
+                  flex: 0 0 24% !important;
+                }
+              }
+              
+              /* Desktop - Ensure single line layout is preserved */
+              @media (min-width: 1301px) {
+                .ipad-filter-container {
+                  flex-wrap: nowrap !important;
+                }
+                
+                .ipad-filter-container [class*="min-w-"] {
+                  min-width: inherit !important;
+                }
+                
+                .ipad-filter-container > div {
+                  flex: inherit !important;
+                  margin-bottom: 0 !important;
                 }
               }
             }
@@ -1732,13 +1796,20 @@ export default function DashboardPage() {
           {/* Desktop Layout - Landscape mode for tablets */}
           <div 
             className="hidden lg:flex lg:flex-nowrap tablet-landscape:lg:flex tablet-landscape:lg:flex-nowrap gap-2 items-end ipad-filter-container"
-            style={{
+            style={isIpadLandscape ? {
               flexWrap: 'wrap',
               height: 'auto'
-            }}
+            } : {}}
           >
           {/* Keyword Filter */}
-          <div className="flex-1 min-w-[200px]" style={{ minWidth: '0', flex: '0 0 32%', marginBottom: '0.5rem' }}>
+          <div 
+            className="flex-1 min-w-[200px]"
+            style={isIpadLandscape ? {
+              minWidth: '0',
+              flex: '0 0 32%',
+              marginBottom: '0.5rem'
+            } : {}}
+          >
             <label className="text-xs font-medium text-slate-600 mb-1 block">Keyword</label>
             <Input
               placeholder="Search..."
@@ -1749,7 +1820,14 @@ export default function DashboardPage() {
           </div>
 
           {/* Date Range */}
-          <div className="min-w-[140px]" style={{ minWidth: '0', flex: '0 0 32%', marginBottom: '0.5rem' }}>
+          <div 
+            className="min-w-[140px]"
+            style={isIpadLandscape ? {
+              minWidth: '0',
+              flex: '0 0 32%',
+              marginBottom: '0.5rem'
+            } : {}}
+          >
             <label className="text-xs font-medium text-slate-800 mb-1 block">From</label>
             <Input
               type="date"
@@ -1759,7 +1837,14 @@ export default function DashboardPage() {
             />
           </div>
           
-          <div className="min-w-[140px]" style={{ minWidth: '0', flex: '0 0 32%', marginBottom: '0.5rem' }}>
+          <div 
+            className="min-w-[140px]"
+            style={isIpadLandscape ? {
+              minWidth: '0',
+              flex: '0 0 32%',
+              marginBottom: '0.5rem'
+            } : {}}
+          >
             <label className="text-xs font-medium text-slate-600 mb-1 block">To</label>
             <Input
               type="date"
@@ -1770,7 +1855,13 @@ export default function DashboardPage() {
           </div>
           
           {/* Status Filter */}
-          <div className="min-w-[120px]" style={{ minWidth: '0', flex: '0 0 24%' }}>
+          <div 
+            className="min-w-[120px]"
+            style={isIpadLandscape ? {
+              minWidth: '0',
+              flex: '0 0 24%'
+            } : {}}
+          >
             <label className="text-xs font-medium text-slate-600 mb-1 block">Status</label>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg h-9 text-sm">
@@ -1786,7 +1877,13 @@ export default function DashboardPage() {
           </div>
           
           {/* Amount Range */}
-          <div className="min-w-[160px]" style={{ minWidth: '0', flex: '0 0 24%' }}>
+          <div 
+            className="min-w-[160px]"
+            style={isIpadLandscape ? {
+              minWidth: '0',
+              flex: '0 0 24%'
+            } : {}}
+          >
             <label className="text-xs font-medium text-slate-600 mb-1 block">Amount</label>
             <div className="grid grid-cols-2 gap-1">
               <Input
@@ -1807,7 +1904,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Clear Filters Button */}
-          <div className="min-w-[120px]" style={{ minWidth: '0', flex: '0 0 24%' }}>
+          <div 
+            className="min-w-[120px]"
+            style={isIpadLandscape ? {
+              minWidth: '0',
+              flex: '0 0 24%'
+            } : {}}
+          >
             <label className="text-xs font-medium text-slate-600 mb-1 block opacity-0">Clear</label>
             <Button 
               onClick={clearAllFilters}
@@ -1820,7 +1923,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Create New Quote Button */}
-          <div className="min-w-[160px]" style={{ minWidth: '0', flex: '0 0 24%' }}>
+          <div 
+            className="min-w-[160px]"
+            style={isIpadLandscape ? {
+              minWidth: '0',
+              flex: '0 0 24%'
+            } : {}}
+          >
             <label className="text-xs font-medium text-slate-600 mb-1 block opacity-0">Create</label>
             <Link href="/create-quote" className="block w-full">
               <Button 

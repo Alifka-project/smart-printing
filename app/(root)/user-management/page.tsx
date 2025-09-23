@@ -1,11 +1,21 @@
 "use client";
 
 import * as React from "react";
-import {
-  seedUsers,
-  type AppUser,
-  type AppUserRole,
-} from "@/constants/dummyusers";
+// Define types for user management
+export type AppUserRole = "admin" | "user" | "estimator";
+export type AppUserStatus = "Active" | "Inactive";
+
+export interface AppUser {
+  id: string;           
+  displayId?: string;   // Optional display ID for formatted display
+  name: string;
+  email: string;
+  joined: string;      
+  role: AppUserRole;
+  password?: string
+  status: AppUserStatus;
+  profilePicture?: string | null; // Profile picture URL or base64 data
+}
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,46 +85,26 @@ export default function UserManagementPage() {
         const response = await fetch('/api/users');
         if (response.ok) {
           const usersData = await response.json();
-          if (usersData.length > 0) {
-            // Transform database users to match AppUser format
-            const transformedUsers = usersData.map((user: any, index: number) => ({
-              id: user.id, // Keep the database ID for operations
-              displayId: getDisplayId(user.id), // Display ID for UI
-              name: user.name,
-              email: user.email,
-              joined: user.createdAt ? user.createdAt.split('T')[0] : new Date().toISOString().slice(0, 10),
-              role: user.role as AppUserRole,
-              status: "Active" as const, // Default to Active
-              password: "", // Don't load passwords from database for security
-              profilePicture: user.profilePicture || null, // Include profile picture
-            }));
-            setUsers(transformedUsers);
-          } else {
-            // If no users in database, use seed users
-            console.log('No users in database, using seed users');
-            const seedUsersWithDisplayIds = seedUsers.map(user => ({
-              ...user,
-              displayId: getDisplayId(user.id)
-            }));
-            setUsers(seedUsersWithDisplayIds);
-          }
-        } else {
-          console.error('Failed to load users');
-          // Fallback to seed users if API fails
-          const seedUsersWithDisplayIds = seedUsers.map(user => ({
-            ...user,
-            displayId: getDisplayId(user.id)
+          // Transform database users to match AppUser format
+          const transformedUsers = usersData.map((user: any, index: number) => ({
+            id: user.id, // Keep the database ID for operations
+            displayId: getDisplayId(user.id), // Display ID for UI
+            name: user.name,
+            email: user.email,
+            joined: user.createdAt ? user.createdAt.split('T')[0] : new Date().toISOString().slice(0, 10),
+            role: user.role as AppUserRole,
+            status: "Active" as const, // Default to Active
+            password: "", // Don't load passwords from database for security
+            profilePicture: user.profilePicture || null, // Include profile picture
           }));
-          setUsers(seedUsersWithDisplayIds);
+          setUsers(transformedUsers);
+        } else {
+          console.error('Failed to load users from database');
+          setUsers([]); // Show empty state if database fails
         }
       } catch (error) {
         console.error('Error loading users:', error);
-        // Fallback to seed users if API fails
-        const seedUsersWithDisplayIds = seedUsers.map(user => ({
-          ...user,
-          displayId: getDisplayId(user.id)
-        }));
-        setUsers(seedUsersWithDisplayIds);
+        setUsers([]); // Show empty state if there's an error
       } finally {
         setLoading(false);
       }

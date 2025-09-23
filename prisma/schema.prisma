@@ -1,0 +1,269 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String
+  role            String            @default("user")
+  password        String?
+  profilePicture  String?
+  status          String            @default("Active")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  salesPersonId   String?
+  isSalesPerson   Boolean?          @default(false)
+  testColumn2     String?           @default("default value")
+  clients         Client[]
+  quotes          Quote[]
+  searchAnalytics SearchAnalytics[]
+  searchHistory   SearchHistory[]
+}
+
+model SalesPerson {
+  id             String   @id @default(cuid())
+  salesPersonId  String   @unique
+  name           String
+  email          String   @unique
+  phone          String
+  countryCode    String   @default("+971")
+  designation    String   @default("Sales Representative")
+  department     String   @default("Sales")
+  hireDate       DateTime @default(now()) @db.Timestamp(6)
+  status         String   @default("Active")
+  profilePicture String?
+  address        String?
+  city           String   @default("Dubai")
+  state          String   @default("Dubai")
+  postalCode     String?
+  country        String   @default("UAE")
+  notes          String?
+  createdAt      DateTime @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime @default(now()) @updatedAt @db.Timestamp(6)
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  clientType    String
+  companyName   String?
+  contactPerson String
+  email         String
+  phone         String
+  countryCode   String
+  role          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String?
+  address       String?
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String?
+  status        String?  @default("Active")
+  firstName     String?
+  lastName      String?
+  designation   String?
+  emails        String?
+  trn           String?
+  hasNoTrn      Int?     @default(0)
+  area          String?
+  testColumn    String?  @default("default value")
+  user          User?    @relation(fields: [userId], references: [id])
+  quotes        Quote[]
+}
+
+model Quote {
+  id                    String            @id @default(cuid())
+  quoteId               String            @unique
+  date                  DateTime
+  status                String            @default("Pending")
+  clientId              String
+  userId                String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  product               String
+  quantity              Int
+  sides                 String
+  printing              String
+  colors                String?
+  productName           String?
+  printingSelection     String?
+  flatSizeHeight        Float?
+  closeSizeSpine        Float?
+  useSameAsFlat         Boolean?          @default(false)
+  flatSizeWidth         Float?
+  closeSizeHeight       Float?
+  closeSizeWidth        Float?
+  flatSizeSpine         Float?
+  salesPersonId         String?
+  finishingComments     String?
+  approvalStatus        String?
+  requiresApproval      Boolean?          @default(false)
+  approvalReason        String?
+  approvedBy            String?
+  approvedAt            DateTime?         @db.Timestamp(6)
+  approvalNotes         String?
+  discountPercentage    Float?            @default(0) @db.Real
+  discountAmount        Float?            @default(0) @db.Real
+  marginPercentage      Float?            @default(0) @db.Real
+  marginAmount          Float?            @default(0) @db.Real
+  customerPdfEnabled    Boolean?          @default(false)
+  sendToCustomerEnabled Boolean?          @default(false)
+  additionalCostsData   String?           // JSON string to store additional costs
+  finishing             Finishing[]
+  papers                Paper[]
+  client                Client            @relation(fields: [clientId], references: [id])
+  user                  User?             @relation(fields: [userId], references: [id])
+  amounts               QuoteAmount?
+  QuoteOperational      QuoteOperational?
+}
+
+model Paper {
+  id                String  @id @default(cuid())
+  name              String
+  gsm               String
+  quoteId           String
+  enteredSheets     Int?
+  inputHeight       Float?
+  inputWidth        Float?
+  outputHeight      Float?
+  outputWidth       Float?
+  pricePerPacket    Float?
+  pricePerSheet     Float?
+  recommendedSheets Int?
+  selectedColors    String?
+  sheetsPerPacket   Int?
+  quote             Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model Finishing {
+  id      String @id @default(cuid())
+  name    String
+  quoteId String
+  cost    Float?
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+
+model QuoteAmount {
+  id      String @id @default(cuid())
+  base    Float
+  vat     Float
+  total   Float
+  quoteId String @unique
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model SearchHistory {
+  id        String   @id @default(cuid())
+  query     String
+  timestamp DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model SearchAnalytics {
+  id        String   @id @default(cuid())
+  query     String
+  timestamp DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Supplier {
+  id          String     @id @default(cuid())
+  name        String
+  contact     String?
+  email       String
+  phone       String?
+  countryCode String?
+  address     String?
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String?
+  status      String     @default("Active")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  materials   Material[]
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  materialId  String   @unique
+  name        String
+  supplierId  String
+  cost        Float
+  unit        String
+  status      String   @default("Active")
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  gsm         String?
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+}
+
+model QuoteOperational {
+  id        String   @id
+  quoteId   String   @unique
+  plates    Int      @default(1)
+  units     Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model UAEArea {
+  id        String   @id @default(cuid())
+  name      String
+  state     String
+  country   String   @default("UAE")
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(6)
+}
+
+// Pricing models for Digital and Offset Costing
+model DigitalPricing {
+  id              String   @id @default(cuid())
+  perClick         Decimal  @db.Decimal(10, 2)
+  parentSheetCost  Decimal  @db.Decimal(10, 2)
+  wasteParents     Int      @default(0)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("digital_pricing")
+}
+
+model OffsetPricing {
+  id               String   @id @default(cuid())
+  parentCost       Decimal  @db.Decimal(10, 2)
+  plateCost        Decimal  @db.Decimal(10, 2)
+  makeReadySetup   Decimal  @db.Decimal(10, 2)
+  makeReadySheets  Int
+  runPer1000       Decimal  @db.Decimal(10, 2)
+  cutOpRate        Decimal  @db.Decimal(10, 2)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("offset_pricing")
+}
+
+// Default pricing records
+model DefaultPricing {
+  id              String   @id @default(cuid())
+  pricingType     String   @unique // "digital" or "offset"
+  pricingData     Json     // Store the pricing data as JSON
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("default_pricing")
+}

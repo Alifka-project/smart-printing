@@ -1,0 +1,1103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@custom-variant dark (&:is(.dark *));
+
+/* Smart Printing System Design Tokens - 2025/26 Enterprise Grade */
+:root {
+  /* Core Colors */
+  --sp-bg: #F8FAFF;           /* app background */
+  --sp-surface: #FFFFFF;      /* base surface */
+  --sp-elev: #F3F6FF;         /* elevated surface */
+  --sp-border: #E5E9F2;
+
+  /* Brand Color Palette - Updated */
+  --sp-azure: #27aae1;        /* bright blue */
+  --sp-magenta: #ea078b;      /* vivid magenta */
+  --sp-yellow: #fbec20;       /* bright yellow */
+  --sp-orange: #f89d1d;       /* warm orange */
+  --sp-black: #000000;        /* solid black */
+
+  /* Primary Palette - Using brand colors */
+  --sp-primary: var(--sp-azure);      /* azure as primary */
+  --sp-primary-600: #1e8bc3;          /* darker azure */
+  --sp-accent: var(--sp-magenta);     /* magenta as accent */
+  --sp-accent-2: var(--sp-orange);    /* orange as secondary accent */
+
+  /* Semantic Colors */
+  --sp-success: #10B981;
+  --sp-warning: var(--sp-orange);     /* using brand orange */
+  --sp-danger: #EF4444;
+
+  /* Text Colors */
+  --sp-text: var(--sp-black);         /* brand black */
+  --sp-muted: #64748B;                /* slate-500 */
+  --sp-subtle: #94A3B8;               /* slate-400 */
+
+  /* Design System */
+  --sp-radius: 16px;
+  --sp-radius-lg: 24px;
+  --sp-shadow-sm: 0 2px 10px rgba(2,6,23,0.06);
+  --sp-shadow: 0 10px 30px rgba(2,6,23,0.08);
+  --sp-blur: 12px;
+
+  /* Signature Gradient - Using brand colors */
+  --sp-gradient: linear-gradient(135deg, var(--sp-azure) 0%, var(--sp-magenta) 55%, var(--sp-orange) 100%);
+}
+
+@theme inline {
+  --color-background: var(--sp-bg);
+  --color-foreground: var(--sp-text);
+  --color-card: var(--sp-surface);
+  --color-card-foreground: var(--sp-text);
+  --color-popover: var(--sp-surface);
+  --color-popover-foreground: var(--sp-text);
+  --color-primary: var(--sp-azure);
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: var(--sp-elev);
+  --color-secondary-foreground: var(--sp-text);
+  --color-muted: var(--sp-muted);
+  --color-muted-foreground: var(--sp-subtle);
+  --color-accent: var(--sp-magenta);
+  --color-accent-foreground: #FFFFFF;
+  --color-destructive: var(--sp-danger);
+  --color-border: var(--sp-border);
+  --color-input: var(--sp-surface);
+  --color-ring: var(--sp-azure);
+  --radius: var(--sp-radius);
+  --chart-1: var(--sp-azure);
+  --chart-2: var(--sp-magenta);
+  --chart-3: var(--sp-orange);
+  --chart-4: var(--sp-yellow);
+  --chart-5: var(--sp-black);
+}
+
+/* Ensure Dialog components have proper background */
+:root {
+  --color-background: #ffffff;
+  --color-foreground: var(--sp-black);
+  --color-card: #ffffff;
+  --color-card-foreground: var(--sp-black);
+  --color-popover: #ffffff;
+  --color-popover-foreground: var(--sp-black);
+  --color-primary: var(--sp-azure);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f3f6ff;
+  --color-secondary-foreground: var(--sp-black);
+  --color-muted: #64748b;
+  --color-muted-foreground: #94a3b8;
+  --color-accent: var(--sp-magenta);
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #ef4444;
+  --color-border: #e5e9f2;
+  --color-input: #ffffff;
+  --color-ring: var(--sp-azure);
+  --radius: 16px;
+}
+
+/* Typography Stack - SF Pro Rounded Feel */
+@font-face {
+  font-family: 'SF Pro Rounded';
+  src: local('SF Pro Rounded'), local('ui-rounded');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SF Pro Rounded';
+  src: local('SF Pro Rounded'), local('ui-rounded');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SF Pro Rounded';
+  src: local('SF Pro Rounded'), local('ui-rounded');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SF Pro Rounded';
+  src: local('SF Pro Rounded'), local('ui-rounded');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Base Typography */
+  body {
+  font-family: 'SF Pro Rounded', 'ui-rounded', 'SF Pro Display', 'Inter', system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Modern Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+  background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+  background: var(--sp-gradient);
+  border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--sp-primary-600) 0%, var(--sp-accent) 100%);
+}
+
+/* Glass Morphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(var(--sp-blur));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--sp-shadow-sm);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(calc(var(--sp-blur) * 1.5));
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: var(--sp-shadow);
+}
+
+/* Gradient Utilities */
+.gradient-text {
+  background: var(--sp-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-border {
+  background: var(--sp-gradient);
+  padding: 2px;
+  border-radius: var(--sp-radius);
+}
+
+.gradient-border > * {
+  background: var(--sp-surface);
+  border-radius: calc(var(--sp-radius) - 2px);
+}
+
+/* Modern Card Styles */
+.modern-card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  box-shadow: var(--sp-shadow-sm);
+  transition: all 200ms ease-out;
+}
+
+.modern-card:hover {
+  box-shadow: var(--sp-shadow);
+  transform: translateY(-2px);
+}
+
+.modern-card-elevated {
+  background: var(--sp-elev);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  box-shadow: var(--sp-shadow);
+}
+
+/* Micro-interactions */
+.smooth-transition {
+  transition: all 200ms ease-out;
+}
+
+.smooth-transition-slow {
+    transition: all 300ms ease-out;
+  }
+
+.hover-lift {
+  transition: all 200ms ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sp-shadow);
+}
+
+/* Focus States */
+.focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--sp-primary);
+  outline-offset: 2px;
+}
+
+/* Animation Keyframes */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(91, 91, 214, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(91, 91, 214, 0.6); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animation Classes */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 300ms ease-out;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Responsive Utilities */
+@media (max-width: 640px) {
+  :root {
+    --sp-radius: 12px;
+    --sp-radius-lg: 20px;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --sp-border: #000000;
+    --sp-text: #000000;
+    --sp-muted: #333333;
+  }
+}
+
+/* Fix Dialog transparency issues - FORCE SOLID BACKGROUNDS */
+[data-slot="dialog-content"] {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+[data-slot="dialog-overlay"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Ensure modal content is fully opaque */
+.dialog-content,
+[role="dialog"] {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Ensure DialogFooter and buttons are always visible - NO TRANSPARENCY */
+[data-slot="dialog-footer"] {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+[data-slot="dialog-footer"] button,
+[data-slot="dialog-footer"] [role="button"] {
+  background-color: var(--sp-azure) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-flex !important;
+  position: relative !important;
+  z-index: 1001 !important;
+}
+
+[data-slot="dialog-footer"] button[variant="ghost"] {
+  background-color: transparent !important;
+  border: 1px solid var(--sp-border) !important;
+}
+
+/* Force white background on dialog content container only */
+[data-slot="dialog-content"] {
+  background-color: #ffffff !important;
+}
+
+/* Allow some transparency for form content (but not buttons) */
+[data-slot="dialog-content"] > * {
+  background-color: transparent;
+}
+
+/* Mobile Responsiveness & Touch Optimization */
+@media (max-width: 768px) {
+  /* Ensure proper touch targets */
+  button, 
+  [role="button"], 
+  input[type="button"], 
+  input[type="submit"], 
+  input[type="reset"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve table responsiveness */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile-friendly spacing */
+  .mobile-p-4 {
+    padding: 1rem;
+  }
+  
+  .mobile-p-6 {
+    padding: 1.5rem;
+  }
+  
+  /* Mobile-friendly text sizes */
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-text-base {
+    font-size: 1rem;
+  }
+  
+  .mobile-text-lg {
+    font-size: 1.125rem;
+  }
+  
+  .mobile-text-xl {
+    font-size: 1.25rem;
+  }
+  
+  .mobile-text-2xl {
+    font-size: 1.5rem;
+  }
+  
+  .mobile-text-3xl {
+    font-size: 1.875rem;
+  }
+  
+  /* Mobile-friendly grid layouts */
+  .mobile-grid-1 {
+    grid-template-columns: 1fr;
+  }
+  
+  .mobile-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Mobile-friendly flex layouts */
+  .mobile-flex-col {
+    flex-direction: column;
+  }
+  
+  .mobile-flex-row {
+    flex-direction: row;
+  }
+  
+  /* Mobile-friendly margins */
+  .mobile-m-4 {
+    margin: 1rem;
+  }
+  
+  .mobile-m-6 {
+    margin: 1.5rem;
+  }
+  
+  /* Mobile-friendly gaps */
+  .mobile-gap-2 {
+    gap: 0.5rem;
+  }
+  
+  .mobile-gap-4 {
+    gap: 1rem;
+  }
+  
+  .mobile-gap-6 {
+    gap: 1.5rem;
+  }
+}
+
+/* Tablet Responsiveness */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tablet-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .tablet-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Ensure proper viewport on mobile */
+@viewport {
+  width: device-width;
+  initial-scale: 1;
+  maximum-scale: 5;
+  user-scalable: yes;
+}
+
+/* Mobile overflow constraints */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Force fixed table layout - NO SCROLLING but better content display */
+.table-fixed {
+  table-layout: fixed !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+.table-fixed th,
+.table-fixed td {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Ensure tables never scroll horizontally */
+.overflow-x-auto {
+  overflow-x: hidden !important;
+}
+
+/* Force mobile cards instead of horizontal scrolling */
+@media (max-width: 1024px) {
+  .lg\\:hidden {
+    display: block !important;
+  }
+  
+  /* Hide desktop tables on mobile */
+  .block:not(.lg\\:hidden) {
+    display: none !important;
+  }
+  
+  /* Ensure mobile cards are properly spaced */
+  .lg\\:hidden .space-y-4 > * {
+    margin-bottom: 1rem !important;
+  }
+}
+
+/* Mobile-specific optimizations ONLY */
+@media (max-width: 1024px) {
+  /* Force mobile cards to display and hide desktop tables */
+  .lg\\:hidden {
+    display: block !important;
+  }
+  
+  /* Hide desktop tables on mobile */
+  .block:not(.lg\\:hidden) {
+    display: none !important;
+  }
+  
+  /* Ensure mobile cards are properly spaced */
+  .lg\\:hidden .space-y-4 > * {
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Mobile button improvements */
+  .lg\\:hidden button {
+    min-height: 44px !important; /* Better touch targets */
+    font-size: 14px !important;
+  }
+  
+  /* Mobile card shadows and borders */
+  .lg\\:hidden .shadow-sm {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+  }
+  
+  /* Mobile spacing improvements */
+  .lg\\:hidden .space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  /* Mobile grid improvements */
+  .lg\\:hidden .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  /* Prevent horizontal scrolling on mobile */
+  .lg\\:hidden {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+  
+  /* Ensure mobile cards don't overflow */
+  .lg\\:hidden .p-4 {
+    padding: 1rem !important;
+    max-width: 100% !important;
+  }
+  
+  /* Mobile card container */
+  .lg\\:hidden .space-y-4 {
+    padding: 0 1rem !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Ensure all mobile content stays within bounds */
+  .lg\\:hidden * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Mobile card specific fixes */
+  .lg\\:hidden .bg-slate-50 {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+  
+  /* Mobile text wrapping */
+  .lg\\:hidden .font-semibold,
+  .lg\\:hidden .font-medium {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+  
+  /* Force table containers to use mobile layout */
+  [data-slot="table"],
+  [role="table"],
+  .overflow-x-auto {
+    display: none !important;
+  }
+  
+  /* Ensure mobile cards are visible */
+  .lg\\:hidden .space-y-4 {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Mobile card styling */
+  .lg\\:hidden .p-4.border-slate-200 {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Mobile badge styling */
+  .lg\\:hidden .font-mono.text-sm {
+    display: inline-block !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 0.5rem !important;
+    font-weight: 500 !important;
+  }
+  
+  /* Mobile section styling */
+  .lg\\:hidden .bg-slate-50.p-3 {
+    background: #f8fafc !important;
+    padding: 0.75rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+}
+
+/* Better table spacing and layout */
+table.min-w-full th,
+table.min-w-full td {
+  padding: 12px 16px !important;
+  vertical-align: top !important;
+}
+
+/* Ensure Quote ID badges have proper spacing */
+table.min-w-full td .inline-flex {
+  max-width: 100% !important;
+  word-break: break-all !important;
+}
+
+/* Better table spacing and layout */
+table.min-w-full th,
+table.min-w-full td {
+  padding: 12px 16px !important;
+  vertical-align: top !important;
+}
+
+/* Ensure Quote ID badges have proper spacing */
+table.min-w-full td .inline-flex {
+  max-width: 100% !important;
+  word-break: break-all !important;
+}
+
+/* Allow some columns to wrap text for better readability */
+.table-fixed td.wrap-text {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  min-height: 60px !important;
+}
+
+/* Ensure table cells have proper padding and don't cut content */
+.table-fixed td {
+  padding: 12px 16px !important;
+  vertical-align: top !important;
+}
+
+/* Better handling for long text content */
+.table-fixed td .break-all {
+  word-break: break-all !important;
+  hyphens: auto !important;
+}
+
+/* Ensure GSM badges don't get cut off */
+.table-fixed td .whitespace-nowrap {
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+/* Ensure tables don't scroll horizontally */
+[data-slot="table"],
+[role="table"] {
+  overflow: hidden !important;
+  max-width: 100% !important;
+}
+
+/* Force mobile layout on small screens */
+@media (max-width: 1024px) {
+  /* Hide all table containers on mobile */
+  .overflow-x-auto,
+  .min-w-\\[.*\\],
+  table {
+    display: none !important;
+  }
+  
+  /* Show mobile cards */
+  .lg\\:hidden {
+    display: block !important;
+  }
+  
+  /* Ensure mobile cards are properly styled */
+  .lg\\:hidden .space-y-4 {
+    display: block !important;
+    padding: 1rem !important;
+  }
+  
+  /* Mobile card styling */
+  .lg\\:hidden .p-4 {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+/* Prevent horizontal scrolling on mobile */
+@media (max-width: 1024px) {
+  html, body {
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  /* Ensure header and navigation don't cause horizontal scroll */
+  header, nav, aside {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Prevent table overflow from affecting layout */
+  .table-container {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+}
+
+/* Touch-friendly scrollbars */
+@media (hover: none) and (pointer: coarse) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+}
+
+/* Ensure proper focus states for accessibility */
+*:focus {
+  outline: 2px solid var(--sp-primary);
+  outline-offset: 2px;
+}
+
+/* Essential: Ensure DialogFooter buttons are always visible */
+[data-slot="dialog-footer"] button,
+[data-slot="dialog-footer"] [role="button"] {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 40px !important;
+  min-width: 100px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* Professional button styling - Different colors for different actions */
+[data-slot="dialog-footer"] button {
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  transition: all 200ms ease-out !important;
+}
+
+/* Primary action buttons (Update, Add, Save Changes) - Green */
+[data-slot="dialog-footer"] button:not([variant="ghost"]) {
+  background-color: #10b981 !important; /* Green color for actions */
+}
+
+[data-slot="dialog-footer"] button:not([variant="ghost"]):hover {
+  background-color: #059669 !important; /* Darker green on hover */
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Ensure DialogFooter is visible */
+[data-slot="dialog-footer"] {
+  background-color: transparent !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+/* Cancel button variant - Gray with better contrast */
+[data-slot="dialog-footer"] button[variant="ghost"] {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 2px solid #cbd5e1 !important;
+  font-weight: 500 !important;
+}
+
+[data-slot="dialog-footer"] button[variant="ghost"]:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #334155 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Improve button accessibility */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--sp-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(91, 91, 214, 0.1);
+}
+
+/* Ensure proper contrast for text */
+.text-slate-900 {
+  color: #0f172a;
+}
+
+.text-slate-700 {
+  color: #334155;
+}
+
+.text-slate-600 {
+  color: #475569;
+}
+
+.text-slate-500 {
+  color: #64748b;
+}
+
+/* Mobile-first responsive utilities */
+.container-mobile {
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 640px) {
+  .container-mobile {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-mobile {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-mobile {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-mobile {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container-mobile {
+    max-width: 1536px;
+  }
+}
+
+/* Mobile Sidebar Animations */
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Animation utility classes */
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.slide-in-from-left {
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+.slide-out-to-left {
+  animation: slideOutToLeft 0.3s ease-out;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-out;
+}
+
+/* Mobile sidebar specific animations - Updated to use CSS transforms */
+/* Note: These are now handled by CSS transforms in the component */
+
+/* Account Dropdown Fixes */
+.account-dropdown {
+  position: relative !important;
+}
+
+.account-dropdown .absolute {
+  position: absolute !important;
+  z-index: 9999 !important;
+  top: 100% !important;
+  right: 0 !important;
+  margin-top: 0.5rem !important;
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  min-width: 200px !important;
+  overflow: visible !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure dropdown is above other elements */
+.z-\[9999\] {
+  z-index: 9999 !important;
+}
+
+/* Fix dropdown positioning */
+.top-full {
+  top: 100% !important;
+}
+
+/* Force dropdown visibility */
+.account-dropdown .absolute[style*="display: none"] {
+  display: block !important;
+}
+
+.account-dropdown .absolute[style*="visibility: hidden"] {
+  visibility: visible !important;
+}
+
+/* Ensure header and navbar are on the same layer */
+header {
+  z-index: 40 !important;
+}
+
+/* Ensure dropdowns appear above header */
+.account-dropdown .absolute {
+  z-index: 60 !important;
+}
+
+/* Mobile sidenav specific styles */
+@media (max-width: 1023px) {
+  .mobile-sidenav {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    width: 288px !important;
+    z-index: 9999 !important;
+    background: white !important;
+    border-right: 1px solid #e2e8f0 !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    transform: translateX(0) !important;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Smooth slide-in using CSS transitions */
+  .mobile-sidenav {
+    transform: translateX(-100%) !important;
+    opacity: 0.8 !important;
+  }
+
+  .mobile-sidenav.show {
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+  }
+  
+  /* Backdrop smooth fade-in using CSS transitions */
+  .mobile-backdrop {
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 9998 !important;
+    opacity: 0 !important;
+  }
+
+  .mobile-backdrop.show {
+    opacity: 1 !important;
+  }
+}
+
+/* Sales Person Management Mobile Specific Styles */
+@media (max-width: 1024px) {
+  /* Ensure sales person mobile cards are properly displayed */
+  .lg\\:hidden .space-y-4 {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Sales person mobile card styling */
+  .lg\\:hidden .p-4.border-slate-200 {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    margin-bottom: 1rem !important;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important;
+  }
+  
+  /* Sales person mobile badge styling */
+  .lg\\:hidden .font-mono.text-sm.bg-orange-100 {
+    display: inline-block !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 0.5rem !important;
+    font-weight: 500 !important;
+    background: #fed7aa !important;
+    color: #ea580c !important;
+  }
+  
+  /* Sales person mobile section styling */
+  .lg\\:hidden .bg-slate-50.p-3 {
+    background: #f8fafc !important;
+    padding: 0.75rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  /* Sales person mobile button styling */
+  .lg\\:hidden button {
+    background: white !important;
+    border: 1px solid #fbbf24 !important;
+    color: #d97706 !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.5rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .lg\\:hidden button:hover {
+    background: #fef3c7 !important;
+    border-color: #f59e0b !important;
+    color: #b45309 !important;
+  }
+}

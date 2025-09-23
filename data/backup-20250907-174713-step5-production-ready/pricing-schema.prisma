@@ -1,0 +1,42 @@
+// Pricing Schema for Digital and Offset Costing
+// This file contains new tables to be added to the existing database
+
+model DigitalPricing {
+  id              String   @id @default(cuid())
+  perClick         Decimal  @db.Decimal(10, 2)
+  parentSheetCost  Decimal  @db.Decimal(10, 2)
+  wasteParents     Int      @default(0)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("digital_pricing")
+}
+
+model OffsetPricing {
+  id               String   @id @default(cuid())
+  parentCost       Decimal  @db.Decimal(10, 2)
+  plateCost        Decimal  @db.Decimal(10, 2)
+  makeReadySetup   Decimal  @db.Decimal(10, 2)
+  makeReadySheets  Int
+  runPer1000       Decimal  @db.Decimal(10, 2)
+  cutOpRate        Decimal  @db.Decimal(10, 2)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("offset_pricing")
+}
+
+// Default pricing records
+model DefaultPricing {
+  id              String   @id @default(cuid())
+  pricingType     String   @unique // "digital" or "offset"
+  pricingData     Json     // Store the pricing data as JSON
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("default_pricing")
+}
+

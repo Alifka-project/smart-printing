@@ -1,0 +1,226 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String            @unique(map: "sqlite_autoindex_User_2")
+  name            String
+  role            String            @default("user")
+  password        String?
+  profilePicture  String?
+  status          String            @default("Active")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  salesPersonId   String?           @unique(map: "sqlite_autoindex_User_3")
+  isSalesPerson   Boolean?          @default(false)
+  clients         Client[]
+  quotes          Quote[]
+  searchAnalytics SearchAnalytics[]
+  searchHistory   SearchHistory[]
+}
+
+model SalesPerson {
+  id             String @id @default(cuid())
+  salesPersonId  String  @unique(map: "sqlite_autoindex_SalesPerson_2")
+  name           String
+  email          String  @unique(map: "sqlite_autoindex_SalesPerson_3")
+  phone          String
+  countryCode    String? @default("+971")
+  designation    String? @default("Sales Representative")
+  department     String? @default("Sales")
+  hireDate       DateTime @default(now())
+  status         String? @default("Active")
+  profilePicture String?
+  address        String?
+  city           String? @default("Dubai")
+  state          String? @default("Dubai")
+  postalCode     String?
+  country        String? @default("UAE")
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  clientType    String
+  companyName   String?
+  contactPerson String
+  email         String
+  phone         String
+  countryCode   String
+  role          String?
+  status        String   @default("Active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String?
+  address       String?
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String?
+  firstName     String?
+  lastName      String?
+  designation   String?
+  emails        String?
+  trn           String?
+  hasNoTrn      Int?     @default(0)
+  area          String?
+  user          User?    @relation(fields: [userId], references: [id])
+  quotes        Quote[]
+}
+
+model Quote {
+  id                    String            @id @default(cuid())
+  quoteId               String            @unique
+  date                  DateTime
+  status                String            @default("Pending")
+  clientId              String
+  userId                String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  product               String
+  quantity              Int
+  sides                 String
+  printing              String
+  colors                String?
+  productName           String?
+  printingSelection     String?
+  flatSizeHeight        Float?
+  closeSizeSpine        Float?
+  useSameAsFlat         Boolean?          @default(false)
+  flatSizeWidth         Float?
+  flatSizeSpine         Float?
+  closeSizeHeight       Float?
+  closeSizeWidth        Float?
+  finishingComments     String?
+  approvalStatus        String?           @default("Draft")
+  requiresApproval      Boolean?          @default(false)
+  approvalReason        String?
+  approvedBy            String?
+  approvedAt            DateTime?
+  approvalNotes         String?
+  discountPercentage    Float?            @default(0)
+  discountAmount        Float?            @default(0)
+  totalAmount           Float?            @default(0)
+  client                Client            @relation(fields: [clientId], references: [id])
+  user                  User?            @relation(fields: [userId], references: [id])
+  quoteSteps           QuoteStep[]
+  quoteMaterials       QuoteMaterial[]
+  quoteSuppliers       QuoteSupplier[]
+  quoteFinishing       QuoteFinishing[]
+  quotePricing         QuotePricing[]
+  quoteApprovals       QuoteApproval[]
+  quoteHistory         QuoteHistory[]
+}
+
+model QuoteStep {
+  id          String @id @default(cuid())
+  quoteId     String
+  stepNumber  Int
+  stepName    String
+  isCompleted Boolean @default(false)
+  completedAt DateTime?
+  quote       Quote  @relation(fields: [quoteId], references: [id])
+}
+
+model QuoteMaterial {
+  id          String @id @default(cuid())
+  quoteId     String
+  materialId  String
+  quantity    Int
+  price       Float
+  quote       Quote  @relation(fields: [quoteId], references: [id])
+}
+
+model QuoteSupplier {
+  id          String @id @default(cuid())
+  quoteId     String
+  supplierId  String
+  price       Float
+  quote       Quote  @relation(fields: [quoteId], references: [id])
+}
+
+model QuoteFinishing {
+  id          String @id @default(cuid())
+  quoteId     String
+  finishingType String
+  price       Float
+  quote       Quote  @relation(fields: [quoteId], references: [id])
+}
+
+model QuotePricing {
+  id          String @id @default(cuid())
+  quoteId     String
+  basePrice   Float
+  totalPrice  Float
+  quote       Quote  @relation(fields: [quoteId], references: [id])
+}
+
+model QuoteApproval {
+  id          String @id @default(cuid())
+  quoteId     String
+  approverId  String
+  status      String
+  approvedAt  DateTime?
+  quote       Quote  @relation(fields: [quoteId], references: [id])
+}
+
+model QuoteHistory {
+  id          String @id @default(cuid())
+  quoteId     String
+  action      String
+  timestamp   DateTime @default(now())
+  quote       Quote  @relation(fields: [quoteId], references: [id])
+}
+
+model Supplier {
+  id          String @id @default(cuid())
+  name        String
+  email       String
+  phone       String
+  address     String?
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String?
+  status      String @default("Active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Material {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  category    String?
+  price       Float
+  unit        String?
+  status      String @default("Active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SearchAnalytics {
+  id          String @id @default(cuid())
+  userId      String
+  searchTerm  String
+  timestamp   DateTime @default(now())
+  user        User    @relation(fields: [userId], references: [id])
+}
+
+model SearchHistory {
+  id          String @id @default(cuid())
+  userId      String
+  searchTerm  String
+  timestamp   DateTime @default(now())
+  user        User    @relation(fields: [userId], references: [id])
+}

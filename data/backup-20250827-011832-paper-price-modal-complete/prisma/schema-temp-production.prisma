@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgres://c91c8561fe8b6b34a5985f17ac564ca367969fe928557c4c4f6b5bc780733281:sk_1sGdxWA91n5mc5fS6JTs0@db.prisma.io:5432/?sslmode=require"
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String
+  role            String            @default("user")
+  password        String?
+  profilePicture  String?
+  status          String            @default("Active")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  clients         Client[]
+  quotes          Quote[]
+  searchAnalytics SearchAnalytics[]
+  searchHistory   SearchHistory[]
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  clientType    String
+  companyName   String?
+  contactPerson String
+  email         String
+  phone         String
+  countryCode   String
+  role          String?
+  status        String   @default("Active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String?
+  address       String?
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String?
+  user          User?    @relation(fields: [userId], references: [id])
+  quotes        Quote[]
+}
+
+model Quote {
+  id                String            @id @default(cuid())
+  quoteId           String            @unique
+  date              DateTime
+  status            String            @default("Pending")
+  clientId          String
+  userId            String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  product           String
+  quantity          Int
+  sides             String
+  printing          String
+  colors            String?
+  productName       String?
+  printingSelection String?
+  flatSizeHeight    Float?
+  closeSizeSpine    Float?
+  useSameAsFlat     Boolean?          @default(false)
+  flatSizeWidth     Float?
+  flatSizeSpine     Float?
+  closeSizeHeight   Float?
+  closeSizeWidth    Float?
+  finishing         Finishing[]
+  papers            Paper[]
+  user              User?             @relation(fields: [userId], references: [id])
+  client            Client            @relation(fields: [clientId], references: [id])
+  amounts           QuoteAmount?
+  operational       QuoteOperational?
+}
+
+model Paper {
+  id                String  @id @default(cuid())
+  name              String
+  gsm               String
+  quoteId           String
+  inputWidth        Float?
+  inputHeight       Float?
+  pricePerPacket    Float?
+  pricePerSheet     Float?
+  sheetsPerPacket   Int?
+  recommendedSheets Int?
+  enteredSheets     Int?
+  outputWidth       Float?
+  outputHeight      Float?
+  selectedColors    String?
+  quote             Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model Finishing {
+  id      String @id @default(cuid())
+  name    String
+  quoteId String
+  cost    Float?
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model QuoteAmount {
+  id      String @id @default(cuid())
+  base    Float
+  vat     Float
+  total   Float
+  quoteId String @unique
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model QuoteOperational {
+  id        String   @id @default(cuid())
+  quoteId   String   @unique
+  plates    Int?
+  units     Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model Supplier {
+  id          String     @id @default(cuid())
+  name        String
+  contact     String?
+  email       String?
+  phone       String?
+  countryCode String?    @default("+971")
+  address     String?
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String?    @default("UAE")
+  status      String     @default("Active")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  materials   Material[]
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  materialId  String   @unique
+  name        String
+  gsm         String?
+  supplierId  String
+  cost        Float
+  unit        String
+  status      String   @default("Active")
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime   @updatedAt
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+}
+
+model SearchHistory {
+  id        String   @id @default(cuid())
+  query     String
+  timestamp DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model SearchAnalytics {
+  id        String   @id @default(cuid())
+  query     String
+  timestamp DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}

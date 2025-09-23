@@ -1,0 +1,112 @@
+[
+  {
+    "id": "cmekilpoq0000xffloxu9xcse",
+    "email": "Zee@example.com",
+    "name": "Zee",
+    "role": "admin",
+    "password": "admin123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T21:58:52.490Z",
+    "updatedAt": "2025-08-20T22:08:20.623Z"
+  },
+  {
+    "id": "cmekj0vxf0006xffl2xdoub1x",
+    "email": "admin@example.com",
+    "name": "John Wick",
+    "role": "admin",
+    "password": "admin123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T22:10:40.342Z",
+    "updatedAt": "2025-08-20T22:10:40.342Z"
+  },
+  {
+    "id": "cmek2grmu0000x507s347xk7j",
+    "email": "admin@smartprint.com",
+    "name": "Admin",
+    "role": "admin",
+    "password": "admin123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T14:27:07.876Z",
+    "updatedAt": "2025-08-20T15:39:57.636Z"
+  },
+  {
+    "id": "cmek2grnf0001x50772sxw531",
+    "email": "estimator@smartprint.com",
+    "name": "Estimator",
+    "role": "user",
+    "password": "password123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T14:27:07.900Z",
+    "updatedAt": "2025-08-20T15:39:57.639Z"
+  },
+  {
+    "id": "cmek2grnj0002x507ds08w13l",
+    "email": "manager@smartprint.com",
+    "name": "Manager",
+    "role": "manager",
+    "password": "manager123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T14:27:07.903Z",
+    "updatedAt": "2025-08-20T15:39:57.643Z"
+  },
+  {
+    "id": "cmek2grnl0003x507445785fy",
+    "email": "user@smartprint.com",
+    "name": "User",
+    "role": "user",
+    "password": "password123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T14:27:07.905Z",
+    "updatedAt": "2025-08-20T15:39:57.647Z"
+  },
+  {
+    "id": "cmek2grnn0004x5076wolf668",
+    "email": "zee@smartprint.com",
+    "name": "Zee",
+    "role": "user",
+    "password": "admin123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T14:27:07.908Z",
+    "updatedAt": "2025-08-20T19:10:39.843Z"
+  },
+  {
+    "id": "cmek2oic80002x5xjcvofcdxt",
+    "email": "alifka@gmail.com",
+    "name": "Alifka",
+    "role": "admin",
+    "password": "admin123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T14:33:09.080Z",
+    "updatedAt": "2025-08-20T14:33:09.080Z"
+  },
+  {
+    "id": "cmek5124f0001x5l8vyinw9i6",
+    "email": "estimator@example.com",
+    "name": "Jane Estimator",
+    "role": "estimator",
+    "password": "estimator123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T15:38:53.824Z",
+    "updatedAt": "2025-08-20T15:39:57.628Z"
+  },
+  {
+    "id": "cmek5124s0002x5l8j8iyshyx",
+    "email": "user@example.com",
+    "name": "Bob User",
+    "role": "user",
+    "password": "admin123",
+    "profilePicture": null,
+    "status": "Active",
+    "createdAt": "2025-08-20T15:38:53.836Z",
+    "updatedAt": "2025-08-20T22:18:16.661Z"
+  }
+]

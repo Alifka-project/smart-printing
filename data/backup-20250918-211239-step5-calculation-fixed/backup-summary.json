@@ -1,0 +1,19 @@
+{
+  "backupDate": "2025-09-18T21:12:39.680Z",
+  "milestone": "Step 5 Calculation Fix",
+  "description": "Fixed Step 5 calculation to include additional costs in base calculation before applying margin and VAT",
+  "finalTotal": "AED 1,461.51",
+  "baseCost": "AED 1,070.70",
+  "margin": "30%",
+  "vat": "5%",
+  "status": "COMPLETE",
+  "filesBackedUp": 26,
+  "totalFiles": 26,
+  "keyChanges": [
+    "Modified calculateSummaryTotals() in Step5Quotation.tsx",
+    "Additional costs now included in base calculation",
+    "30% margin applied to total base cost",
+    "5% VAT applied to subtotal",
+    "Database storage matches Step 5 final price"
+  ]
+}

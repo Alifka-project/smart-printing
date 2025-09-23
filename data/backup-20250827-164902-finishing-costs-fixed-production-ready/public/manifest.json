@@ -1,0 +1,39 @@
+{
+  "name": "SmartPrint Print Management System",
+  "short_name": "SmartPrint",
+  "description": "Professional print management system with modern UI/UX design",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5B5BD6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-smart-printing.svg",
+      "sizes": "32x32",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-smart-printing.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-smart-printing.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-smart-printing.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}

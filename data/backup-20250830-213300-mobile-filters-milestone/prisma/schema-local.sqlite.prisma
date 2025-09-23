@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id              String?           @id @default(cuid())
+  email           String            @unique(map: "sqlite_autoindex_User_2")
+  name            String
+  role            String            @default("user")
+  password        String?
+  profilePicture  String?
+  status          String            @default("Active")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  salesPersonId   String?           @unique(map: "sqlite_autoindex_User_3")
+  isSalesPerson   Boolean?          @default(false)
+  clients         Client[]
+  quotes          Quote[]
+  searchAnalytics SearchAnalytics[]
+  searchHistory   SearchHistory[]
+}
+
+model SalesPerson {
+  id             String? @id @default(cuid())
+  salesPersonId  String  @unique(map: "sqlite_autoindex_SalesPerson_2")
+  name           String
+  email          String  @unique(map: "sqlite_autoindex_SalesPerson_3")
+  phone          String
+  countryCode    String? @default("+971")
+  designation    String? @default("Sales Representative")
+  department     String? @default("Sales")
+  hireDate       String? @default("CURRENT_TIMESTAMP")
+  status         String? @default("Active")
+  profilePicture String?
+  address        String?
+  city           String? @default("Dubai")
+  state          String? @default("Dubai")
+  postalCode     String?
+  country        String? @default("UAE")
+  notes          String?
+  createdAt      String? @default("CURRENT_TIMESTAMP")
+  updatedAt      String? @default("CURRENT_TIMESTAMP") @updatedAt
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  clientType    String
+  companyName   String?
+  contactPerson String
+  email         String
+  phone         String
+  countryCode   String
+  role          String?
+  status        String   @default("Active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String?
+  address       String?
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String?
+  firstName     String?
+  lastName      String?
+  designation   String?
+  emails        String?
+  trn           String?
+  hasNoTrn      Int?     @default(0)
+  area          String?
+  user          User?    @relation(fields: [userId], references: [id])
+  quotes        Quote[]
+}
+
+model Quote {
+  id                    String            @id @default(cuid())
+  quoteId               String            @unique
+  date                  DateTime
+  status                String            @default("Pending")
+  clientId              String
+  userId                String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  product               String
+  quantity              Int
+  sides                 String
+  printing              String
+  colors                String?
+  productName           String?
+  printingSelection     String?
+  flatSizeHeight        Float?
+  closeSizeSpine        Float?
+  useSameAsFlat         Boolean?          @default(false)
+  flatSizeWidth         Float?
+  flatSizeSpine         Float?
+  closeSizeHeight       Float?
+  closeSizeWidth        Float?
+  finishingComments     String?
+  approvalStatus        String?           @default("Draft")
+  requiresApproval      Boolean?          @default(false)
+  approvalReason        String?
+  approvedBy            String?
+  approvedAt            DateTime?
+  approvalNotes         String?
+  discountPercentage    Float?            @default(0)
+  discountAmount        Float?            @default(0)
+  marginPercentage      Float?            @default(15)
+  marginAmount          Float?            @default(0)
+  customerPdfEnabled    Boolean?          @default(true)
+  sendToCustomerEnabled Boolean?          @default(true)
+  salesPersonId         String?
+  finishing             Finishing[]
+  papers                Paper[]
+  user                  User?             @relation(fields: [userId], references: [id])
+  client                Client            @relation(fields: [clientId], references: [id])
+  amounts               QuoteAmount?
+  operational           QuoteOperational?
+}
+
+model Supplier {
+  id          String     @id @default(cuid())
+  name        String
+  contact     String?
+  email       String?
+  phone       String?
+  countryCode String?    @default("+971")
+  address     String?
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String?    @default("UAE")
+  status      String     @default("Active")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  materials   Material[]
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  materialId  String   @unique
+  name        String
+  gsm         String?
+  supplierId  String
+  cost        Float
+  unit        String
+  status      String   @default("Active")
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+}
+
+model Paper {
+  id                String  @id @default(cuid())
+  name              String
+  gsm               String
+  quoteId           String
+  inputWidth        Float?
+  inputHeight       Float?
+  pricePerPacket    Float?
+  pricePerSheet     Float?
+  sheetsPerPacket   Int?
+  recommendedSheets Int?
+  enteredSheets     Int?
+  outputWidth       Float?
+  outputHeight      Float?
+  selectedColors    String?
+  quote             Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model Finishing {
+  id      String @id @default(cuid())
+  name    String
+  quoteId String
+  cost    Float?
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model QuoteAmount {
+  id      String @id @default(cuid())
+  base    Float
+  vat     Float
+  total   Float
+  quoteId String @unique
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model QuoteOperational {
+  id        String   @id @default(cuid())
+  quoteId   String   @unique
+  plates    Int?
+  units     Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model SearchHistory {
+  id        String   @id @default(cuid())
+  query     String
+  timestamp DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model SearchAnalytics {
+  id        String   @id @default(cuid())
+  query     String
+  timestamp DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model UAEArea {
+  id        String   @id @default(cuid())
+  name      String
+  state     String
+  country   String   @default("UAE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

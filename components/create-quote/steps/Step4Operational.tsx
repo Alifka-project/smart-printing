@@ -6254,9 +6254,14 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                             console.log('🔍 Pricing Summary - productIndex:', productIndex);
                             console.log('🔍 Pricing Summary - outputDimensions:', outputDimensions);
                             console.log('🔍 Pricing Summary - product:', product);
+                            console.log('🔍 Pricing Summary - outputDimensions[productIndex]:', outputDimensions[productIndex]);
+                            console.log('🔍 Pricing Summary - product.flatSize:', product?.flatSize);
                             
-                            const pieceH = outputDimensions[productIndex]?.height ?? product?.flatSize?.height ?? 9;
-                            const pieceW = outputDimensions[productIndex]?.width  ?? product?.flatSize?.width  ?? 5.5;
+                            // Use same logic as main calculation - prioritize product.flatSize directly
+                            const pieceH = product?.flatSize?.height ?? 9;
+                            const pieceW = product?.flatSize?.width ?? 5.5;
+                            
+                            console.log('🔍 Pricing Summary - Final dimensions:', { pieceH, pieceW });
 
                             const qty   = Number(product.quantity) || 1000;
                             const sides = Number(product.sides) || 2;
@@ -6352,8 +6357,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                 
                                 <div className="space-y-3">
                                   <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-600">Paper Cost ({excelResult.sheets} sheets):</span>
-                                    <span className="font-semibold text-blue-600">{fmt(excelResult.paperCost)}</span>
+                                    <span className="text-slate-600">Paper Cost ({opPaper?.enteredSheets || excelResult.sheets} sheets):</span>
+                                    <span className="font-semibold text-blue-600">{fmt((opPaper?.enteredSheets || excelResult.sheets) * paperCostPerSheet)}</span>
                                   </div>
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-600">Unit Price:</span>
@@ -6368,7 +6373,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                 <div className="border-t border-gray-300 pt-3 mt-3">
                                   <div className="flex justify-between items-center">
                                     <span className="font-bold text-blue-800">Excel Total Cost:</span>
-                                    <span className="text-xl font-bold text-blue-800">{fmt(excelResult.total)}</span>
+                                    <span className="text-xl font-bold text-blue-800">{fmt(excelResult.unit_price + ((opPaper?.enteredSheets || excelResult.sheets) * paperCostPerSheet) + excelResult.plateTotal)}</span>
                                   </div>
                                   <div className="text-xs text-slate-500 mt-1">
                                     Ups/sheet: {excelResult.upsPerSht} &nbsp;|&nbsp; Waste: {excelResult.wasteSheets} &nbsp;|&nbsp; No. of ups: {excelResult.noOfUps}

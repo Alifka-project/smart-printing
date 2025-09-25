@@ -4885,10 +4885,206 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
 
 
 
-  // ===== Enhanced pricing calculation with packet + sheet logic =====
-  const calculateTotalCost = (opPaper: any, actualSheetsNeeded: number) => {
+  const ROUNDUP0 = (x: number) => Math.ceil(x);
+  const ROUNDDOWN0 = (x: number) => Math.floor(x);
+
+  // ---- Units-table VLOOKUP (cumulative) in closed form ----
+    const unitPrice = (units: number) => {
+      const u = Math.max(0, Math.floor(units));
+      if (u <= 10) return 50 * u;
+    if (u <= 20) return 60 * u - u * u;   // 60u - u^2
+      return 40 * u;
+    };
+  const RU = Math.ceil, RD = Math.floor;
+
+  // ---- Single-row Excel-matching calculator ----
+  function calcRowTotal({ pieceW, pieceH, qty, sides, colours, paperCostPerSheet }: {
+    pieceW: number;
+    pieceH: number;
+    qty: number;
+    sides: number;
+    colours: number;
+    paperCostPerSheet: number;
+  }, { parentW, parentH, cutPcs }: {
+    parentW: number;
+    parentH: number;
+    cutPcs: number;
+  }) {
+    // 1) Imposition (Option1/2)
+    const opt1 = RD(parentW / (pieceH + 1)) * RD(parentH / (pieceW + 1));
+    const opt2 = RD(parentW / (pieceW + 1)) * RD(parentH / (pieceH + 1));
+    const noOfUps = Math.max(opt1, opt2);
+    
+    // 2) Odd/even rule (IF(Sides=1, TRUE, ISEVEN(No. of ups)))
+    const oddEven = (sides === 1) ? true : (noOfUps % 2 === 0);
+    
+    // 3) Ups per sheet; 4) Waste; 5) Sheets
+    const upsPerSht = noOfUps * cutPcs;
+    const wasteSheets = RU((parentW > 50 ? 120 : 100) / cutPcs);
+    const sheets = upsPerSht === 0 ? 0 : RU(qty / upsPerSht + wasteSheets);
+
+    // 6) Paper cost
+    const paperCost = sheets * paperCostPerSheet;
+    
+    // 7) Units (clicks) → 8) unit price
+    const coreUnits = RU((sheets * cutPcs * colours * sides) / 1000);
+    const units = Math.max(colours, coreUnits);
+    const unit_price = unitPrice(units);
+    
+    // 9) Plate per side; total plates
+    const platePerSide = (parentW > 54 ? 50 : 20) * colours;
+    const plateTotal = platePerSide * sides;
+
+    // 10) Total
+    const total = sheets === 0 ? 0 : unit_price + paperCost + plateTotal;
+
+    return { parentW, parentH, cutPcs, noOfUps, upsPerSht, wasteSheets, sheets,
+             paperCost, units, unit_price, platePerSide, plateTotal, total };
+  }
+
+  // ---- Evaluate all candidates and pick cheapest (ascending) ----
+  function pickCheapestTotal(base: any, candidates: any[]) {
+    const rows = candidates.map(c => calcRowTotal(base, c));
+    rows.sort((a, b) => a.total - b.total);
+    return rows;                 // rows[0] is the cheapest
+  }
+
+  // ===== Enhanced pricing calculation with Excel formula integration =====
+  const calculateTotalCost = (opPaper: any, actualSheetsNeeded: number, productData?: any, productIndex?: number) => {
     if (!opPaper) return 0;
     
+    // Get paper cost per sheet - prioritize Step 4 manual input, fallback to Step 3 database
+    let paperCostPerSheet = opPaper.pricePerSheet;
+    
+    // If no manual input, try packet pricing
+    if (paperCostPerSheet == null && opPaper.pricePerPacket != null && opPaper.sheetsPerPacket != null && opPaper.sheetsPerPacket > 0) {
+      paperCostPerSheet = opPaper.pricePerPacket / opPaper.sheetsPerPacket;
+    }
+    
+    // If still no price, try materials database
+    if (paperCostPerSheet == null && productData && productIndex !== undefined) {
+      const product = formData.products[productIndex];
+      if (product && product.papers && product.papers.length > 0) {
+        // Find the paper that matches this operational paper
+        const matchingPaper = product.papers.find((p: any) => 
+          p.name === opPaper.name || 
+          (p.gsm && opPaper.gsm && p.gsm === opPaper.gsm)
+        );
+        if (matchingPaper) {
+          const materialPrice = getPaperPriceFromMaterials(matchingPaper.name, matchingPaper.gsm);
+          if (materialPrice != null) {
+            paperCostPerSheet = materialPrice;
+          }
+        }
+      }
+    }
+    
+    // Final fallback
+    if (paperCostPerSheet == null) {
+      paperCostPerSheet = 0;
+    }
+    
+    // If we have product data, use Excel formula with candidate-based logic
+    if (productData && productIndex !== undefined) {
+      const product = formData.products[productIndex];
+      if (!product) return 0;
+      
+      // Get product dimensions from Step 3
+      const pieceH = outputDimensions[productIndex]?.height || product?.flatSize?.height || 9;
+      const pieceW = outputDimensions[productIndex]?.width || product?.flatSize?.width || 5.5;
+      
+      // Get quantity
+      const qty = Number(product.quantity) || 0;
+      
+      // Get sides and colours
+      const sides = Number(product.sides) || 2;
+      
+      // Debug colors calculation
+      console.log('🎨 calculateTotalCost - product.colors:', product.colors);
+      console.log('🎨 calculateTotalCost - front:', product.colors?.front, 'back:', product.colors?.back);
+      
+      // Extract number of colors from Step 3 selection
+      // Handle formats like "4 Colors (CMYK)", "4+1 Colors", "4+2 Colors"
+      const parseColors = (colorStr: any): number => {
+        if (!colorStr) return 0;
+        const str = colorStr.toString();
+        
+        // Check for "4+1" or "4+2" format
+        const plusMatch = str.match(/(\d+)\+(\d+)/);
+        if (plusMatch) {
+          const base = parseInt(plusMatch[1]);
+          const additional = parseInt(plusMatch[2]);
+          return base + additional;
+        }
+        
+        // Fallback to single number
+        const singleMatch = str.match(/\d+/);
+        return singleMatch ? parseInt(singleMatch[0]) : 0;
+      };
+
+      const frontColors = parseColors(product.colors?.front);
+      const backColors = parseColors(product.colors?.back);
+      
+      // For 2-sided printing, use max of front/back (same plates used)
+      const colours = Math.max(frontColors, backColors) || 4;
+      
+      console.log('🎨 calculateTotalCost - calculated colours:', colours);
+      
+      // Candidate rows (same as pricing summary)
+      const candidates = [
+        // Small parent sheets for 1-3 colors
+        { parentW: 15, parentH: 10,   cutPcs: 50, label: "15×10 / Cp50" },
+        { parentW: 18, parentH: 12,   cutPcs: 35, label: "18×12 / Cp35" },
+        { parentW: 20, parentH: 14,   cutPcs: 25, label: "20×14 / Cp25" },
+        { parentW: 20, parentH: 17.5, cutPcs: 20, label: "20×17.5 / Cp20" },
+        { parentW: 23, parentH: 16.5, cutPcs: 18, label: "23×16.5 / Cp18" },
+        { parentW: 25, parentH: 17.5, cutPcs: 16, label: "25×17.5 / Cp16" },
+        { parentW: 23, parentH: 14,   cutPcs: 21, label: "23×14 / Cp21" },
+        { parentW: 25, parentH: 14,   cutPcs: 20, label: "25×14 / Cp20" },
+        { parentW: 30, parentH: 20,   cutPcs: 11, label: "30×20 / Cp11" },
+        // Larger parent sheets for 4-6 colors
+        { parentW: 35, parentH: 25,   cutPcs: 8,  label: "35×25 / Cp8" },
+        { parentW: 40, parentH: 30,   cutPcs: 6,  label: "40×30 / Cp6" },
+        { parentW: 50, parentH: 35,   cutPcs: 4,  label: "50×35 / Cp4" },
+        { parentW: 60, parentH: 40,   cutPcs: 3,  label: "60×40 / Cp3" },
+      ];
+
+      // Decide which row to use (same logic as pricing summary)
+      const userParentW = opPaper?.inputWidth;
+      const userParentH = opPaper?.inputHeight;
+
+      let chosenRow;
+      if (userParentW && userParentH) {
+        chosenRow = candidates.find(
+          r => Number(r.parentW) === Number(userParentW) && Number(r.parentH) === Number(userParentH)
+        );
+      }
+
+      const base = { pieceW, pieceH, qty, sides, colours, paperCostPerSheet };
+
+      if (!chosenRow) {
+        // rank all rows by total and take cheapest
+        const rankedRows = candidates
+          .map(r => ({ r, res: calcRowTotal(base, r) }))
+          .sort((a, b) => a.res.total - b.res.total);
+        chosenRow = rankedRows[0].r;
+      }
+
+      // Compute final using the chosen REAL row
+      const excelResult = calcRowTotal(base, chosenRow);
+      
+      // Debug logging for testing
+      console.log('🔍 calculateTotalCost - Candidate selection:', {
+        productIndex,
+        productName: product.productName,
+        chosenRow,
+        excelResult
+      });
+      
+      return excelResult.total;
+    }
+    
+    // Fallback to original packet + sheet logic for backward compatibility
     const { pricePerSheet, pricePerPacket, sheetsPerPacket } = opPaper;
     
     // If only packet pricing is available
@@ -5101,6 +5297,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     return totalFinishingCost;
   };
 
+
   // ===== Calculate total project cost =====
   const calculateTotalProjectCost = () => {
     let totalCost = 0;
@@ -5109,7 +5306,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     formData.operational.papers.forEach((opPaper, index) => {
       const actualSheetsNeeded = opPaper.enteredSheets ?? 
                                  perPaperCalc[Math.floor(index / formData.products[0]?.papers.length || 1)]?.[index % (formData.products[0]?.papers.length || 1)]?.recommendedSheets ?? 0;
-      totalCost += calculateTotalCost(opPaper, actualSheetsNeeded);
+      const productData = formData.products[Math.floor(index / (formData.products[0]?.papers.length || 1))];
+      totalCost += calculateTotalCost(opPaper, actualSheetsNeeded, productData, Math.floor(index / (formData.products[0]?.papers.length || 1)));
     });
     
     // Plates cost
@@ -6003,71 +6201,158 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                         
                         {(() => {
                           try {
-                            // Get Excel calculation results
-                            // Get paper price from materials database
-                            const paperName = product.papers[paperIndex]?.name || '';
-                            const paperGSM = product.papers[paperIndex]?.gsm || '';
+                            // 0) Resolve inputs
+                            const pieceH = outputDimensions[productIndex]?.height || product?.flatSize?.height || 9;
+                            const pieceW = outputDimensions[productIndex]?.width  || product?.flatSize?.width  || 5.5;
+
+                            const qty    = Number(product.quantity) || 1000;
+                            const sides  = Number(product.sides) || 2;
+                            // Debug colors calculation
+                            console.log('🎨 Colors Debug - product.colors:', product.colors);
+                            console.log('🎨 Colors Debug - front:', product.colors?.front, 'back:', product.colors?.back);
+                            
+                            // Extract number of colors from Step 3 selection
+                            // Handle formats like "4 Colors (CMYK)", "4+1 Colors", "4+2 Colors"
+                            const parseColors = (colorStr: any): number => {
+                              if (!colorStr) return 0;
+                              const str = colorStr.toString();
+                              
+                              // Check for "4+1" or "4+2" format
+                              const plusMatch = str.match(/(\d+)\+(\d+)/);
+                              if (plusMatch) {
+                                const base = parseInt(plusMatch[1]);
+                                const additional = parseInt(plusMatch[2]);
+                                return base + additional;
+                              }
+                              
+                              // Fallback to single number
+                              const singleMatch = str.match(/\d+/);
+                              return singleMatch ? parseInt(singleMatch[0]) : 0;
+                            };
+
+                            const frontColors = parseColors(product.colors?.front);
+                            const backColors = parseColors(product.colors?.back);
+                            
+                            // For 2-sided printing, use max of front/back (same plates used)
+                            const colours = Math.max(frontColors, backColors) || 4;
+                            
+                            console.log('🎨 Colors Debug - calculated colours:', colours);
+
+                            // Paper cost per sheet (Step 4 overrides > packet > materials DB)
+                            const paperName = product.papers[paperIndex]?.name || "";
+                            const paperGSM  = product.papers[paperIndex]?.gsm  || "";
                             const materialPrice = getPaperPriceFromMaterials(paperName, paperGSM);
-                            
-                            console.log('🔍 Excel Calculation Debug:', {
-                              paperName,
-                              paperGSM,
-                              materialPrice,
-                              opPaperPricePerSheet: opPaper?.pricePerSheet,
-                              opPaperPricePerPacket: opPaper?.pricePerPacket,
-                              opPaperSheetsPerPacket: opPaper?.sheetsPerPacket,
-                              finalPaperCostPerSheet: materialPrice || opPaper?.pricePerSheet || 
-                                (opPaper?.pricePerPacket != null && opPaper?.sheetsPerPacket != null && opPaper.sheetsPerPacket > 0
-                                  ? opPaper.pricePerPacket / opPaper.sheetsPerPacket
-                                  : 1)
-                            });
-                            
-                            const excelResult = calculateExcelBasedPricing({
-                              productWidth: outputDimensions[productIndex]?.width || product?.flatSize?.width || 9,
-                              productHeight: outputDimensions[productIndex]?.height || product?.flatSize?.height || 5.5,
-                              quantity: qty,
-                              paperCostPerSheet: materialPrice || opPaper?.pricePerSheet || 
-                                (opPaper?.pricePerPacket != null && opPaper?.sheetsPerPacket != null && opPaper.sheetsPerPacket > 0
-                                  ? opPaper.pricePerPacket / opPaper.sheetsPerPacket
-                                  : 1),
-                              colors: Math.max(paperColors[productIndex]?.[paperIndex]?.length || 1, 1),
-                              sides: product.sides || '2',
-                              printingSelection: product.printingSelection || 'Offset',
-                              parentSheetWidth: opPaper?.inputWidth || 100,
-                              parentSheetHeight: opPaper?.inputHeight || 70
+
+                            let paperCostPerSheet = opPaper?.pricePerSheet;
+                            if (paperCostPerSheet == null) {
+                              if (opPaper?.pricePerPacket != null && opPaper?.sheetsPerPacket != null && opPaper.sheetsPerPacket > 0) {
+                                paperCostPerSheet = opPaper.pricePerPacket / opPaper.sheetsPerPacket;
+                              } else {
+                                paperCostPerSheet = materialPrice ?? 10;
+                              }
+                            }
+
+                            // 1) Candidate rows (MUST BE REAL ROWS FROM YOUR "Cut Size" TABLE)
+                            // Replace this stub with your dynamic fetch (Option A/Option B we discussed)
+                            const candidates = [
+                              // Small parent sheets for 1-3 colors
+                              { parentW: 15, parentH: 10,   cutPcs: 50, label: "15×10 / Cp50" },
+                              { parentW: 18, parentH: 12,   cutPcs: 35, label: "18×12 / Cp35" },
+                              { parentW: 20, parentH: 14,   cutPcs: 25, label: "20×14 / Cp25" },
+                              { parentW: 20, parentH: 17.5, cutPcs: 20, label: "20×17.5 / Cp20" },
+                              { parentW: 23, parentH: 16.5, cutPcs: 18, label: "23×16.5 / Cp18" },
+                              { parentW: 25, parentH: 17.5, cutPcs: 16, label: "25×17.5 / Cp16" },
+                              { parentW: 23, parentH: 14,   cutPcs: 21, label: "23×14 / Cp21" },
+                              { parentW: 25, parentH: 14,   cutPcs: 20, label: "25×14 / Cp20" },
+                              { parentW: 30, parentH: 20,   cutPcs: 11, label: "30×20 / Cp11" },
+                              // Larger parent sheets for 4-6 colors
+                              { parentW: 35, parentH: 25,   cutPcs: 8,  label: "35×25 / Cp8" },
+                              { parentW: 40, parentH: 30,   cutPcs: 6,  label: "40×30 / Cp6" },
+                              { parentW: 50, parentH: 35,   cutPcs: 4,  label: "50×35 / Cp4" },
+                              { parentW: 60, parentH: 40,   cutPcs: 3,  label: "60×40 / Cp3" },
+                              // ...add all rows you use in Excel
+                            ];
+
+                            // 2) Decide which row to use:
+                            //    - If user typed a parent in Step 4, find that exact row and use ITS cutPcs.
+                            //    - Else, evaluate ALL rows and pick the cheapest (Excel behavior).
+                            const userParentW = opPaper?.inputWidth;
+                            const userParentH = opPaper?.inputHeight;
+
+                            let chosenRow;
+                            let rankedRows;
+
+                            if (userParentW && userParentH) {
+                              chosenRow = candidates.find(
+                                r => Number(r.parentW) === Number(userParentW) && Number(r.parentH) === Number(userParentH)
+                              );
+                              if (!chosenRow) {
+                                // No exact match: warn and fall back to cheapest
+                                console.warn("Manual parent size not found in candidate rows; falling back to cheapest row.");
+                              }
+                            }
+
+                            const base = { pieceW, pieceH, qty, sides, colours, paperCostPerSheet };
+
+                            if (!chosenRow) {
+                              // rank all rows by total and take cheapest
+                              rankedRows = candidates
+                                .map(r => ({ r, res: calcRowTotal(base, r) }))
+                                .sort((a, b) => a.res.total - b.res.total);
+                              chosenRow = rankedRows[0].r;
+                            }
+
+                            // 3) Compute final using the chosen REAL row
+                            const excelResult = calcRowTotal(base, chosenRow);
+
+                            // 4) Debug (helps catch the exact issue you hit)
+                            console.log("🧮 Pricing selection:", {
+                              pieceH, pieceW, qty, sides, colours, paperCostPerSheet,
+                              chosenRow,
+                              note_plateRule: `platePerSide = ${(chosenRow.parentW>54?50:20)} × colours`,
+                              excelResult
                             });
                             
                             return (
-                              <div className="space-y-3">
-                                <div className="flex justify-between items-center text-sm">
-                                  <span className="text-slate-600">Paper Cost ({excelResult.totalSheets} sheets):</span>
-                                  <span className="font-semibold text-[#27aae1]">{fmt(excelResult.paperCost)}</span>
+                              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                <div className="flex items-center mb-4">
+                                  <Calculator className="w-5 h-5 text-blue-600 mr-2" />
+                                  <h4 className="text-lg font-semibold text-blue-800">Excel-Based Pricing Summary</h4>
                                 </div>
-                                <div className="flex justify-between items-center text-sm">
-                                  <span className="text-slate-600">Unit Price:</span>
-                                  <span className="font-semibold text-[#27aae1]">{fmt(excelResult.unitPrice)}</span>
+
+                                <div className="text-xs text-slate-500 mb-2">
+                                  Parent used: <b>{chosenRow.parentW}×{chosenRow.parentH}</b> &nbsp;|&nbsp; Cut pcs: <b>{chosenRow.cutPcs}</b>
                                 </div>
-                                <div className="flex justify-between items-center text-sm">
-                                  <span className="text-slate-600">Plate Cost ({Math.max(paperColors[productIndex]?.[paperIndex]?.length || 1, 1)} colors):</span>
-                                  <span className="font-semibold text-[#27aae1]">{fmt(excelResult.plateCost)}</span>
-                                </div>
-                                <div className="border-t pt-2 mt-2">
-                                  <div className="flex justify-between items-center">
-                                    <span className="font-semibold text-[#27aae1]">Excel Total Cost:</span>
-                                    <span className="text-lg font-bold text-[#27aae1]">{fmt(excelResult.totalPrice)}</span>
+                                
+                                <div className="space-y-3">
+                                  <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Paper Cost ({excelResult.sheets} sheets):</span>
+                                    <span className="font-semibold text-blue-600">{fmt(excelResult.paperCost)}</span>
                                   </div>
-                                  <div className="text-xs text-[#27aae1] mt-1">
-                                    Based on {excelResult.piecesPerSheet} pieces per sheet, {excelResult.wasteSheets} waste sheets
+                                  <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Unit Price:</span>
+                                    <span className="font-semibold text-blue-600">{fmt(excelResult.unit_price)}</span>
+                                  </div>
+                                  <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-600">Plate Cost ({colours} colors):</span>
+                                    <span className="font-semibold text-blue-600">{fmt(excelResult.plateTotal)}</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="border-t border-gray-300 pt-3 mt-3">
+                                  <div className="flex justify-between items-center">
+                                    <span className="font-bold text-blue-800">Excel Total Cost:</span>
+                                    <span className="text-xl font-bold text-blue-800">{fmt(excelResult.total)}</span>
+                                  </div>
+                                  <div className="text-xs text-slate-500 mt-1">
+                                    Ups/sheet: {excelResult.upsPerSht} &nbsp;|&nbsp; Waste: {excelResult.wasteSheets} &nbsp;|&nbsp; No. of ups: {excelResult.noOfUps}
                                   </div>
                                 </div>
                               </div>
                             );
                           } catch (error) {
-                            return (
-                              <div className="text-sm text-slate-600">
-                                Excel calculation unavailable. Enter pricing details above to see cost breakdown.
-                              </div>
-                            );
+                            console.error(error);
+                            return <div className="text-sm text-slate-600">Excel calculation unavailable.</div>;
                           }
                         })()}
                       </div>
@@ -7299,7 +7584,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-blue-700">Base Cost:</span>
-                          <span className="font-semibold text-blue-800">{fmt(calculateTotalCost(openData, openData.quantity || 0))}</span>
+                          <span className="font-semibold text-blue-800">{fmt(calculateTotalCost(openData?.op, openData?.quantity || 0, openData?.paper, openIdx ?? undefined))}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-blue-700">Additional Costs:</span>
@@ -7313,7 +7598,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                         </div>
                         <div className="flex justify-between border-t pt-2">
                           <span className="font-bold text-blue-900">Total:</span>
-                          <span className="text-xl font-bold text-blue-900">{fmt(calculateTotalCost(openData, openData.quantity || 0) + (formData.additionalCosts || []).reduce((acc, f) => acc + (f.cost || 0), 0) + calculateFinishingCosts())}</span>
+                          <span className="text-xl font-bold text-blue-900">{fmt(calculateTotalCost(openData?.op, openData?.quantity || 0, openData?.paper, openIdx ?? undefined) + (formData.additionalCosts || []).reduce((acc, f) => acc + (f.cost || 0), 0) + calculateFinishingCosts())}</span>
                         </div>
                       </div>
                     </div>
@@ -7704,9 +7989,9 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                   <div>
                     <p className="text-sm text-orange-600 font-medium">Total Cost</p>
                     <p className="text-2xl font-bold text-orange-800">
-                      {fmt(formData.products.reduce((sum, product) => {
-                        const opPaper = formData.operational?.papers?.[formData.products.indexOf(product)];
-                        return sum + (opPaper ? calculateTotalCost(opPaper, (product.quantity || 0) * (opPaper?.sheetsPerPacket || 1)) : 0);
+                      {fmt(formData.products.reduce((sum, product, productIndex) => {
+                        const opPaper = formData.operational?.papers?.[productIndex];
+                        return sum + (opPaper ? calculateTotalCost(opPaper, (product.quantity || 0) * (opPaper?.sheetsPerPacket || 1), product, productIndex) : 0);
                       }, 0) + (formData.additionalCosts || []).reduce((acc: number, f: any) => acc + (f.cost || 0), 0) + calculateFinishingCosts())}
                     </p>
                   </div>
@@ -7736,6 +8021,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         </Card>
       )}
       */}
+
 
       {/* Finishing Details Popup Modal */}
       <Dialog open={showFinishingDetails} onOpenChange={setShowFinishingDetails}>

@@ -90,7 +90,11 @@ const calculateOtherQtyPrice = (formData: QuoteFormData, otherQty: OtherQty) => 
   
   // 1. Paper Costs (price per sheet × entered sheets)
   const paperCost = formData.operational.papers.reduce((total, p) => {
-    const pricePerSheet = (p.pricePerPacket || 0) / (p.sheetsPerPacket || 1);
+    // Manual pricing override: use direct price per sheet if provided, otherwise use packet pricing
+    const pricePerSheet = p.pricePerSheet || 
+      (p.pricePerPacket && p.sheetsPerPacket && p.sheetsPerPacket > 0 
+        ? p.pricePerPacket / p.sheetsPerPacket 
+        : 0);
     const actualSheetsNeeded = p.enteredSheets || 0;
     return total + (pricePerSheet * actualSheetsNeeded);
   }, 0) * quantityRatio;

@@ -353,12 +353,13 @@ const Step5Quotation: React.FC<Step5Props> = ({
 
     // 1. Paper Costs - Calculate from operational papers data
     const paperCost = formData.operational.papers.reduce((total, p) => {
-      if (p.pricePerPacket && p.enteredSheets && p.sheetsPerPacket) {
-        const pricePerSheet = p.pricePerPacket / p.sheetsPerPacket;
-        const actualSheetsNeeded = p.enteredSheets;
-        return total + (pricePerSheet * actualSheetsNeeded);
-      }
-      return total;
+      // Manual pricing override: use direct price per sheet if provided, otherwise use packet pricing
+      const pricePerSheet = p.pricePerSheet || 
+        (p.pricePerPacket && p.sheetsPerPacket && p.sheetsPerPacket > 0 
+          ? p.pricePerPacket / p.sheetsPerPacket 
+          : 0);
+      const actualSheetsNeeded = p.enteredSheets || 0;
+      return total + (pricePerSheet * actualSheetsNeeded);
     }, 0);
 
     // 2. Plates Cost (per plate, typically $25-50 per plate)

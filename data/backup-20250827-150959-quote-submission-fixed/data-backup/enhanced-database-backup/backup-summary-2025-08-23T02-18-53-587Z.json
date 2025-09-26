@@ -1,0 +1,70 @@
+{
+  "backupInfo": {
+    "timestamp": "2025-08-23T02-18-53-587Z",
+    "databasePath": "/Users/Alifka_Roosseo/Desktop/Project/Smart-printing-update/prisma/dev.db",
+    "backupDirectory": "/Users/Alifka_Roosseo/Desktop/Project/Smart-printing-update/data/enhanced-database-backup",
+    "description": "Enhanced database backup with all Step 3 fields and comprehensive quote data"
+  },
+  "tables": [
+    {
+      "name": "Paper",
+      "recordCount": 36
+    },
+    {
+      "name": "Finishing",
+      "recordCount": 45
+    },
+    {
+      "name": "QuoteAmount",
+      "recordCount": 23
+    },
+    {
+      "name": "QuoteOperational",
+      "recordCount": 10
+    },
+    {
+      "name": "SearchHistory",
+      "recordCount": 65
+    },
+    {
+      "name": "SearchAnalytics",
+      "recordCount": 0
+    },
+    {
+      "name": "Supplier",
+      "recordCount": 7
+    },
+    {
+      "name": "Material",
+      "recordCount": 28
+    },
+    {
+      "name": "Quote",
+      "recordCount": 23
+    },
+    {
+      "name": "User",
+      "recordCount": 10
+    },
+    {
+      "name": "Client",
+      "recordCount": 55
+    }
+  ],
+  "dataSummary": {
+    "totalTables": 11,
+    "totalRecords": 302,
+    "enhancedFeatures": [
+      "Complete Step 3 product specifications",
+      "Enhanced quote data with all fields",
+      "Realistic amount calculations",
+      "Proper product configurations",
+      "Complete color specifications",
+      "Size dimensions for all products",
+      "Printing method selections",
+      "Side configurations (1-side vs 2-side)",
+      "Paper and finishing specifications",
+      "Operational and production details"
+    ]
+  }
+}

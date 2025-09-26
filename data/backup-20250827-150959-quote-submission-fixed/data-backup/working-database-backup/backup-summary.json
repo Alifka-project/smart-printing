@@ -1,0 +1,22 @@
+{
+  "backupDate": "2025-08-22T14:26:49.507Z",
+  "databaseVersion": "Working Database Backup",
+  "tableCounts": {
+    "users": 10,
+    "suppliers": 4,
+    "materials": 6,
+    "clients": 50,
+    "quotes": 13,
+    "searchHistory": 46
+  },
+  "clientTypes": {
+    "Company": 44,
+    "Individual": 6
+  },
+  "quoteStatuses": {
+    "Approved": 8,
+    "Pending": 3,
+    "Rejected": 2
+  },
+  "notes": "This is a backup of the working database with all relationships properly established"
+}

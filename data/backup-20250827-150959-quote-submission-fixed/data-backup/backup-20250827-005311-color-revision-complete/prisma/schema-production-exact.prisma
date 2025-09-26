@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza18xc0dkeFdBOTFuNW1jNWZTNkpUczAiLCJhcGlfa2V5IjoiMDFLMzRRTVFYTVhDR0VaMkFBS1lTMFo3RUMiLCJ0ZW5hbnRfaWQiOiJjOTFjODU2MWZlOGI2YjM0YTU5ODVmMTdhYzU2NGNhMzY3OTY5ZmU5Mjg1NTdjNGM0ZjZiNWJjNzgwNzMzMjgxIiwiaW50ZXJuYWxfc2VjcmV0IjoiNGY4OWUzMTItMDE4OC00ZjE4LWFhMGQtYTc1OWVhN2EzNGE5In0.lPVxsK7w4PqWlM7f5ErZ-LE7ixz4nL1rVMJIRttzRqs"
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String
+  role            String            @default("user")
+  password        String?
+  profilePicture  String?
+  status          String            @default("Active")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  clients         Client[]
+  quotes          Quote[]
+  searchAnalytics SearchAnalytics[]
+  searchHistory   SearchHistory[]
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  clientType    String
+  companyName   String?
+  contactPerson String
+  email         String
+  phone         String
+  countryCode   String
+  role          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  quotes        Quote[]
+}
+
+model Quote {
+  id        String       @id @default(cuid())
+  quoteId   String       @unique
+  date      DateTime
+  status    String       @default("Pending")
+  clientId  String
+  userId    String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  product   String
+  quantity  Int
+  sides     String
+  printing  String
+  colors    String?      // Store colors as JSON string: {"front": "4 Colors (CMYK)", "back": "1 Color"}
+  finishing Finishing[]
+  papers    Paper[]
+  client    Client       @relation(fields: [clientId], references: [id])
+  user      User?        @relation(fields: [userId], references: [id])
+  amounts   QuoteAmount?
+  operational QuoteOperational?
+}
+
+model Paper {
+  id      String @id @default(cuid())
+  name    String
+  quoteId String
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  // Operational specifications
+  inputWidth     Float?
+  inputHeight    Float?
+  pricePerPacket Float?
+  pricePerSheet  Float?
+  sheetsPerPacket Int?
+  recommendedSheets Int?
+  enteredSheets  Int?
+  outputWidth    Float?
+  outputHeight   Float?
+  // Color specifications for this paper
+  selectedColors String?  // JSON array of selected colors: ["cmyk", "red", "blue"]
+}
+
+model Finishing {
+  id      String @id @default(cuid())
+  name    String
+  quoteId String
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  // Operational specifications
+  cost    Float?
+}
+
+model QuoteAmount {
+  id      String @id @default(cuid())
+  base    Float
+  vat     Float
+  total   Float
+  quoteId String @unique
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model QuoteOperational {
+  id        String   @id @default(cuid())
+  quoteId   String   @unique
+  plates    Int      @default(1)
+  units     Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  contact     String?
+  email       String
+  phone       String?
+  countryCode String?
+  address     String?
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String?
+  status      String   @default("Active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  materials   Material[]
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  materialId  String   @unique
+  name        String
+  supplierId  String
+  cost        Float
+  unit        String
+  status      String   @default("Active")
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+}
+
+model SearchHistory {
+  id        String   @id @default(cuid())
+  query     String
+  timestamp DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model SearchAnalytics {
+  id        String   @id @default(cuid())
+  query     String
+  timestamp DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}

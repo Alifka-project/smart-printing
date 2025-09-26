@@ -1,0 +1,74 @@
+[
+  {
+    "id": "cmekl542l001axffl20qbeheh",
+    "materialId": "TEST-001",
+    "name": "Test Material",
+    "supplierId": "cmekl53zx0018xffljz6q27et",
+    "cost": 1,
+    "unit": "per_sheet",
+    "status": "Active",
+    "lastUpdated": "2025-08-20T23:09:56.829Z",
+    "createdAt": "2025-08-20T23:09:56.829Z",
+    "updatedAt": "2025-08-20T23:09:56.829Z"
+  },
+  {
+    "id": "cmekl628w001fxfflpfh6gjxc",
+    "materialId": "M-001",
+    "name": "Art Paper 300gsm",
+    "supplierId": "cmekl6224001cxfflcsag532o",
+    "cost": 0.5,
+    "unit": "per_sheet",
+    "status": "Active",
+    "lastUpdated": "2025-08-20T23:10:41.120Z",
+    "createdAt": "2025-08-20T23:10:41.120Z",
+    "updatedAt": "2025-08-20T23:10:41.120Z"
+  },
+  {
+    "id": "cmekl62ci001hxfflct9y3u00",
+    "materialId": "M-002",
+    "name": "Art Paper 150gsm",
+    "supplierId": "cmekl6224001cxfflcsag532o",
+    "cost": 0.18,
+    "unit": "per_sheet",
+    "status": "Active",
+    "lastUpdated": "2025-08-20T23:10:41.250Z",
+    "createdAt": "2025-08-20T23:10:41.250Z",
+    "updatedAt": "2025-08-20T23:10:41.250Z"
+  },
+  {
+    "id": "cmekl62fu001jxfflhyanswgp",
+    "materialId": "M-003",
+    "name": "Glossy Paper 200gsm",
+    "supplierId": "cmekl61yw001bxffldvavdcde",
+    "cost": 0.35,
+    "unit": "per_sheet",
+    "status": "Active",
+    "lastUpdated": "2025-08-20T23:10:41.370Z",
+    "createdAt": "2025-08-20T23:10:41.370Z",
+    "updatedAt": "2025-08-20T23:10:41.370Z"
+  },
+  {
+    "id": "cmekl62is001lxfflwqs48kuq",
+    "materialId": "M-004",
+    "name": "Matte Paper 250gsm",
+    "supplierId": "cmekl61yw001bxffldvavdcde",
+    "cost": 0.42,
+    "unit": "per_sheet",
+    "status": "Active",
+    "lastUpdated": "2025-08-20T23:10:41.476Z",
+    "createdAt": "2025-08-20T23:10:41.476Z",
+    "updatedAt": "2025-08-20T23:10:41.476Z"
+  },
+  {
+    "id": "cmekl62lv001nxfflt337t32y",
+    "materialId": "M-005",
+    "name": "Cardboard 400gsm",
+    "supplierId": "cmekl624p001dxffl3h7p12fb",
+    "cost": 0.85,
+    "unit": "per_sheet",
+    "status": "Active",
+    "lastUpdated": "2025-08-20T23:10:41.588Z",
+    "createdAt": "2025-08-20T23:10:41.588Z",
+    "updatedAt": "2025-08-20T23:10:41.588Z"
+  }
+]

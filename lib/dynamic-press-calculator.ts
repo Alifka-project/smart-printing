@@ -1,8 +1,17 @@
-import type { Cm } from '../types';
+// Define Cm type locally since types module might not be available
+type Cm = number;
 
 // === Dynamic Press Dimension Calculator ===
 // This module calculates optimal press dimensions based on product size
 // Following the Excel sheet logic for cutting operations
+
+// Units-table VLOOKUP (cumulative) in closed form - same as Excel
+const unitPrice = (units: number) => {
+  const u = Math.max(0, Math.floor(units));
+  if (u <= 10) return 50 * u;
+  if (u <= 20) return 60 * u - u * u; // 60u - u^2
+  return 40 * u;
+};
 
 export interface PressDimension {
   width: Cm;
@@ -202,12 +211,13 @@ export function validatePressCalculations(): boolean {
     console.warn('⚠️ Press calculation validation: FAILED');
   }
   
-  return isValid;
+  return isValid || false;
 }
 
 /**
  * Calculate press dimensions specifically for visualization
  * Returns dimensions that work well for the cutting visualization
+ * Uses EXACT SAME logic as Excel calculation (pickCheapestTotal + calcRowTotal)
  */
 export function calculateVisualizationPressDimensions(
   productDimensions: ProductDimensions,
@@ -224,177 +234,134 @@ export function calculateVisualizationPressDimensions(
   
   console.log('🔍 Calculating visualization press dimensions for:', productDimensions);
   
-  // Special handling for very large products (like large shopping bags)
-  // If product is larger than standard press sizes, use parent sheet size
-  if (productWidth > 50 || productHeight > 60) {
-    console.log('🛍️ Very large product detected, using parent sheet size');
-    return {
-      width: 100,
-      height: 70,
-      label: "100×70 cm (Parent Sheet)",
-      efficiency: 100,
-      piecesPerPress: 1,
-      piecesPerParent: 1
-    };
-  }
-  
-  // Calculate optimal press dimensions based on Excel logic
-  // Example: 9×5.5 product should result in 40×20 press (7 pieces)
-  
-  // Business card cutting logic - matches Excel calculation
-  // For business cards, use specific cutting strategy with standard 20cm width
-  if (productWidth >= 8 && productWidth <= 10 && productHeight >= 5 && productHeight <= 8) {
-    const parentSheetWidth = 100;
-    const parentSheetHeight = 70;
-    
-    // Standard cutting width for business cards
-    const cuttingWidth = 20;
-    
-    // Calculate how many pieces fit in 20cm width
-    const piecesPerRow = Math.floor(cuttingWidth / productWidth);
-    
-    // Calculate cutting height based on how many pieces fit vertically
-    // This should result in the Excel cutting dimensions
-    let cuttingHeight;
-    
-    if (productWidth === 9 && productHeight === 5.5) {
-      // 9×5.5 → 20×14 (25 pieces)
-      cuttingHeight = 14;
-    } else if (productWidth === 9 && productHeight === 7) {
-      // 9×7 → 20×17.5 (based on Excel showing 18 press sheets)
-      cuttingHeight = 17.5;
-    } else {
-      // Calculate for other business card sizes
-      const piecesPerCol = Math.floor(parentSheetHeight / productHeight);
-      cuttingHeight = productHeight * piecesPerCol;
-    }
-    
-    // Calculate total pieces per cutting sheet
-    const piecesPerCol = Math.floor(cuttingHeight / productHeight);
-    const piecesPerCuttingSheet = piecesPerRow * piecesPerCol;
-    
-    // Calculate how many cutting sheets fit in parent sheet
-    const cuttingSheetsPerRow = Math.floor(parentSheetWidth / cuttingWidth);
-    const cuttingSheetsPerCol = Math.floor(parentSheetHeight / cuttingHeight);
-    const totalCuttingSheets = cuttingSheetsPerRow * cuttingSheetsPerCol;
-    const totalPieces = totalCuttingSheets * piecesPerCuttingSheet;
-    
-    console.log('📊 Business card cutting calculation:', {
-      productDimensions: `${productWidth}×${productHeight}`,
-      cuttingDimensions: `${cuttingWidth}×${cuttingHeight}`,
-      piecesPerCuttingSheet: piecesPerCuttingSheet,
-      totalCuttingSheets: totalCuttingSheets,
-      totalPieces: totalPieces
-    });
-    
-    return {
-      width: cuttingWidth,
-      height: cuttingHeight,
-      label: `${cuttingWidth}×${cuttingHeight} cm`,
-      efficiency: (totalPieces * productWidth * productHeight) / (parentSheetWidth * parentSheetHeight) * 100,
-      piecesPerPress: piecesPerCuttingSheet,
-      piecesPerParent: totalPieces
-    };
-  }
-  
-  // Standard imposition calculation for non-business card products
-  const parentSheetWidth = 100;
-  const parentSheetHeight = 70;
-  
-  // Calculate how many pieces fit in normal orientation
-  const normalPiecesPerRow = Math.floor(parentSheetWidth / productWidth);
-  const normalPiecesPerCol = Math.floor(parentSheetHeight / productHeight);
-  const normalTotalPieces = normalPiecesPerRow * normalPiecesPerCol;
-  
-  // Calculate how many pieces fit in rotated orientation
-  const rotatedPiecesPerRow = Math.floor(parentSheetWidth / productHeight);
-  const rotatedPiecesPerCol = Math.floor(parentSheetHeight / productWidth);
-  const rotatedTotalPieces = rotatedPiecesPerRow * rotatedPiecesPerCol;
-  
-  // Choose the better orientation
-  let cuttingWidth, cuttingHeight, totalPieces;
-  
-  if (normalTotalPieces >= rotatedTotalPieces) {
-    // Normal orientation is better
-    cuttingWidth = productWidth * normalPiecesPerRow;
-    cuttingHeight = productHeight * normalPiecesPerCol;
-    totalPieces = normalTotalPieces;
-  } else {
-    // Rotated orientation is better
-    cuttingWidth = productHeight * rotatedPiecesPerRow;
-    cuttingHeight = productWidth * rotatedPiecesPerCol;
-    totalPieces = rotatedTotalPieces;
-  }
-  
-  console.log('📊 Standard cutting calculation:', {
-    productDimensions: `${productWidth}×${productHeight}`,
-    cuttingDimensions: `${cuttingWidth}×${cuttingHeight}`,
-    totalPieces: totalPieces
-  });
-  
-  return {
-    width: cuttingWidth,
-    height: cuttingHeight,
-    label: `${cuttingWidth}×${cuttingHeight} cm`,
-    efficiency: (totalPieces * productWidth * productHeight) / (parentSheetWidth * parentSheetHeight) * 100,
-    piecesPerPress: totalPieces,
-    piecesPerParent: totalPieces
-  };
-  
-  // Calculate optimal press dimensions for other products
-  // Try different press sizes and find the one that maximizes total pieces per parent sheet
-  const pressOptions = [
-    { width: 20, height: 30 },
-    { width: 25, height: 35 },
-    { width: 30, height: 40 },
-    { width: 35, height: 45 },
-    { width: 40, height: 20 },
-    { width: 40, height: 25 },
-    { width: 40, height: 30 },
-    { width: 40, height: 35 },
-    { width: 40, height: 40 },
-    { width: 40, height: 45 },
-    { width: 40, height: 50 },
-    { width: 45, height: 50 },
-    { width: 50, height: 50 }
+  // Use EXACT SAME CUT_SIZE_CANDIDATES as Excel calculation
+  const cutSizeCandidates = [
+    { parentW: 20,   parentH: 14,    cutPcs: 25, label: "20×14 / Cp25" },
+    { parentW: 20,   parentH: 17.5,  cutPcs: 20, label: "20×17.5 / Cp20" },
+    { parentW: 23,   parentH: 14,    cutPcs: 21, label: "23×14 / Cp21" },
+    { parentW: 23,   parentH: 16.5,  cutPcs: 18, label: "23×16.5 / Cp18" },
+    { parentW: 23,   parentH: 20,    cutPcs: 15, label: "23×20 / Cp15" },
+    { parentW: 25,   parentH: 14,    cutPcs: 20, label: "25×14 / Cp20" },
+    { parentW: 25,   parentH: 17.5,  cutPcs: 16, label: "25×17.5 / Cp16" },
+    { parentW: 25,   parentH: 20,    cutPcs: 14, label: "25×20 / Cp14" },
+    { parentW: 25,   parentH: 23,    cutPcs: 12, label: "25×23 / Cp12" },
+    { parentW: 28,   parentH: 14,    cutPcs: 17, label: "28×14 / Cp17" },
+    { parentW: 30,   parentH: 14,    cutPcs: 16, label: "30×14 / Cp16" },
+    { parentW: 30,   parentH: 17.5,  cutPcs: 13, label: "30×17.5 / Cp13" },
+    { parentW: 30,   parentH: 20,    cutPcs: 11, label: "30×20 / Cp11" },
+    { parentW: 30,   parentH: 23,    cutPcs: 9,  label: "30×23 / Cp9"  },
+    { parentW: 35,   parentH: 14,    cutPcs: 14, label: "35×14 / Cp14" },
+    { parentW: 35,   parentH: 17.5,  cutPcs: 11, label: "35×17.5 / Cp11" },
+    { parentW: 35,   parentH: 20,    cutPcs: 10, label: "35×20 / Cp10" },
+    { parentW: 35,   parentH: 23,    cutPcs: 8,  label: "35×23 / Cp8"  },
+    { parentW: 35,   parentH: 25,    cutPcs: 7,  label: "35×25 / Cp7"  },
+    { parentW: 40,   parentH: 14,    cutPcs: 12, label: "40×14 / Cp12" },
+    { parentW: 40,   parentH: 17.5,  cutPcs: 10, label: "40×17.5 / Cp10" },
+    { parentW: 40,   parentH: 20,    cutPcs: 8,  label: "40×20 / Cp8"  },
+    { parentW: 40,   parentH: 23,    cutPcs: 7,  label: "40×23 / Cp7"  },
+    { parentW: 40,   parentH: 25,    cutPcs: 6,  label: "40×25 / Cp6"  },
+    { parentW: 40,   parentH: 30,    cutPcs: 5,  label: "40×30 / Cp5"  },
+    { parentW: 40,   parentH: 35,    cutPcs: 4,  label: "40×35 / Cp4"  },
+    { parentW: 45,   parentH: 20,    cutPcs: 7,  label: "45×20 / Cp7"  },
+    { parentW: 45,   parentH: 25,    cutPcs: 5,  label: "45×25 / Cp5"  },
+    { parentW: 45,   parentH: 30,    cutPcs: 4,  label: "45×30 / Cp4"  },
+    { parentW: 45,   parentH: 35,    cutPcs: 3,  label: "45×35 / Cp3"  },
+    { parentW: 50,   parentH: 20,    cutPcs: 6,  label: "50×20 / Cp6"  },
+    { parentW: 50,   parentH: 25,    cutPcs: 5,  label: "50×25 / Cp5"  },
+    { parentW: 50,   parentH: 30,    cutPcs: 4,  label: "50×30 / Cp4"  },
+    { parentW: 50,   parentH: 35,    cutPcs: 4,  label: "50×35 / Cp4"  }
   ];
   
-  let bestOption = { width: 35, height: 50, pieces: 0 };
+  // Use EXACT SAME logic as Excel calculation
+  // Get form data values for accurate calculation
+  const sides = formData?.products?.[0]?.sides === "1" ? 1 : 2;
+  const colours = formData?.products?.[0]?.colours || 4;
+  const qty = formData?.products?.[0]?.quantity || 1000;
+  const paperCostPerSheet = 1; // Standard paper cost for visualization
   
-  for (const option of pressOptions) {
-    // Calculate pieces per press sheet (with 0.5cm gap)
-    const piecesPerRow = Math.floor(option.width / (productWidth + 0.5));
-    const piecesPerCol = Math.floor(option.height / (productHeight + 0.5));
-    const piecesPerPress = piecesPerRow * piecesPerCol;
+  // Create base object for calcRowTotal
+  const base = {
+    pieceW: productWidth,
+    pieceH: productHeight,
+    qty: qty,
+    sides: sides,
+    colours: colours,
+    paperCostPerSheet: paperCostPerSheet
+  };
+  
+  // Use EXACT SAME pickCheapestTotal logic
+  const rows = cutSizeCandidates.map(candidate => calcRowTotal(base, candidate));
+  rows.sort((a, b) => a.total - b.total);
+  const cheapestRow = rows[0]; // cheapest row
+  
+  if (cheapestRow) {
+    console.log('🎯 Best cutting size found (Excel logic):', cheapestRow);
     
-    // Calculate how many press sheets fit in parent sheet (100×70)
-    const pressSheetsPerRow = Math.floor(100 / option.width);
-    const pressSheetsPerCol = Math.floor(70 / option.height);
-    const pressSheetsPerParent = pressSheetsPerRow * pressSheetsPerCol;
+    // Calculate efficiency percentage
+    const efficiency = (cheapestRow.upsPerSht * productWidth * productHeight) / 
+                      (cheapestRow.parentW * cheapestRow.parentH) * 100;
     
-    // Calculate total pieces per parent sheet
-    const totalPieces = piecesPerPress * pressSheetsPerParent;
-    
-    console.log(`🔍 Testing ${option.width}×${option.height}: ${piecesPerPress} pieces/press × ${pressSheetsPerParent} presses = ${totalPieces} total`);
-    
-    // Find the option with most pieces per parent sheet
-    if (totalPieces > bestOption.pieces) {
-      bestOption = {
-        width: option.width,
-        height: option.height,
-        pieces: totalPieces
-      };
-    }
+    return {
+      width: cheapestRow.parentW,
+      height: cheapestRow.parentH,
+      label: cheapestRow.label || `${cheapestRow.parentW}×${cheapestRow.parentH} cm`,
+      efficiency: Math.round(efficiency * 100) / 100,
+      piecesPerPress: cheapestRow.noOfUps,
+      piecesPerParent: cheapestRow.cutPcs
+    };
   }
   
-  console.log(`🎯 Calculated optimal press: ${bestOption.width}×${bestOption.height} cm (${bestOption.pieces} pieces per parent)`);
-  
+  // Fallback: use parent sheet size for very large products
+  console.log('⚠️ No optimal cutting size found, using parent sheet size');
   return {
-    width: bestOption.width,
-    height: bestOption.height,
-    label: `${bestOption.width}×${bestOption.height} cm`,
-    efficiency: 0, // Will be calculated by layout
-    piecesPerPress: 0, // Will be calculated by layout
-    piecesPerParent: 0 // Will be calculated by layout
+    width: 100,
+    height: 70,
+    label: "100×70 cm (Parent Sheet)",
+    efficiency: 100,
+    piecesPerPress: 1,
+    piecesPerParent: 1
   };
+}
+
+/**
+ * EXACT COPY of calcRowTotal from Step4Operational.tsx
+ * This ensures the visualization uses the same calculation logic
+ */
+function calcRowTotal(
+  base: { pieceW: number; pieceH: number; qty: number; sides: number; colours: number; paperCostPerSheet: number },
+  row: { parentW: number; parentH: number; cutPcs: number; label?: string }
+) {
+  const { pieceW, pieceH, qty, sides, colours, paperCostPerSheet } = base;
+  const { parentW, parentH, cutPcs } = row;
+
+  // 1) Imposition (Option1/2)
+  const opt1 = Math.floor(parentW / (pieceH + 1)) * Math.floor(parentH / (pieceW + 1));
+  const opt2 = Math.floor(parentW / (pieceW + 1)) * Math.floor(parentH / (pieceH + 1));
+  const noOfUps = Math.max(opt1, opt2);
+
+  // 2) Odd/even rule (IF(Sides=1, TRUE, ISEVEN(No. of ups)))
+  const oddEven = (sides === 1) ? true : (noOfUps % 2 === 0);
+
+  // 3) Ups/sheet; 4) Waste; 5) Sheets
+  const upsPerSht   = noOfUps * cutPcs;
+  const wasteSheets = Math.ceil((parentW > 50 ? 120 : 100) / cutPcs);
+  const sheets      = upsPerSht === 0 ? 0 : Math.ceil(qty / upsPerSht + wasteSheets);
+
+  // 6) Paper cost
+  const paperCost = sheets * paperCostPerSheet;
+
+  // 7) Units → 8) unit price
+  const coreUnits = Math.ceil((sheets * cutPcs * colours * sides) / 1000);
+  const baseUnits = Math.max(colours, coreUnits);
+  const units     = oddEven ? baseUnits : baseUnits * 2;
+  const unit_price = unitPrice(units);
+
+  // 9) Plate
+  const platePerSide = (parentW > 54 ? 50 : 20) * colours;
+  const plateTotal   = platePerSide * sides;
+
+  // 10) Total
+  const total = sheets === 0 ? 0 : unit_price + paperCost + plateTotal;
+
+  return { ...row, noOfUps, upsPerSht, wasteSheets, sheets, paperCost, units, unit_price, platePerSide, plateTotal, total };
 }

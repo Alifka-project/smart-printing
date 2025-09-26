@@ -1,0 +1,163 @@
+[
+  {
+    "id": "amount_1755875987003_e739an1rs",
+    "base": 120,
+    "vat": 7.8,
+    "total": 163.8,
+    "quoteId": "cmek2epwd001wx5j7q9qx49a5"
+  },
+  {
+    "id": "amount_1755875987009_hflexv7of",
+    "base": 1440,
+    "vat": 93.6,
+    "total": 1965.6,
+    "quoteId": "cmek2epyd002gx5j736tpmlo3"
+  },
+  {
+    "id": "amount_1755875987012_hq87tw9gq",
+    "base": 189.32,
+    "vat": 12.3058,
+    "total": 258.4218,
+    "quoteId": "cmekj5xca0013xfflnbl5ohpr"
+  },
+  {
+    "id": "amount_1755875987012_0a20rlc45",
+    "base": 120,
+    "vat": 7.8,
+    "total": 163.8,
+    "quoteId": "cmekilram0003xfflus48jf6p"
+  },
+  {
+    "id": "amount_1755875987013_9o17z6qul",
+    "base": 120,
+    "vat": 7.8,
+    "total": 163.8,
+    "quoteId": "cmek39ntx000jx5xjpk1lqq87"
+  },
+  {
+    "id": "amount_1755875987013_x4ucqz5dt",
+    "base": 120,
+    "vat": 7.8,
+    "total": 163.8,
+    "quoteId": "cmek38mmv000dx5xj81sjd9pk"
+  },
+  {
+    "id": "amount_1755875987014_g7ryp13zx",
+    "base": 7.5,
+    "vat": 0.49,
+    "total": 10.24,
+    "quoteId": "cmek2epz5002qx5j701d8lfv6"
+  },
+  {
+    "id": "amount_1755875987011_ruwh7ijjx",
+    "base": 94.5,
+    "vat": 6.14,
+    "total": 128.99,
+    "quoteId": "cmek2eq0c0030x5j7nh64b7la"
+  },
+  {
+    "id": "amount_1755875987016_me2w3t3e6",
+    "base": 625,
+    "vat": 39.06,
+    "total": 820.31,
+    "quoteId": "cmek2epww0021x5j703n82450"
+  },
+  {
+    "id": "amount_1755875987017_k1qojwdpr",
+    "base": 540,
+    "vat": 32.4,
+    "total": 680.4,
+    "quoteId": "cmek2epxd0026x5j71rlvx9tw"
+  },
+  {
+    "id": "amount_1755875987014_r6lsbp3ep",
+    "base": 192,
+    "vat": 12,
+    "total": 252,
+    "quoteId": "cmek2epxt002bx5j7f82jxumw"
+  },
+  {
+    "id": "amount_1755875987011_5wsliuh3o",
+    "base": 22.5,
+    "vat": 1.46,
+    "total": 30.71,
+    "quoteId": "cmek2eq0z0035x5j78d2bh52a"
+  },
+  {
+    "id": "amount_1755875987010_jv27xuhau",
+    "base": 36,
+    "vat": 2.43,
+    "total": 51.03,
+    "quoteId": "cmek2epyp002lx5j782u8z8rf"
+  },
+  {
+    "id": "cmemzz91r0005x5o7fjyf69df",
+    "base": 150,
+    "vat": 7.5,
+    "total": 157.5,
+    "quoteId": "cmemzz91q0001x5o7ff1n4l6e"
+  },
+  {
+    "id": "cmemzz925000cx5o7vnxwacuy",
+    "base": 150,
+    "vat": 7.5,
+    "total": 157.5,
+    "quoteId": "cmemzz9240008x5o7h4p9hab5"
+  },
+  {
+    "id": "cmemzz92e000jx5o7g9svasts",
+    "base": 150,
+    "vat": 7.5,
+    "total": 157.5,
+    "quoteId": "cmemzz92e000fx5o7nfyy841r"
+  },
+  {
+    "id": "cmenfrbh4000cx5gco433whmp",
+    "base": 189.32,
+    "vat": 12.3058,
+    "total": 258.4218,
+    "quoteId": "cmenfrbh40008x5gcq8wvqt94"
+  },
+  {
+    "id": "cmenhxdsk0005x5zme5zxbe9t",
+    "base": 100144.32,
+    "vat": 6509.380800000001,
+    "total": 136696.9968,
+    "quoteId": "cmenhxdsj0001x5zmaphovdew"
+  },
+  {
+    "id": "cmenjwm5u0005x594pladtnoy",
+    "base": 459.32,
+    "vat": 29.8558,
+    "total": 626.9718,
+    "quoteId": "cmenjwm5t0001x594wx06zc37"
+  },
+  {
+    "id": "cmenk1xvq000cx594yyyho08f",
+    "base": 914.3199999999999,
+    "vat": 59.4308,
+    "total": 1248.0468,
+    "quoteId": "cmenk1xvq0008x594newh5tu1"
+  },
+  {
+    "id": "cmenk9b1e000nx594jf7ufkhj",
+    "base": 522.88,
+    "vat": 33.9872,
+    "total": 713.7312000000001,
+    "quoteId": "cmenk9b1d000jx594k1d5izyt"
+  },
+  {
+    "id": "cmenkqgqs0005x5bfljnc5eoa",
+    "base": 144.32,
+    "vat": 9.380799999999999,
+    "total": 196.9968,
+    "quoteId": "cmenkqgqr0001x5bfmzkdn5uw"
+  },
+  {
+    "id": "cmenl93tq000dx5bf6314m1q4",
+    "base": 294.32,
+    "vat": 19.1308,
+    "total": 401.7468,
+    "quoteId": "cmenl93tq0008x5bf47u7dipf"
+  }
+]

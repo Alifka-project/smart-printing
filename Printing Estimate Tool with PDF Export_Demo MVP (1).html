@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printing Estimation Tool MVP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* Custom styles for Inter font and general layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Stronger shadow */
+            padding: 2.5rem;
+            max-width: 1000px; /* Increased max width for better layout */
+            width: 100%;
+            display: flex;
+            flex-direction: column; /* Default to column for smaller screens */
+            gap: 2.5rem; /* Increased gap */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .container {
+                flex-direction: row; /* Row layout for larger screens */
+            }
+        }
+        .input-section, .output-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Gap between form groups */
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db; /* Lighter border */
+            border-radius: 0.5rem; /* Rounded inputs */
+            font-size: 1rem;
+            color: #4b5563;
+            transition: border-color 0.2s;
+        }
+        .form-group input[type="number"]:focus,
+        .form-group select:focus,
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #3b82f6; /* Blue focus ring */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping for checkboxes */
+            gap: 1rem; /* Smaller gap for checkboxes */
+            margin-top: 0.5rem;
+        }
+        .radio-group label, .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            color: #4b5563;
+            margin-bottom: 0; /* Remove default label margin */
+        }
+        .radio-group input[type="radio"], .checkbox-group input[type="checkbox"] {
+            margin-right: 0.5rem;
+            width: auto; /* Reset width for checkboxes */
+            padding: 0;
+            height: 1.25em; /* Standard checkbox size */
+            width: 1.25em;
+            border-radius: 0.25em;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem; /* More rounded button */
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        .btn-secondary {
+            background-color: #6b7280; /* Gray for secondary button */
+            color: #ffffff;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(107, 114, 128, 0.3);
+            border: none;
+            margin-top: 1rem; /* Space from primary button */
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+            transform: translateY(-2px);
+        }
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+        .results-section {
+            background-color: #f9fafb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+        }
+        .results-section h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        .results-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+        .results-item:last-of-type { /* Use last-of-type for better specificity with dynamic items */
+            border-bottom: none;
+        }
+        .results-item span:first-child {
+            font-weight: 500;
+            color: #4b5563;
+        }
+        .results-item span:last-child {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .total-cost {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #10b981; /* Green for cost */
+            margin-top: 1rem;
+            text-align: right;
+        }
+        .canvas-container {
+            background-color: #f9fafb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px; /* Ensure canvas container has some height */
+        }
+        canvas {
+            background-color: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            max-width: 100%; /* Make canvas responsive */
+            height: auto; /* Maintain aspect ratio */
+            display: block;
+            margin: 0 auto;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        .mt-4 { margin-top: 1rem; } /* Tailwind helper for spacing */
+        .mb-4 { margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="input-section">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Printing Job Details</h2>
+
+            <div class="form-group">
+                <label for="jobType">Job Type:</label>
+                <select id="jobType" class="shadow-sm">
+                    <option value="Business Card">Business Card</option>
+                    <option value="Flyer">Flyer</option>
+                    <option value="Poster">Poster</option>
+                    <option value="Other">Other (Custom Item)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="cardsNeeded">Number of Items Needed:</label>
+                <input type="number" id="cardsNeeded" value="1000" min="1" class="shadow-sm">
+                <p id="cardsNeededError" class="error-message hidden">Please enter a valid number of items (minimum 1).</p>
+            </div>
+
+            <div class="form-group">
+                <label for="paperType">Input Paper Type:</label>
+                <select id="paperType" class="shadow-sm">
+                    <option value="SRA3">SRA3 (45cm x 32cm)</option>
+                    <option value="A3">A3 (42cm x 29.7cm)</option>
+                    <option value="SRA2">SRA2 (64cm x 45cm)</option>
+                    <option value="Custom">Custom Size</option>
+                </select>
+            </div>
+
+            <div id="customPaperSize" class="form-group hidden">
+                <label for="inputLength">Custom Input Paper Length (cm):</label>
+                <input type="number" id="inputLength" value="45" min="1" class="shadow-sm">
+                <p id="inputLengthError" class="error-message hidden">Please enter a valid length (minimum 1cm).</p>
+
+                <label for="inputWidth" class="mt-4">Custom Input Paper Width (cm):</label>
+                <input type="number" id="inputWidth" value="32" min="1" class="shadow-sm">
+                <p id="inputWidthError" class="error-message hidden">Please enter a valid width (minimum 1cm).</p>
+            </div>
+
+            <div class="form-group">
+                <label id="outputLengthLabel" for="outputLength">Output Card Length (cm):</label>
+                <input type="number" id="outputLength" value="9" min="1" class="shadow-sm">
+                <p id="outputLengthError" class="error-message hidden">Please enter a valid length (minimum 1cm).</p>
+            </div>
+
+            <div class="form-group">
+                <label id="outputWidthLabel" for="outputWidth">Output Card Width (cm):</label>
+                <input type="number" id="outputWidth" value="5" min="1" class="shadow-sm">
+                <p id="outputWidthError" class="error-message hidden">Please enter a valid width (minimum 1cm).</p>
+            </div>
+
+            <div class="form-group">
+                <label>Print Sides:</label>
+                <div class="radio-group">
+                    <label for="oneSidePrint">
+                        <input type="radio" id="oneSidePrint" name="printSides" value="1" checked> One Side
+                    </label>
+                    <label for="bothSidesPrint">
+                        <input type="radio" id="bothSidesPrint" name="printSides" value="2"> Both Sides
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="mb-2">Additional Finishing Options:</label>
+                <div class="checkbox-group">
+                    <label for="addFolding">
+                        <input type="checkbox" id="addFolding"> Folding
+                    </label>
+                    <div id="foldingOptions" class="hidden ml-6">
+                        <label for="numFoldLines" class="mb-1 text-sm">Number of Fold Lines:</label>
+                        <input type="number" id="numFoldLines" value="1" min="1" class="shadow-sm text-sm p-1.5 w-24">
+                        <p id="numFoldLinesError" class="error-message hidden">Min 1 fold line.</p>
+                    </div>
+
+                    <label for="addFoiling">
+                        <input type="checkbox" id="addFoiling"> Foiling
+                    </label>
+                    <label for="addEmbossing">
+                        <input type="checkbox" id="addEmbossing"> Embossing/Debossing
+                    </label>
+                    <label for="addUvPrinting">
+                        <input type="checkbox" id="addUvPrinting"> UV Printing
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="calculateEstimate()" class="btn-primary mt-6">Calculate Estimate</button>
+            <button onclick="exportPdf()" class="btn-secondary">Export as PDF</button>
+        </div>
+
+        <div class="output-section" id="resultsSection">
+            <div class="results-section">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Estimation Results</h3>
+                <div class="results-item">
+                    <span>Items per Input Sheet:</span>
+                    <span id="cardsPerSheet">0</span>
+                </div>
+                <div class="results-item">
+                    <span>Total Input Sheets Required:</span>
+                    <span id="totalSheetsRequired">0</span>
+                </div>
+                <div class="results-item">
+                    <span>Selected Paper Type:</span>
+                    <span id="displayPaperType">SRA3 (45cm x 32cm)</span>
+                </div>
+                <div class="results-item">
+                    <span>Input Sheet Dimensions:</span>
+                    <span id="displayInputDimensions">0cm x 0cm</span>
+                </div>
+                <div class="results-item">
+                    <span>Output Item Type:</span>
+                    <span id="displayJobType">Business Card</span>
+                </div>
+                <div class="results-item">
+                    <span>Output Item Dimensions:</span>
+                    <span id="displayOutputDimensions">0cm x 0cm</span>
+                </div>
+                <div class="results-item">
+                    <span>Print Sides:</span>
+                    <span id="displayPrintSides">One Side</span>
+                </div>
+                <div id="additionsCostSummary">
+                    </div>
+                <div class="total-cost">
+                    Estimated Cost: <span id="estimatedCost">$0.00</span>
+                </div>
+            </div>
+
+            <div class="canvas-container" id="canvasContainer">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Die Pattern Visualization</h3>
+                <canvas id="diePatternCanvas" width="400" height="300" class="border"></canvas>
+                <p class="text-sm text-gray-500 mt-2">Visualization of items on a single input sheet (scaled).</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define paper types and their dimensions (in cm)
+        const PAPER_SIZES = {
+            SRA3: { length: 45, width: 32, name: "SRA3 (45cm x 32cm)" },
+            A3: { length: 42, width: 29.7, name: "A3 (42cm x 29.7cm)" },
+            SRA2: { length: 64, width: 45, name: "SRA2 (64cm x 45cm)" },
+            Custom: { length: 0, width: 0, name: "Custom Size" } // Placeholder for custom
+        };
+
+        // Define cost parameters
+        const BASE_COST_PER_SHEET = 0.50; // Base cost for paper and basic printing
+        const COST_PER_SIDE_SURCHARGE = 0.05; // Additional cost per side per sheet
+
+        // Costs for additional finishing options (per sheet)
+        const ADDITION_COSTS = {
+            foldingPerLinePerSheet: 0.02, // Cost per fold line per sheet
+            foilingPerSheet: 0.15,
+            embossingPerSheet: 0.20,
+            uvPrintingPerSheet: 0.10
+        };
+
+        // Tiered pricing for sheets (cost per sheet decreases with higher quantity)
+        const TIERED_SHEET_PRICING = [
+            { maxSheets: 100, pricePerSheet: 0.50 },
+            { maxSheets: 500, pricePerSheet: 0.45 },
+            { maxSheets: Infinity, pricePerSheet: 0.40 } // For quantities above 500
+        ];
+
+        // Get DOM elements
+        const jobTypeSelect = document.getElementById('jobType');
+        const cardsNeededInput = document.getElementById('cardsNeeded');
+        const paperTypeSelect = document.getElementById('paperType');
+        const customPaperSizeDiv = document.getElementById('customPaperSize');
+        const inputLengthInput = document.getElementById('inputLength');
+        const inputWidthInput = document.getElementById('inputWidth');
+        const outputLengthInput = document.getElementById('outputLength');
+        const outputWidthInput = document.getElementById('outputWidth');
+        const oneSidePrintRadio = document.getElementById('oneSidePrint');
+        const bothSidesPrintRadio = document.getElementById('bothSidesPrint');
+
+        // Additions
+        const addFoldingCheckbox = document.getElementById('addFolding');
+        const foldingOptionsDiv = document.getElementById('foldingOptions');
+        const numFoldLinesInput = document.getElementById('numFoldLines');
+        const addFoilingCheckbox = document.getElementById('addFoiling');
+        const addEmbossingCheckbox = document.getElementById('addEmbossing');
+        const addUvPrintingCheckbox = document.getElementById('addUvPrinting');
+
+        const cardsPerSheetSpan = document.getElementById('cardsPerSheet');
+        const totalSheetsRequiredSpan = document.getElementById('totalSheetsRequired');
+        const displayPaperTypeSpan = document.getElementById('displayPaperType');
+        const displayInputDimensionsSpan = document.getElementById('displayInputDimensions');
+        const displayJobTypeSpan = document.getElementById('displayJobType');
+        const displayOutputDimensionsSpan = document.getElementById('displayOutputDimensions');
+        const displayPrintSidesSpan = document.getElementById('displayPrintSides');
+        const additionsCostSummaryDiv = document.getElementById('additionsCostSummary');
+        const estimatedCostSpan = document.getElementById('estimatedCost');
+
+        const cardsNeededError = document.getElementById('cardsNeededError');
+        const inputLengthError = document.getElementById('inputLengthError');
+        const inputWidthError = document.getElementById('inputWidthError');
+        const outputLengthError = document.getElementById('outputLengthError');
+        const outputWidthError = document.getElementById('outputWidthError');
+        const numFoldLinesError = document.getElementById('numFoldLinesError');
+
+        const outputLengthLabel = document.getElementById('outputLengthLabel');
+        const outputWidthLabel = document.getElementById('outputWidthLabel');
+
+        const canvas = document.getElementById('diePatternCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Event listeners
+        paperTypeSelect.addEventListener('change', () => {
+            if (paperTypeSelect.value === 'Custom') {
+                customPaperSizeDiv.classList.remove('hidden');
+            } else {
+                customPaperSizeDiv.classList.add('hidden');
+                // Reset custom inputs if not selected
+                inputLengthInput.value = PAPER_SIZES[paperTypeSelect.value].length;
+                inputWidthInput.value = PAPER_SIZES[paperTypeSelect.value].width;
+            }
+        });
+
+        jobTypeSelect.addEventListener('change', () => {
+            const selectedType = jobTypeSelect.value;
+            outputLengthLabel.textContent = `Output ${selectedType} Length (cm):`;
+            outputWidthLabel.textContent = `Output ${selectedType} Width (cm):`;
+        });
+
+        addFoldingCheckbox.addEventListener('change', () => {
+            if (addFoldingCheckbox.checked) {
+                foldingOptionsDiv.classList.remove('hidden');
+            } else {
+                foldingOptionsDiv.classList.add('hidden');
+                numFoldLinesInput.value = 1; // Reset to default when unchecked
+                numFoldLinesError.classList.add('hidden');
+            }
+        });
+
+        /**
+         * Validates a numeric input field.
+         * @param {HTMLInputElement} inputElement - The input element to validate.
+         * @param {HTMLElement} errorElement - The element to display error messages.
+         * @param {string} message - The error message to display.
+         * @returns {boolean} - True if valid, false otherwise.
+         */
+        function validateInput(inputElement, errorElement, message) {
+            const value = parseFloat(inputElement.value);
+            if (isNaN(value) || value <= 0) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+                return false;
+            }
+            errorElement.classList.add('hidden');
+            return true;
+        }
+
+        /**
+         * Calculates the maximum number of items that can be cut from a sheet.
+         * Considers two orientations for optimal packing.
+         * @param {number} sheetLength - Length of the input sheet.
+         * @param {number} sheetWidth - Width of the input sheet.
+         * @param {number} itemLength - Length of the output item.
+         * @param {number} itemWidth - Width of the output item.
+         * @returns {{count: number, orientation: string}} - Object with max count and optimal orientation.
+         */
+        function calculateMaxItemsPerSheet(sheetLength, sheetWidth, itemLength, itemWidth) {
+            // Orientation 1: Item length aligned with sheet length, item width with sheet width
+            const count1 = Math.floor(sheetLength / itemLength) * Math.floor(sheetWidth / itemWidth);
+
+            // Orientation 2: Item length aligned with sheet width, item width with sheet length (rotated)
+            const count2 = Math.floor(sheetLength / itemWidth) * Math.floor(sheetWidth / itemLength);
+
+            if (count1 >= count2) {
+                return { count: count1, orientation: 'normal' };
+            } else {
+                return { count: count2, orientation: 'rotated' };
+            }
+        }
+
+        /**
+         * Draws the die pattern on the canvas.
+         * @param {number} sheetLength - Length of the input sheet.
+         * @param {number} sheetWidth - Width of the input sheet.
+         * @param {number} itemLength - Length of the output item.
+         * @param {number} itemWidth - Width of the output item.
+         * @param {string} orientation - 'normal' or 'rotated'.
+         */
+        function drawDiePattern(sheetLength, sheetWidth, itemLength, itemWidth, orientation) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+
+            // Determine scaling factor to fit the sheet within the canvas
+            const padding = 20; // Padding around the sheet on the canvas
+            const canvasUsableWidth = canvas.width - 2 * padding;
+            const canvasUsableHeight = canvas.height - 2 * padding;
+
+            const scaleX = canvasUsableWidth / sheetLength;
+            const scaleY = canvasUsableHeight / sheetWidth;
+            const scale = Math.min(scaleX, scaleY); // Use the smaller scale to fit both dimensions
+
+            const scaledSheetLength = sheetLength * scale;
+            const scaledSheetWidth = sheetWidth * scale;
+
+            // Center the drawing on the canvas
+            const startX = (canvas.width - scaledSheetLength) / 2;
+            const startY = (canvas.height - scaledSheetWidth) / 2;
+
+            // Draw the input sheet outline
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(startX, startY, scaledSheetLength, scaledSheetWidth);
+
+            // Draw the individual cards
+            let currentItemLength = itemLength;
+            let currentItemWidth = itemWidth;
+
+            if (orientation === 'rotated') {
+                currentItemLength = itemWidth;
+                currentItemWidth = itemLength;
+            }
+
+            const scaledItemLength = currentItemLength * scale;
+            const scaledItemWidth = currentItemWidth * scale;
+
+            const itemsPerRow = Math.floor(sheetLength / currentItemLength);
+            const itemsPerCol = Math.floor(sheetWidth / currentItemWidth);
+
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.2)'; // Light blue fill for cards
+            ctx.strokeStyle = '#3b82f6'; // Blue border for cards
+            ctx.lineWidth = 1;
+
+            for (let row = 0; row < itemsPerCol; row++) {
+                for (let col = 0; col < itemsPerRow; col++) {
+                    const x = startX + col * scaledItemLength;
+                    const y = startY + row * scaledItemWidth;
+                    ctx.fillRect(x, y, scaledItemLength, scaledItemWidth);
+                    ctx.strokeRect(x, y, scaledItemLength, scaledItemWidth);
+                }
+            }
+
+            // Add text for dimensions (optional, but helpful)
+            ctx.fillStyle = '#1f2937';
+            ctx.font = '10px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${sheetLength.toFixed(1)}cm`, startX + scaledSheetLength / 2, startY + scaledSheetWidth + 15);
+            ctx.save();
+            ctx.translate(startX - 15, startY + scaledSheetWidth / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText(`${sheetWidth.toFixed(1)}cm`, 0, 0);
+            ctx.restore();
+        }
+
+        /**
+         * Calculates the estimated cost based on total sheets and tiered pricing.
+         * @param {number} totalSheets - The total number of input sheets required.
+         * @param {number} printSides - 1 for one-sided, 2 for both-sided.
+         * @returns {object} - Object containing total cost and breakdown of addition costs.
+         */
+        function calculateCost(totalSheets, printSides) {
+            let baseCost = 0;
+            for (const tier of TIERED_SHEET_PRICING) {
+                if (totalSheets <= tier.maxSheets) {
+                    baseCost = totalSheets * tier.pricePerSheet;
+                    break;
+                }
+            }
+            const printSurcharge = totalSheets * COST_PER_SIDE_SURCHARGE * (printSides - 1); // Surcharge only for the second side
+
+            let additionsCost = {};
+            let totalAdditionsCost = 0;
+
+            if (addFoldingCheckbox.checked) {
+                const numFoldLines = parseFloat(numFoldLinesInput.value);
+                if (numFoldLines > 0) {
+                    const cost = totalSheets * numFoldLines * ADDITION_COSTS.foldingPerLinePerSheet;
+                    additionsCost['Folding'] = cost;
+                    totalAdditionsCost += cost;
+                }
+            }
+            if (addFoilingCheckbox.checked) {
+                const cost = totalSheets * ADDITION_COSTS.foilingPerSheet;
+                additionsCost['Foiling'] = cost;
+                totalAdditionsCost += cost;
+            }
+            if (addEmbossingCheckbox.checked) {
+                const cost = totalSheets * ADDITION_COSTS.embossingPerSheet;
+                additionsCost['Embossing/Debossing'] = cost;
+                totalAdditionsCost += cost;
+            }
+            if (addUvPrintingCheckbox.checked) {
+                const cost = totalSheets * ADDITION_COSTS.uvPrintingPerSheet;
+                additionsCost['UV Printing'] = cost;
+                totalAdditionsCost += cost;
+            }
+
+            return {
+                baseCost: baseCost + printSurcharge,
+                additionsCost: additionsCost,
+                totalAdditionsCost: totalAdditionsCost,
+                totalEstimatedCost: baseCost + printSurcharge + totalAdditionsCost
+            };
+        }
+
+        /**
+         * Main function to calculate and display the estimate.
+         */
+        function calculateEstimate() {
+            // 1. Validate Inputs
+            let isValid = true;
+            isValid = validateInput(cardsNeededInput, cardsNeededError, 'Please enter a valid number of items (minimum 1).') && isValid;
+            isValid = validateInput(outputLengthInput, outputLengthError, 'Please enter a valid length (minimum 1cm).') && isValid;
+            isValid = validateInput(outputWidthInput, outputWidthError, 'Please enter a valid width (minimum 1cm).') && isValid;
+
+            if (addFoldingCheckbox.checked) {
+                isValid = validateInput(numFoldLinesInput, numFoldLinesError, 'Please enter a valid number of fold lines (minimum 1).') && isValid;
+            }
+
+            let inputLength, inputWidth, paperTypeName;
+            if (paperTypeSelect.value === 'Custom') {
+                isValid = validateInput(inputLengthInput, inputLengthError, 'Please enter a valid length (minimum 1cm).') && isValid;
+                isValid = validateInput(inputWidthInput, inputWidthError, 'Please enter a valid width (minimum 1cm).') && isValid;
+                inputLength = parseFloat(inputLengthInput.value);
+                inputWidth = parseFloat(inputWidthInput.value);
+                paperTypeName = `Custom (${inputLength.toFixed(1)}cm x ${inputWidth.toFixed(1)}cm)`;
+            } else {
+                inputLength = PAPER_SIZES[paperTypeSelect.value].length;
+                inputWidth = PAPER_SIZES[paperTypeSelect.value].width;
+                paperTypeName = PAPER_SIZES[paperTypeSelect.value].name;
+            }
+
+            if (!isValid) {
+                // Clear previous results if inputs are invalid
+                cardsPerSheetSpan.textContent = '0';
+                totalSheetsRequiredSpan.textContent = '0';
+                displayPaperTypeSpan.textContent = 'N/A';
+                displayInputDimensionsSpan.textContent = '0cm x 0cm';
+                displayJobTypeSpan.textContent = jobTypeSelect.value;
+                displayOutputDimensionsSpan.textContent = '0cm x 0cm';
+                displayPrintSidesSpan.textContent = document.querySelector('input[name="printSides"]:checked').nextSibling.textContent.trim();
+                additionsCostSummaryDiv.innerHTML = '';
+                estimatedCostSpan.textContent = '$0.00';
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+                return; // Stop execution if validation fails
+            }
+
+            // 2. Get Input Values
+            const jobType = jobTypeSelect.value;
+            const itemsNeeded = parseInt(cardsNeededInput.value);
+            const outputLength = parseFloat(outputLengthInput.value);
+            const outputWidth = parseFloat(outputWidthInput.value);
+            const printSides = parseInt(document.querySelector('input[name="printSides"]:checked').value);
+
+            // 3. Calculate Items per Sheet
+            const { count: itemsPerSheet, orientation } = calculateMaxItemsPerSheet(
+                inputLength, inputWidth, outputLength, outputWidth
+            );
+
+            // Handle case where items don't fit at all
+            if (itemsPerSheet === 0) {
+                cardsPerSheetSpan.textContent = '0';
+                totalSheetsRequiredSpan.textContent = 'N/A (Items too large)';
+                estimatedCostSpan.textContent = '$0.00';
+                displayPaperTypeSpan.textContent = paperTypeName;
+                displayInputDimensionsSpan.textContent = `${inputLength.toFixed(1)}cm x ${inputWidth.toFixed(1)}cm`;
+                displayJobTypeSpan.textContent = jobType;
+                displayOutputDimensionsSpan.textContent = `${outputLength.toFixed(1)}cm x ${outputWidth.toFixed(1)}cm`;
+                displayPrintSidesSpan.textContent = printSides === 1 ? 'One Side' : 'Both Sides';
+                additionsCostSummaryDiv.innerHTML = '';
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+                return;
+            }
+
+            // 4. Calculate Total Sheets Required
+            const totalSheetsRequired = Math.ceil(itemsNeeded / itemsPerSheet);
+
+            // 5. Calculate Estimated Cost
+            const { baseCost, additionsCost, totalAdditionsCost, totalEstimatedCost } = calculateCost(totalSheetsRequired, printSides);
+
+            // 6. Update Display
+            cardsPerSheetSpan.textContent = itemsPerSheet;
+            totalSheetsRequiredSpan.textContent = totalSheetsRequired;
+            displayPaperTypeSpan.textContent = paperTypeName;
+            displayInputDimensionsSpan.textContent = `${inputLength.toFixed(1)}cm x ${inputWidth.toFixed(1)}cm`;
+            displayJobTypeSpan.textContent = jobType;
+            displayOutputDimensionsSpan.textContent = `${outputLength.toFixed(1)}cm x ${outputWidth.toFixed(1)}cm`;
+            displayPrintSidesSpan.textContent = printSides === 1 ? 'One Side' : 'Both Sides';
+            estimatedCostSpan.textContent = `$${totalEstimatedCost.toFixed(2)}`;
+
+            // Update additions cost summary
+            additionsCostSummaryDiv.innerHTML = ''; // Clear previous additions
+            if (Object.keys(additionsCost).length > 0) {
+                const header = document.createElement('div');
+                header.className = 'results-item mt-2';
+                header.innerHTML = '<span>**Additions Cost:**</span><span></span>';
+                additionsCostSummaryDiv.appendChild(header);
+
+                for (const [addition, cost] of Object.entries(additionsCost)) {
+                    const item = document.createElement('div');
+                    item.className = 'results-item text-sm text-gray-600';
+                    item.innerHTML = `<span>- ${addition}:</span><span>$${cost.toFixed(2)}</span>`;
+                    additionsCostSummaryDiv.appendChild(item);
+                }
+            }
+
+
+            // 7. Draw Die Pattern
+            drawDiePattern(inputLength, inputWidth, outputLength, outputWidth, orientation);
+        }
+
+        /**
+         * Exports the estimate as a PDF.
+         */
+        async function exportPdf() {
+            if (window.jspdf && window.html2canvas) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Get values from the display (already formatted)
+                const jobType = displayJobTypeSpan.textContent;
+                const itemsNeeded = cardsNeededInput.value; // Get raw input for PDF
+                const paperType = displayPaperTypeSpan.textContent;
+                const inputDimensions = displayInputDimensionsSpan.textContent;
+                const outputDimensions = displayOutputDimensionsSpan.textContent;
+                const printSides = displayPrintSidesSpan.textContent;
+                const itemsPerSheet = cardsPerSheetSpan.textContent;
+                const totalSheets = totalSheetsRequiredSpan.textContent;
+                const estimatedCost = estimatedCostSpan.textContent;
+
+                let y = 10;
+                doc.setFontSize(22);
+                doc.text("Printing Estimate Summary", 10, y);
+                y += 10;
+                doc.setFontSize(12);
+                doc.text(`Date: ${new Date().toLocaleDateString()}`, 10, y);
+                y += 10;
+
+                doc.setFontSize(14);
+                doc.text("Job Details:", 10, y);
+                y += 7;
+                doc.setFontSize(12);
+                doc.text(`Job Type: ${jobType}`, 20, y); y += 7;
+                doc.text(`Items Needed: ${itemsNeeded}`, 20, y); y += 7;
+                doc.text(`Input Paper Type: ${paperType}`, 20, y); y += 7;
+                doc.text(`Input Sheet Dimensions: ${inputDimensions}`, 20, y); y += 7;
+                doc.text(`Output Item Dimensions: ${outputDimensions}`, 20, y); y += 7;
+                doc.text(`Print Sides: ${printSides}`, 20, y); y += 7;
+
+                doc.setFontSize(14);
+                doc.text("Production Summary:", 10, y += 10);
+                y += 7;
+                doc.setFontSize(12);
+                doc.text(`Items per Input Sheet: ${itemsPerSheet}`, 20, y); y += 7;
+                doc.text(`Total Input Sheets Required: ${totalSheets}`, 20, y); y += 7;
+
+                // Additions Summary
+                const additionsText = additionsCostSummaryDiv.innerText;
+                if (additionsText.trim() !== '') {
+                    doc.setFontSize(14);
+                    doc.text("Additional Finishing Options:", 10, y += 10);
+                    y += 7;
+                    const lines = additionsText.split('\n').filter(line => line.trim() !== '');
+                    doc.setFontSize(12);
+                    lines.forEach(line => {
+                        doc.text(line, 20, y);
+                        y += 7;
+                    });
+                }
+
+                doc.setFontSize(18);
+                doc.setTextColor(16, 185, 129); // Tailwind green for cost
+                doc.text(`Estimated Total Cost: ${estimatedCost}`, 10, y += 15);
+                doc.setTextColor(0, 0, 0); // Reset text color
+
+                // Add Canvas Image
+                y += 15; // Space before image
+                if (y > doc.internal.pageSize.height - 100) { // Check if new page is needed for image
+                    doc.addPage();
+                    y = 10;
+                }
+
+                doc.setFontSize(14);
+                doc.text("Die Pattern Visualization:", 10, y);
+                y += 5;
+
+                // Convert canvas to image
+                const canvasImage = canvas.toDataURL('image/png');
+                const imgWidth = 150; // Set a fixed width for the image in PDF
+                const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
+
+                doc.addImage(canvasImage, 'PNG', (doc.internal.pageSize.width - imgWidth) / 2, y, imgWidth, imgHeight);
+
+                doc.save('PrintingEstimate.pdf');
+            } else {
+                alert("PDF export libraries are not loaded. Please ensure you are online.");
+            }
+        }
+
+        // Initialize with default values on load
+        window.onload = function() {
+            // Set initial custom paper size inputs based on SRA3 default
+            inputLengthInput.value = PAPER_SIZES['SRA3'].length;
+            inputWidthInput.value = PAPER_SIZES['SRA3'].width;
+            calculateEstimate(); // Run calculation on page load with default values
+        };
+    </script>
+</body>
+</html>

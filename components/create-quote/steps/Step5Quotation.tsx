@@ -25,6 +25,7 @@ import type { QuoteFormData, QuoteDiscount, DiscountApproval, QuoteApproval, Quo
 import type { OtherQty } from "@/lib/quote-pdf";
 import { formatAED, requiresApproval, getApprovalReason, getApprovalStatusColor, canApproveQuotes, canSendToCustomer } from "@/lib/currency";
 import { downloadCustomerPdf, downloadOpsPdf } from "@/lib/quote-pdf";
+import { excelDigitalCalculation, excelOffsetCalculation } from "@/lib/excel-calculation";
 
 // AED Currency formatter
 const currency = (n: number) => formatAED(n);
@@ -337,7 +338,7 @@ const Step5Quotation: React.FC<Step5Props> = ({
     }
   };
 
-  // Calculate comprehensive costs for each product
+  // Calculate comprehensive costs for each product using new Excel-based calculation logic
   const calculateProductCosts = (productIndex: number) => {
     const product = formData.products[productIndex];
     if (!product || !product.quantity) return { 
@@ -351,20 +352,81 @@ const Step5Quotation: React.FC<Step5Props> = ({
       total: 0 
     };
 
-    // 1. Paper Costs - Calculate from operational papers data
-    const paperCost = formData.operational.papers.reduce((total, p) => {
-      // Manual pricing override: use direct price per sheet if provided, otherwise use packet pricing
-      const pricePerSheet = p.pricePerSheet || 
-        (p.pricePerPacket && p.sheetsPerPacket && p.sheetsPerPacket > 0 
-          ? p.pricePerPacket / p.sheetsPerPacket 
-          : 0);
-      const actualSheetsNeeded = p.enteredSheets || 0;
-      return total + (pricePerSheet * actualSheetsNeeded);
-    }, 0);
+    // Get product dimensions and specifications
+    const step3ProductWidth = product.flatSize?.width || 0;
+    const step3ProductHeight = product.flatSize?.height || 0;
+    const qty = product.quantity || 0;
+    const sides = Number(product.sides) || 1;
+    const colours = Number(product.colors) || 1;
+    const isDigital = product.printingSelection === 'Digital';
 
-    // 2. Plates Cost (per plate, typically $25-50 per plate)
-    const PLATE_COST_PER_PLATE = 35; // Standard plate cost
-    const platesCost = (formData.operational.plates || 0) * PLATE_COST_PER_PLATE;
+    // Get paper cost per sheet from operational data
+    const paperCostPerSheet = formData.operational.papers[productIndex]?.pricePerSheet || 
+      (formData.operational.papers[productIndex]?.pricePerPacket && formData.operational.papers[productIndex]?.sheetsPerPacket && formData.operational.papers[productIndex]?.sheetsPerPacket > 0 
+        ? formData.operational.papers[productIndex].pricePerPacket / formData.operational.papers[productIndex].sheetsPerPacket 
+        : undefined);
+
+    let paperCost = 0;
+    let platesCost = 0;
+    let printingCost = 0;
+
+    try {
+      if (isDigital) {
+        // Use new Excel-based digital calculation
+        const digitalResults = excelDigitalCalculation({
+          qty,
+          piece: { w: step3ProductWidth, h: step3ProductHeight },
+          sides: sides as 1 | 2,
+          colorsF: colours as 1 | 2 | 4,
+          colorsB: 1,
+          parent: { w: 100, h: 70 },
+          allowRotate: true,
+          paperCostPerSheet: paperCostPerSheet
+        });
+
+        if (digitalResults.length > 0) {
+          // Use the cheapest digital option
+          const cheapest = digitalResults.reduce((min, current) => 
+            current.total < min.total ? current : min
+          );
+          
+          paperCost = cheapest.paper;
+          printingCost = cheapest.clicks; // Digital printing cost
+          platesCost = 0; // No plates for digital
+        }
+      } else {
+        // Use new Excel-based offset calculation
+        const offsetResult = excelOffsetCalculation({
+          qty,
+          piece: { w: step3ProductWidth, h: step3ProductHeight },
+          sides: sides as 1 | 2,
+          colorsF: colours as 1 | 2 | 4,
+          colorsB: 1,
+          parent: { w: 100, h: 70 },
+          allowRotate: true
+        });
+
+        paperCost = offsetResult.paper;
+        platesCost = offsetResult.platesC;
+        printingCost = offsetResult.mkready + offsetResult.run + offsetResult.cutting;
+      }
+    } catch (error) {
+      console.warn('Error in new calculation logic, falling back to legacy calculation:', error);
+      
+      // Fallback to legacy calculation if new logic fails
+      paperCost = formData.operational.papers.reduce((total, p) => {
+        const pricePerSheet = p.pricePerSheet || 
+          (p.pricePerPacket && p.sheetsPerPacket && p.sheetsPerPacket > 0 
+            ? p.pricePerPacket / p.sheetsPerPacket 
+            : 0);
+        const actualSheetsNeeded = p.enteredSheets || 0;
+        return total + (pricePerSheet * actualSheetsNeeded);
+      }, 0);
+
+      const PLATE_COST_PER_PLATE = 35;
+      platesCost = (formData.operational.plates || 0) * PLATE_COST_PER_PLATE;
+      printingCost = 0;
+    }
 
     // 3. Finishing Costs (calculate using same logic as Step 4)
     const actualUnitsNeeded = formData.operational.units || product.quantity || 0;
@@ -441,7 +503,7 @@ const Step5Quotation: React.FC<Step5Props> = ({
     })();
 
     // 4. Calculate subtotal, margin, and VAT
-    const subtotal = paperCost + platesCost + finishingCost;
+    const subtotal = paperCost + platesCost + printingCost + finishingCost;
     const marginPercentage = 30; // 30% margin (hidden from user)
     const marginAmount = subtotal * (marginPercentage / 100);
     const total = subtotal + marginAmount;

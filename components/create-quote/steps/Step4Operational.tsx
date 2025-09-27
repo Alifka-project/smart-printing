@@ -1981,13 +1981,13 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
       productHeight = T + H + B; // Top hem + Body height + Bottom flaps
       
       console.log('🛍️ Visualization using shopping bag dieline dimensions:', {
-        bagPreset: currentProduct.bagPreset,
+        bagPreset: printCurrentProduct.bagPreset,
         individualPanel: { W, H, G },
         totalDieline: { width: productWidth, height: productHeight }
       });
     } else {
-      productWidth = currentProduct?.flatSize?.width || productConfig?.defaultSizes?.width || 9;
-      productHeight = currentProduct?.flatSize?.height || productConfig?.defaultSizes?.height || 5.5;
+      productWidth = printCurrentProduct?.flatSize?.width || productConfig?.defaultSizes?.width || 9;
+      productHeight = printCurrentProduct?.flatSize?.height || productConfig?.defaultSizes?.height || 5.5;
     }
   } else {
     // Use unified helper for consistent dimensions across all views
@@ -2296,7 +2296,7 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
       } else {
         // For circular products (cups), use the specialized drawing function
         if (productShape === 'circular') {
-          drawCircularProduct(ctx, x, y, actualProductWidth, actualProductHeight, settings, productData, row, col, currentProduct);
+          drawCircularProduct(ctx, x, y, actualProductWidth, actualProductHeight, settings, productData, row, col, printCurrentProduct);
         } else {
           drawProductShape(ctx, x, y, actualProductWidth, actualProductHeight, productShape, settings, productData);
         }
@@ -3040,7 +3040,7 @@ function drawGripperView(ctx: CanvasRenderingContext2D, canvasWidth: number, can
       } else {
         // For circular products (cups), use the specialized drawing function
         if (productShape === 'circular') {
-          drawCircularProduct(ctx, x, y, actualProductWidth, actualProductHeight, settings, productData, row, col, currentProduct);
+          drawCircularProduct(ctx, x, y, actualProductWidth, actualProductHeight, settings, productData, row, col, gripperCurrentProduct);
         } else {
           drawProductShape(ctx, x, y, actualProductWidth, actualProductHeight, productShape, settings, productData);
         }
@@ -3976,13 +3976,13 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     console.log('🚀 Step4Operational: Component mounted with data:', {
       productsLength: formData.products.length,
       operationalPapersLength: formData.operational.papers.length,
-      products: formData.products.map(p => ({
+        products: formData.products.map((p: any) => ({
         name: p.productName,
         quantity: p.quantity,
         papers: p.papers.length,
         colors: p.colors
       })),
-      operationalPapers: formData.operational.papers.map(p => ({
+      operationalPapers: formData.operational.papers.map((p: any) => ({
         inputWidth: p.inputWidth,
         inputHeight: p.inputHeight,
         outputWidth: p.outputWidth,
@@ -4012,7 +4012,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
       let globalPaperIndex = 0;
       
       formData.products.forEach((product, productIndex) => {
-        product.papers.forEach((paper, paperIndex) => {
+        product.papers.forEach((paper: any, paperIndex: number) => {
           // Check if we have existing operational data for this paper
           const existingOpPaper = formData.operational.papers[globalPaperIndex];
           
@@ -4254,7 +4254,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     console.log('🔄 Step4Operational: formData changed, syncing local state...', {
       productsLength: formData.products.length,
       operationalPapersLength: formData.operational.papers.length,
-      hasOperationalData: formData.operational.papers.some(p => 
+      hasOperationalData: formData.operational.papers.some((p: any) => 
         p.inputWidth !== null || p.inputHeight !== null || 
         p.outputWidth !== null || p.outputHeight !== null
       )
@@ -4263,11 +4263,11 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     // Sync colors from formData to local state
     const newPaperColors: { [productIndex: number]: { [paperIndex: number]: string[] } } = {};
     formData.products.forEach((product, productIndex) => {
-      product.papers.forEach((paper, paperIndex) => {
+      product.papers.forEach((paper: any, paperIndex: number) => {
         // Calculate global paper index
         const globalPaperIndex = formData.products
           .slice(0, productIndex)
-          .reduce((total, p) => total + p.papers.length, 0) + paperIndex;
+          .reduce((total: number, p: any) => total + p.papers.length, 0) + paperIndex;
         
         // Get colors from operational data
         const operationalPaper = formData.operational.papers[globalPaperIndex];
@@ -4473,7 +4473,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     console.log('🔄 perPaperCalc recalculating due to dependency change:', {
       operationalPapersLength: formData.operational.papers.length,
       productsLength: formData.products.length,
-      manualPricingData: formData.operational.papers.map(p => ({
+      manualPricingData: formData.operational.papers.map((p: any) => ({
         pricePerSheet: p.pricePerSheet,
         pricePerPacket: p.pricePerPacket,
         sheetsPerPacket: p.sheetsPerPacket
@@ -4485,7 +4485,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
       const productDimensions = outputDimensions[productIndex] || { width: 0, height: 0 };
 
       // Map through the product's papers (not operational papers)
-      return product.papers.map((paper, paperIndex) => {
+      return product.papers.map((paper: any, paperIndex: number) => {
         // Calculate the global paper index for this product's paper
         let globalPaperIndex = 0;
         for (let pi = 0; pi < productIndex; pi++) {
@@ -4818,7 +4818,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     // Only run this effect once when the component mounts and perPaperCalc is available
     if (perPaperCalc.length > 0 && perPaperCalc[0]?.length > 0) {
       setFormData((prev) => {
-        const nextPapers = prev.operational.papers.map((p, i) => {
+        const nextPapers = prev.operational.papers.map((p: any, i: number) => {
           // Find which product and paper index this operational paper corresponds to
           let productIndex = 0;
           let paperIndex = 0;
@@ -4856,7 +4856,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
           }
         });
 
-        const hasChanges = nextPapers.some((p, i) => 
+        const hasChanges = nextPapers.some((p: any, i: number) => 
           p.enteredSheets !== prev.operational.papers[i]?.enteredSheets ||
           p.recommendedSheets !== prev.operational.papers[i]?.recommendedSheets
         );
@@ -4877,7 +4877,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
   // ===== Initialize default input sheet sizes and validate output dimensions =====
   React.useEffect(() => {
     setFormData((prev) => {
-      const nextPapers = prev.operational.papers.map((p, i) => {
+      const nextPapers = prev.operational.papers.map((p: any, i: number) => {
         const updatedPaper = { ...p };
         const paperKey = `input-dimensions-${i}`;
         const hasUserEdited = userEditedInputDimensions.has(paperKey);
@@ -4895,7 +4895,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         return updatedPaper;
       });
 
-      const hasChanges = nextPapers.some((p, i) => 
+        const hasChanges = nextPapers.some((p: any, i: number) => 
         p.inputWidth !== prev.operational.papers[i]?.inputWidth ||
         p.inputHeight !== prev.operational.papers[i]?.inputHeight
       );
@@ -4990,9 +4990,9 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
           // Fallback to original calculation if Excel calculation fails
           const productPapers = product.papers || [];
           const totalSheets = productPapers.reduce(
-            (acc, paper, paperIndex) => {
+            (acc: any, paper: any, paperIndex: number) => {
               const rec = perPaperCalc[productIndex]?.[paperIndex]?.recommendedSheets ?? 0;
-              const globalPaperIndex = formData.products.slice(0, productIndex).reduce((total, p) => total + p.papers.length, 0) + paperIndex;
+              const globalPaperIndex = formData.products.slice(0, productIndex).reduce((total: number, p: any) => total + p.papers.length, 0) + paperIndex;
               const opPaper = formData.operational.papers[globalPaperIndex];
               const entered = opPaper?.enteredSheets ?? null;
               return acc + (entered != null ? entered : rec);
@@ -5024,7 +5024,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
   // ===== Sync to state =====
   React.useEffect(() => {
     setFormData((prev) => {
-      const nextPapers = prev.operational.papers.map((p, i) => {
+      const nextPapers = prev.operational.papers.map((p: any, i: number) => {
         // Find which product and paper index this operational paper corresponds to
         let productIndex = 0;
         let paperIndex = 0;
@@ -5064,7 +5064,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
       const samePapers =
         nextPapers.length === prev.operational.papers.length &&
         nextPapers.every(
-          (p, i) =>
+          (p: any, i: number) =>
             p.recommendedSheets === prev.operational.papers[i].recommendedSheets &&
             p.enteredSheets === prev.operational.papers[i].enteredSheets
         );
@@ -5099,7 +5099,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         
         // Create operational paper entries for each product's papers
         formData.products.forEach((product, productIndex) => {
-          product.papers.forEach((paper, paperIndex) => {
+          product.papers.forEach((paper: any, paperIndex: number) => {
             // Calculate the global paper index for this product's paper
             const globalPaperIndex = newOperationalPapers.length;
             const existingOpPaper = prev.operational.papers[globalPaperIndex];
@@ -5388,7 +5388,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     
     formData.products.forEach(product => {
       if (product.finishing && Array.isArray(product.finishing)) {
-        product.finishing.forEach(finishingName => {
+        product.finishing.forEach((finishingName: any) => {
           // Extract base finishing name (remove side suffix)
           const baseFinishingName = finishingName.split('-')[0];
           allFinishingNames.add(baseFinishingName);
@@ -5414,7 +5414,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         
         // Only add if it's actually selected in Step 3
         const isSelectedInStep3 = formData.products.some(product => 
-          product.finishing && product.finishing.some(f => {
+          product.finishing && product.finishing.some((f: any) => {
             const baseName = f.split('-')[0];
             return baseName.toLowerCase() === finishingName.toLowerCase();
           })
@@ -5446,13 +5446,13 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
   // ===== Clean up incorrect UV Spot entries =====
   React.useEffect(() => {
     setFormData((prev) => {
-      const hasIncorrectUVSpot = prev.operational.finishing.some(f => 
+      const hasIncorrectUVSpot = prev.operational.finishing.some((f: any) => 
         f.name.toLowerCase() === 'uv spot' && f.name !== 'UV Spot'
       );
       
       if (hasIncorrectUVSpot) {
         console.log('DEBUG: Found incorrect UV Spot entry, cleaning up...');
-        const cleanedFinishing = prev.operational.finishing.filter(f => 
+        const cleanedFinishing = prev.operational.finishing.filter((f: any) => 
           !(f.name.toLowerCase() === 'uv spot' && f.name !== 'UV Spot')
         );
         
@@ -5482,7 +5482,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
   React.useEffect(() => {
     // This effect runs once on mount to ensure defaults are set
     setFormData((prev) => {
-      const nextPapers = prev.operational.papers.map((p, i) => {
+      const nextPapers = prev.operational.papers.map((p: any, i: number) => {
         const updatedPaper = { ...p };
         
         // Force set to 100x70 on first load
@@ -5496,7 +5496,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         return updatedPaper;
       });
 
-      const hasChanges = nextPapers.some((p, i) => 
+        const hasChanges = nextPapers.some((p: any, i: number) => 
         p.inputWidth !== prev.operational.papers[i]?.inputWidth ||
         p.inputHeight !== prev.operational.papers[i]?.inputHeight
       );
@@ -5855,7 +5855,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         
       default:
         // Fallback to manual cost if set in operational finishing
-        const finishingItem = formData.operational.finishing.find(f => f.name === finishingName);
+        const finishingItem = formData.operational.finishing.find((f: any) => f.name === finishingName);
         if (finishingItem && finishingItem.cost != null) {
           finishingCost = finishingItem.cost * actualSheetsNeeded;
         }
@@ -5876,7 +5876,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     
     formData.products.forEach((product) => {
       if (product.finishing && product.finishing.length > 0) {
-        product.finishing.forEach(finishingName => {
+        product.finishing.forEach((finishingName: any) => {
           allFinishingTypes.add(finishingName);
         });
       }
@@ -5904,7 +5904,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
     let totalCost = 0;
     
     // Paper costs
-    formData.operational.papers.forEach((opPaper, index) => {
+    formData.operational.papers.forEach((opPaper: any, index: number) => {
       const actualSheetsNeeded = opPaper.enteredSheets ?? 
                                  perPaperCalc[Math.floor(index / formData.products[0]?.papers.length || 1)]?.[index % (formData.products[0]?.papers.length || 1)]?.recommendedSheets ?? 0;
       const productData = formData.products[Math.floor(index / (formData.products[0]?.papers.length || 1))];
@@ -6182,7 +6182,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
               </div>
               {/* Product Color Summary Badge */}
               {(() => {
-                const totalColors = product.papers.reduce((total, _, paperIdx) => {
+                const totalColors = product.papers.reduce((total: any, _: any, paperIdx: number) => {
                   return total + (paperColors[productIndex]?.[paperIdx]?.length || 0);
                 }, 0);
                 
@@ -6202,7 +6202,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
           </div>
 
 
-          {product.papers.map((paper, paperIndex) => {
+          {product.papers.map((paper: any, paperIndex: number) => {
             // Calculate the global paper index for this product's paper
             let globalPaperIndex = 0;
             for (let pi = 0; pi < productIndex; pi++) {
@@ -6615,7 +6615,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                               ...prev,
                               operational: {
                                 ...prev.operational,
-                                papers: prev.operational.papers.map((paper, index) => 
+                                papers: prev.operational.papers.map((paper: any, index: number) => 
                                   index === globalPaperIndex 
                                     ? { ...paper, selectedColors: newColors }
                                     : paper
@@ -6705,7 +6705,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                   ...prev,
                                   operational: {
                                     ...prev.operational,
-                                    papers: prev.operational.papers.map((paper, index) => 
+                                    papers: prev.operational.papers.map((paper: any, index: number) => 
                                       index === globalPaperIndex 
                                         ? { ...paper, selectedColors: newColors }
                                         : paper
@@ -7308,7 +7308,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                       const allFinishingTypes = new Set<string>();
                       formData.products.forEach((product) => {
                         if (product.finishing && product.finishing.length > 0) {
-                          product.finishing.forEach(finishingName => {
+                          product.finishing.forEach((finishingName: any) => {
                             allFinishingTypes.add(finishingName);
                           });
                         }
@@ -7452,7 +7452,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                   height: outputDimensions[productIndex].height
                                 };
                                 const pressDimension = calculateVisualizationPressDimensions(productDimensions, formData);
-                                return pressDimension ? `${pressDimension.width} × ${pressDimension.height} cm` : "Calculating...";
+                                return pressDimension ? `${pressDimension?.width || 0} × ${pressDimension?.height || 0} cm` : "Calculating...";
                               }
                               return "Dimensions required";
                             })()}
@@ -7484,7 +7484,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                 };
                                 const pressDimension = calculateVisualizationPressDimensions(productDimensions, formData);
                                 if (pressDimension) {
-                                  const cutPieces = calculateCutPieces(opPaper.inputWidth!, opPaper.inputHeight!, pressDimension.width, pressDimension.height);
+                                  const cutPieces = calculateCutPieces(opPaper.inputWidth!, opPaper.inputHeight!, pressDimension?.width || 0, pressDimension?.height || 0);
                                   return cutPieces.totalPieces;
                                 }
                               }
@@ -7503,7 +7503,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                 };
                                 const pressDimension = calculateVisualizationPressDimensions(productDimensions, formData);
                                 if (pressDimension) {
-                                  const cutPieces = calculateCutPieces(opPaper.inputWidth!, opPaper.inputHeight!, pressDimension.width, pressDimension.height);
+                                  const cutPieces = calculateCutPieces(opPaper.inputWidth!, opPaper.inputHeight!, pressDimension?.width || 0, pressDimension?.height || 0);
                                 return `${cutPieces.piecesPerRow}×${cutPieces.piecesPerCol}`;
                                 }
                               }
@@ -7522,8 +7522,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                 };
                                 const pressDimension = calculateVisualizationPressDimensions(productDimensions, formData);
                                 if (pressDimension) {
-                                  const cutPieces = calculateCutPieces(opPaper.inputWidth!, opPaper.inputHeight!, pressDimension.width, pressDimension.height);
-                                  const cutSize = pressDimension.width * pressDimension.height;
+                                  const cutPieces = calculateCutPieces(opPaper.inputWidth!, opPaper.inputHeight!, pressDimension?.width || 0, pressDimension?.height || 0);
+                                  const cutSize = (pressDimension?.width || 0) * (pressDimension?.height || 0);
                                 return ((cutSize * cutPieces.totalPieces) / (opPaper.inputWidth! * opPaper.inputHeight!) * 100).toFixed(1);
                                 }
                               }
@@ -7577,7 +7577,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                                     inputSheet: { width: opPaper.inputWidth, height: opPaper.inputHeight }
                                   });
                                   
-                                  const cutPieces = calculateCutPieces(opPaper.inputWidth!, opPaper.inputHeight!, pressDimension.width, pressDimension.height);
+                                  const cutPieces = calculateCutPieces(opPaper.inputWidth!, opPaper.inputHeight!, pressDimension?.width || 0, pressDimension?.height || 0);
                                 drawFinalPrintingLayout(canvas, cutPieces, outputDimensions[productIndex].width, outputDimensions[productIndex].height);
                                 }
                               }
@@ -7602,23 +7602,17 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
             )}
 
 
-          </div>
-        );
-      })}
-        </div>
-      ))}
-
-      {/* Enhanced Sheet Optimization Preview - MAXIMUM SCALE - MOVED OUTSIDE PRODUCT LOOP */}
-      <Card className="border-0 shadow-lg w-full mx-0">
+            {/* Product-Specific Sheet Layout Visualization */}
+            <Card className="border-0 shadow-lg w-full mx-0 mt-6">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl md:text-2xl font-bold text-slate-800 flex items-center">
             <BarChart3 className="w-6 h-6 md:w-7 md:h-7 mr-2 md:mr-3 text-[#27aae1]" />
-            Single Sheet Layout Visualization
+                  Sheet Layout Visualization - {product.productName || `Product ${productIndex + 1}`}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 w-full px-2 md:px-4">
           <div className="space-y-3">
-            <h5 className="text-base md:text-lg font-semibold text-slate-700">Single Sheet Layout Pattern (All sheets use same pattern)</h5>
+                  <h5 className="text-base md:text-lg font-semibold text-slate-700">Product-Specific Sheet Layout Pattern</h5>
             
             {/* Professional Visualization Type Selector */}
             <div className="flex flex-wrap gap-3 justify-center mb-4">
@@ -7657,37 +7651,42 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
               </button>
             </div>
             
-            {/* Single Sheet Canvas Visualization - Use first product/paper for display */}
+                  {/* Product-Specific Canvas Visualization */}
             <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-lg p-1 shadow-lg overflow-hidden">
               <div className="relative w-full h-full bg-white rounded-lg shadow-inner overflow-hidden">
                 <canvas
-                  id="unified-canvas-visualization"
+                        id={`canvas-visualization-${productIndex}`}
                   className="w-full h-full rounded-lg transition-all duration-500 hover:shadow-md"
                   style={{ maxWidth: '100%', maxHeight: '100%' }}
                   ref={(canvas) => {
-                    if (canvas && formData.products.length > 0 && formData.operational.papers.length > 0) {
-                      const firstProduct = formData.products[0];
-                      const firstPaper = formData.operational.papers[0];
-                      const firstLayout = perPaperCalc[0]?.[0];
+                          if (canvas && product.papers.length > 0) {
+                            // Get the first paper of this product
+                            const productPaper = product.papers[0];
+                            let globalPaperIndex = 0;
+                            for (let pi = 0; pi < productIndex; pi++) {
+                              globalPaperIndex += formData.products[pi].papers.length;
+                            }
+                            const opPaper = formData.operational.papers[globalPaperIndex];
+                            const productLayout = perPaperCalc[productIndex]?.[0];
                       
                       // Check if this is digital printing
-                      const isDigital = firstProduct?.printingSelection === 'Digital';
+                            const isDigital = product?.printingSelection === 'Digital';
                       
                       if (isDigital) {
                         // Use digital visualization for digital printing
                         if (digitalCostingResults.length > 0) {
                           setTimeout(() => {
                             // Get product dimensions for digital visualization
-                            const productName = firstProduct?.productName || 'business-cards';
+                                  const productName = product?.productName || 'business-cards';
                             const productConfig = getProductConfig(productName);
                             
-                            let step3ProductWidth = firstProduct?.flatSize?.width || productConfig?.defaultSizes?.width || 9;
-                            let step3ProductHeight = firstProduct?.flatSize?.height || productConfig?.defaultSizes?.height || 5.5;
+                                  let step3ProductWidth = product?.flatSize?.width || productConfig?.defaultSizes?.width || 9;
+                                  let step3ProductHeight = product?.flatSize?.height || productConfig?.defaultSizes?.height || 5.5;
                             
                             // Use outputDimensions if available (from Step 3), otherwise fall back to width/height
-                            if (formData && formData.outputDimensions && formData.outputDimensions[0]) {
-                              step3ProductWidth = formData.outputDimensions[0].width;
-                              step3ProductHeight = formData.outputDimensions[0].height;
+                                  if (outputDimensions[productIndex]) {
+                                    step3ProductWidth = outputDimensions[productIndex].width;
+                                    step3ProductHeight = outputDimensions[productIndex].height;
                             }
                             
                             drawDigitalLayout(
@@ -7701,15 +7700,21 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                           }, 150);
                         }
                       } else {
-                        // Use offset visualization for offset printing (unchanged)
-                        if (firstLayout && firstLayout.layout && firstLayout.layout.itemsPerSheet > 0 && firstPaper?.inputWidth && firstPaper?.inputHeight) {
+                              // Use offset visualization for offset printing
+                              if (productLayout && productLayout.layout && productLayout.layout.itemsPerSheet > 0 && opPaper?.inputWidth && opPaper?.inputHeight) {
                           setTimeout(() => {
-                            // Use first product data for visualization
-                            const productName = firstProduct?.productName || 'business-cards';
+                                  // Use current product data for visualization
+                                  const productName = product?.productName || 'business-cards';
                             const productConfig = getProductConfig(productName);
                             
-                            let step3ProductWidth = firstProduct?.flatSize?.width || productConfig?.defaultSizes?.width || 9;
-                            let step3ProductHeight = firstProduct?.flatSize?.height || productConfig?.defaultSizes?.height || 5.5;
+                                  let step3ProductWidth = product?.flatSize?.width || productConfig?.defaultSizes?.width || 9;
+                                  let step3ProductHeight = product?.flatSize?.height || productConfig?.defaultSizes?.height || 5.5;
+                                  
+                                  // Use outputDimensions if available
+                                  if (outputDimensions[productIndex]) {
+                                    step3ProductWidth = outputDimensions[productIndex].width;
+                                    step3ProductHeight = outputDimensions[productIndex].height;
+                                  }
                             
                             const settings = {
                               type: visualizationType,
@@ -7717,23 +7722,23 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                               showCutLines: visualizationType === 'cut',
                               showBleed: true,
                               showGaps: true,
-                              gripperWidth: (firstProduct?.gripper || productConfig?.defaultGripper || 0.9),
+                                    gripperWidth: (product?.gripper || productConfig?.defaultGripper || 0.9),
                               bleedWidth: 0.3,
                               gapWidth: 0.5
                             };
                             
                             drawProfessionalVisualization(
                               canvas, 
-                              firstLayout.layout, 
+                                    productLayout.layout, 
                               visualizationType, 
                               settings, 
-                              firstProduct,
-                              firstPaper.inputWidth || undefined,
-                              firstPaper.inputHeight || undefined,
+                                    product,
+                                    opPaper.inputWidth || undefined,
+                                    opPaper.inputHeight || undefined,
                               step3ProductWidth,
                               step3ProductHeight,
                               formData,
-                              0
+                                    productIndex
                             );
                           }, 150);
                         }
@@ -7742,8 +7747,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                   }}
                 />
                 {(() => {
-                  const firstProduct = formData.products[0];
-                  const isDigital = firstProduct?.printingSelection === 'Digital';
+                        const isDigital = product?.printingSelection === 'Digital';
                   
                   if (isDigital) {
                     // Digital printing: show message if no digital results
@@ -7758,12 +7762,13 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                     );
                   } else {
                     // Offset printing: show message if no layout data
-                    return (!formData.products.length || !formData.operational.papers.length || !perPaperCalc[0]?.[0]?.layout?.itemsPerSheet) && (
+                          const productLayout = perPaperCalc[productIndex]?.[0];
+                          return (!product.papers.length || !productLayout?.layout?.itemsPerSheet) && (
                       <div className="absolute inset-0 grid place-items-center text-sm md:text-lg text-slate-500 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
                         <div className="text-center p-3 md:p-4 lg:p-8 max-w-[90%]">
                           <div className="text-slate-400 mb-2 md:mb-4 text-2xl md:text-3xl lg:text-5xl">📏</div>
-                          <div className="font-semibold text-slate-600 text-sm md:text-base lg:text-xl">Configure Products First</div>
-                          <div className="text-xs md:text-sm text-slate-400 mt-2 md:mt-3">Complete Step 3 to preview layout visualization</div>
+                                <div className="font-semibold text-slate-600 text-sm md:text-base lg:text-xl">Configure Product First</div>
+                                <div className="text-xs md:text-sm text-slate-400 mt-2 md:mt-3">Complete product configuration to preview layout visualization</div>
                         </div>
                       </div>
                     );
@@ -7775,7 +7780,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         </CardContent>
       </Card>
 
-      {/* Enhanced Information Cards - Below Canvas */}
+            {/* Product-Specific Advanced Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 items-start">
         {/* Advanced Sheet Analysis */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
@@ -7801,129 +7806,104 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
             </h6>
           </div>
           {!isAdvancedSheetAnalysisCollapsed && (
-            <div className="p-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
+                  <div className="p-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-slate-600">Input Sheet:</span>
-                <span className="font-semibold">
+                          <span className="text-blue-700">Input Sheet:</span>
+                          <span className="font-semibold text-blue-800">
                   {(() => {
-                    const isDigital = formData.products[0]?.printingSelection === 'Digital';
-                    if (isDigital && perPaperCalc[0]?.[0]?.layout?.selectedDigitalOption) {
-                      const digitalOption = perPaperCalc[0][0].layout.selectedDigitalOption;
-                      // Extract dimensions from option label (e.g., "48×33 cm")
-                      const match = digitalOption.option.match(/(\d+)×(\d+)/);
-                      if (match) {
-                        return `${match[1]} × ${match[2]} cm`;
-                      }
-                    }
-                    return `${formData.operational.papers[0]?.inputWidth?.toFixed(1) ?? "–"} × ${formData.operational.papers[0]?.inputHeight?.toFixed(1) ?? "–"} cm`;
+                              const isDigital = product?.printingSelection === 'Digital';
+                              if (isDigital && perPaperCalc[productIndex]?.[0]?.layout?.selectedDigitalOption) {
+                                const digitalOption = perPaperCalc[productIndex][0].layout.selectedDigitalOption;
+                                const dimensions = digitalOption.label.match(/(\d+)×(\d+)/);
+                                if (dimensions) {
+                                  return `${dimensions[1]}×${dimensions[2]} cm`;
+                                }
+                              }
+                              let globalPaperIndex = 0;
+                              for (let pi = 0; pi < productIndex; pi++) {
+                                globalPaperIndex += formData.products[pi].papers.length;
+                              }
+                              const opPaper = formData.operational.papers[globalPaperIndex];
+                              return `${opPaper?.inputWidth || 100} × ${opPaper?.inputHeight || 70} cm`;
                   })()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">Sheet Area:</span>
+                          <span className="text-blue-700">Sheet Area:</span>
                 <span className="font-semibold text-[#27aae1]">
                   {(() => {
-                    const isDigital = formData.products[0]?.printingSelection === 'Digital';
-                    if (isDigital && perPaperCalc[0]?.[0]?.layout?.selectedDigitalOption) {
-                      const digitalOption = perPaperCalc[0][0].layout.selectedDigitalOption;
-                      // Extract dimensions from option label (e.g., "48×33 cm")
-                      const match = digitalOption.option.match(/(\d+)×(\d+)/);
-                      if (match) {
-                        const width = parseInt(match[1]);
-                        const height = parseInt(match[2]);
-                        return `${(width * height).toFixed(1)} cm²`;
-                      }
-                    }
-                    return `${formData.operational.papers[0]?.inputWidth && formData.operational.papers[0]?.inputHeight ? (formData.operational.papers[0].inputWidth * formData.operational.papers[0].inputHeight).toFixed(1) : "–"} cm²`;
+                              const isDigital = product?.printingSelection === 'Digital';
+                              if (isDigital && perPaperCalc[productIndex]?.[0]?.layout?.selectedDigitalOption) {
+                                const digitalOption = perPaperCalc[productIndex][0].layout.selectedDigitalOption;
+                                const dimensions = digitalOption.label.match(/(\d+)×(\d+)/);
+                                if (dimensions) {
+                                  const width = parseInt(dimensions[1]);
+                                  const height = parseInt(dimensions[2]);
+                                  return `${(width * height).toLocaleString()} cm²`;
+                                }
+                              }
+                              let globalPaperIndex = 0;
+                              for (let pi = 0; pi < productIndex; pi++) {
+                                globalPaperIndex += formData.products[pi].papers.length;
+                              }
+                              const opPaper = formData.operational.papers[globalPaperIndex];
+                              const area = (opPaper?.inputWidth || 100) * (opPaper?.inputHeight || 70);
+                              return `${area.toLocaleString()} cm²`;
                   })()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">Material Efficiency:</span>
-                <span className={`font-semibold ${perPaperCalc[0]?.[0]?.layout?.efficiency > 85 ? 'text-green-600' : perPaperCalc[0]?.[0]?.layout?.efficiency > 70 ? 'text-yellow-600' : 'text-red-600'}`}>
-                  {perPaperCalc[0]?.[0]?.layout?.efficiency ? perPaperCalc[0][0].layout.efficiency.toFixed(1) : "–"}%
+                          <span className="text-blue-700">Items per Sheet:</span>
+                          <span className="font-semibold text-blue-800">
+                            {perPaperCalc[productIndex]?.[0]?.layout?.itemsPerSheet || 0}
                 </span>
               </div>
-              
-              {/* Waste Analysis */}
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Used Area:</span>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">Used Area:</span>
                   <span className="font-semibold text-green-600">
                     {(() => {
-                      const isDigital = formData.products[0]?.printingSelection === 'Digital';
-                      if (isDigital && perPaperCalc[0]?.[0]?.layout?.selectedDigitalOption && outputDimensions[0]?.width && outputDimensions[0]?.height) {
-                        const digitalOption = perPaperCalc[0][0].layout.selectedDigitalOption;
-                        return `${(digitalOption.upsPerSheet * outputDimensions[0].width * outputDimensions[0].height).toFixed(1)} cm²`;
-                      }
-                      return `${formData.operational.papers[0]?.inputWidth && formData.operational.papers[0]?.inputHeight && outputDimensions[0]?.width && outputDimensions[0]?.height && perPaperCalc[0]?.[0]?.layout?.itemsPerSheet 
-                        ? (perPaperCalc[0][0].layout.itemsPerSheet * outputDimensions[0].width * outputDimensions[0].height).toFixed(1) 
-                        : "–"} cm²`;
+                              const isDigital = product?.printingSelection === 'Digital';
+                              if (isDigital && perPaperCalc[productIndex]?.[0]?.layout?.selectedDigitalOption && outputDimensions[productIndex]?.width && outputDimensions[productIndex]?.height) {
+                                const digitalOption = perPaperCalc[productIndex][0].layout.selectedDigitalOption;
+                                const dimensions = digitalOption.label.match(/(\d+)×(\d+)/);
+                                if (dimensions) {
+                                  const sheetWidth = parseInt(dimensions[1]);
+                                  const sheetHeight = parseInt(dimensions[2]);
+                                  const productWidth = outputDimensions[productIndex].width;
+                                  const productHeight = outputDimensions[productIndex].height;
+                                  const itemsPerSheet = perPaperCalc[productIndex]?.[0]?.layout?.itemsPerSheet || 1;
+                                  const usedArea = productWidth * productHeight * itemsPerSheet;
+                                  return `${usedArea.toLocaleString()} cm²`;
+                                }
+                              }
+                              if (outputDimensions[productIndex]?.width && outputDimensions[productIndex]?.height) {
+                                const productWidth = outputDimensions[productIndex].width;
+                                const productHeight = outputDimensions[productIndex].height;
+                                const itemsPerSheet = perPaperCalc[productIndex]?.[0]?.layout?.itemsPerSheet || 1;
+                                const usedArea = productWidth * productHeight * itemsPerSheet;
+                                return `${usedArea.toLocaleString()} cm²`;
+                              }
+                              return 'N/A';
                     })()}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Waste Area:</span>
-                  <span className="font-semibold text-red-600">
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">Efficiency:</span>
+                          <span className="font-semibold text-green-600">
                     {(() => {
-                      const isDigital = formData.products[0]?.printingSelection === 'Digital';
-                      if (isDigital && perPaperCalc[0]?.[0]?.layout?.selectedDigitalOption && outputDimensions[0]?.width && outputDimensions[0]?.height) {
-                        const digitalOption = perPaperCalc[0][0].layout.selectedDigitalOption;
-                        const match = digitalOption.option.match(/(\d+)×(\d+)/);
-                        if (match) {
-                          const sheetWidth = parseInt(match[1]);
-                          const sheetHeight = parseInt(match[2]);
-                          const sheetArea = sheetWidth * sheetHeight;
-                          const usedArea = digitalOption.upsPerSheet * outputDimensions[0].width * outputDimensions[0].height;
-                          return `${(sheetArea - usedArea).toFixed(1)} cm²`;
-                        }
-                      }
-                      return `${formData.operational.papers[0]?.inputWidth && formData.operational.papers[0]?.inputHeight && outputDimensions[0]?.width && outputDimensions[0]?.height && perPaperCalc[0]?.[0]?.layout?.itemsPerSheet 
-                        ? ((formData.operational.papers[0].inputWidth * formData.operational.papers[0].inputHeight) - (perPaperCalc[0][0].layout.itemsPerSheet * outputDimensions[0].width * outputDimensions[0].height)).toFixed(1) 
-                        : "–"} cm²`;
+                              const efficiency = perPaperCalc[productIndex]?.[0]?.layout?.efficiency || 0;
+                              return `${efficiency.toFixed(1)}%`;
                     })()}
                   </span>
                 </div>
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>Base Area:</span>
-                  <span>
-                    {(() => {
-                      const isDigital = formData.products[0]?.printingSelection === 'Digital';
-                      if (isDigital && perPaperCalc[0]?.[0]?.layout?.selectedDigitalOption) {
-                        const digitalOption = perPaperCalc[0][0].layout.selectedDigitalOption;
-                        const match = digitalOption.option.match(/(\d+)×(\d+)/);
-                        if (match) {
-                          const width = parseInt(match[1]);
-                          const height = parseInt(match[2]);
-                          return `${(width * height).toFixed(1)} cm² (Full Sheet)`;
-                        }
-                      }
-                      return `${formData.operational.papers[0]?.inputWidth && formData.operational.papers[0]?.inputHeight ? (formData.operational.papers[0].inputWidth * formData.operational.papers[0].inputHeight).toFixed(1) : "–"} cm² (Full Sheet)`;
-                    })()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Performance Rating */}
-              <div className="bg-slate-50 p-2 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-700 flex items-center">
-                    <BarChart3 className="w-4 h-4 mr-2 text-[#27aae1]" />
-                    Performance:
-                  </span>
-                  <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 h-2 rounded-full ${
-                          i < Math.ceil((perPaperCalc[0]?.[0]?.layout?.efficiency || 0) / 100 * 5) 
-                            ? (perPaperCalc[0]?.[0]?.layout?.efficiency || 0) > 85 ? 'bg-green-500' : (perPaperCalc[0]?.[0]?.layout?.efficiency || 0) > 70 ? 'bg-yellow-500' : 'bg-red-500'
-                            : 'bg-gray-200'
-                        }`}
-                      />
-                    ))}
-                    <span className="text-xs font-semibold ml-1">
-                      {(perPaperCalc[0]?.[0]?.layout?.efficiency || 0) > 85 ? 'Excellent' : (perPaperCalc[0]?.[0]?.layout?.efficiency || 0) > 70 ? 'Good' : (perPaperCalc[0]?.[0]?.layout?.efficiency || 0) > 50 ? 'Fair' : 'Poor'}
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">Orientation:</span>
+                          <span className="font-semibold text-blue-800">
+                            {perPaperCalc[productIndex]?.[0]?.layout?.orientation || 'normal'}
                     </span>
                   </div>
                 </div>
@@ -7956,99 +7936,59 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
             </h6>
           </div>
           {!isProductionIntelligenceCollapsed && (
-            <div className="p-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
+                  <div className="p-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-slate-600">Item Size:</span>
-                <span className="font-semibold text-[#27aae1]">
+                          <span className="text-green-700">Quantity:</span>
+                          <span className="font-semibold text-green-800">{product?.quantity || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                          <span className="text-green-700">Sides:</span>
+                          <span className="font-semibold text-green-800">{product?.sides || '1'}</span>
+              </div>
+              <div className="flex justify-between">
+                          <span className="text-green-700">Printing:</span>
+                          <span className="font-semibold text-green-800">{product?.printingSelection || 'Digital'}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-green-700">Total Sheets:</span>
+                          <span className="font-semibold text-green-800">
                   {(() => {
-                    // For cups, show the actual cup dimensions from product config
-                    const currentProduct = formData.products[0];
-                    if (currentProduct?.productName === 'Cups' && currentProduct?.cupSizeOz) {
-                      // Get cup dimensions from the cup configuration
-                      const cupDimensions = {
-                        4: { width: 22.4, height: 6.0 },   // 4oz cup dimensions
-                        6: { width: 24.7, height: 7.3 },   // 6oz cup dimensions  
-                        8: { width: 31.3, height: 8.3 },   // 8oz cup dimensions
-                        12: { width: 33.9, height: 11.0 }  // 12oz cup dimensions
-                      };
-                      const dims = cupDimensions[currentProduct.cupSizeOz as keyof typeof cupDimensions];
-                      return dims ? `${dims.width.toFixed(1)} × ${dims.height.toFixed(1)} cm` : "–";
-                    }
-                    // For other products, use outputDimensions
-                    return `${outputDimensions[0]?.width?.toFixed(1) ?? "–"} × ${outputDimensions[0]?.height?.toFixed(1) ?? "–"} cm`;
+                              let totalSheets = 0;
+                              product.papers.forEach((paper: any, paperIndex: number) => {
+                                let globalPaperIndex = 0;
+                                for (let pi = 0; pi < productIndex; pi++) {
+                                  globalPaperIndex += formData.products[pi].papers.length;
+                                }
+                                globalPaperIndex += paperIndex;
+                                const opPaper = formData.operational.papers[globalPaperIndex];
+                                const rec = perPaperCalc[productIndex]?.[paperIndex]?.recommendedSheets ?? 0;
+                                const entered = opPaper?.enteredSheets ?? null;
+                                totalSheets += (entered != null ? entered : rec);
+                              });
+                              return totalSheets;
                   })()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">Layout Strategy:</span>
-                <span className={`font-semibold ${(() => {
-                  const isDigital = formData.products[0]?.printingSelection === 'Digital';
-                  if (isDigital) return 'text-green-600';
-                  return perPaperCalc[0]?.[0]?.layout?.orientation === 'rotated' ? 'text-[#ea078b]' : 'text-green-600';
-                })()}`}>
-                  {(() => {
-                    const isDigital = formData.products[0]?.printingSelection === 'Digital';
-                    if (isDigital) return '→ Digital Layout';
-                    return perPaperCalc[0]?.[0]?.layout?.orientation === 'rotated' ? '↻ Optimized Rotation' : '→ Standard Layout';
-                  })()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Grid Pattern:</span>
-                <span className="font-semibold">
-                  {(() => {
-                    const isDigital = formData.products[0]?.printingSelection === 'Digital';
-                    if (isDigital && perPaperCalc[0]?.[0]?.layout?.selectedDigitalOption) {
-                      const digitalOption = perPaperCalc[0][0].layout.selectedDigitalOption;
-                      return `${digitalOption.cutPerParent} × ${Math.floor(digitalOption.upsPerSheet / digitalOption.cutPerParent)} matrix`;
-                    }
-                    return `${perPaperCalc[0]?.[0]?.layout?.itemsPerRow} × ${perPaperCalc[0]?.[0]?.layout?.itemsPerCol} matrix`;
-                  })()}
-                </span>
-              </div>
-
-              {/* Layout Optimization */}
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Items per Sheet:</span>
-                  <span className="font-bold text-[#27aae1] text-lg">{perPaperCalc[0]?.[0]?.layout?.itemsPerSheet || 0}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Space Utilization:</span>
-                  <span className={`font-semibold ${(perPaperCalc[0]?.[0]?.layout?.efficiency || 0) > 80 ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {formData.operational.papers[0]?.inputWidth && formData.operational.papers[0]?.inputHeight && outputDimensions[0]?.width && outputDimensions[0]?.height && perPaperCalc[0]?.[0]?.layout?.itemsPerSheet
-                      ? ((perPaperCalc[0][0].layout.itemsPerRow * outputDimensions[0].width) / formData.operational.papers[0].inputWidth * 100).toFixed(1)
-                      : "–"}% × {formData.operational.papers[0]?.inputWidth && formData.operational.papers[0]?.inputHeight && outputDimensions[0]?.width && outputDimensions[0]?.height && perPaperCalc[0]?.[0]?.layout?.itemsPerSheet
-                      ? ((perPaperCalc[0][0].layout.itemsPerCol * outputDimensions[0].height) / formData.operational.papers[0].inputHeight * 100).toFixed(1)
-                      : "–"}%
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>Grid Layout:</span>
-                  <span>
+                          <span className="text-green-700">Colors:</span>
+                          <span className="font-semibold text-green-800">
                     {(() => {
-                      const isDigital = formData.products[0]?.printingSelection === 'Digital';
-                      if (isDigital && perPaperCalc[0]?.[0]?.layout?.selectedDigitalOption) {
-                        const digitalOption = perPaperCalc[0][0].layout.selectedDigitalOption;
-                        return `${digitalOption.cutPerParent} × ${Math.floor(digitalOption.upsPerSheet / digitalOption.cutPerParent)} items`;
-                      }
-                      return `${perPaperCalc[0]?.[0]?.layout?.itemsPerRow} × ${perPaperCalc[0]?.[0]?.layout?.itemsPerCol} items`;
+                              const totalColors = product.papers.reduce((total: any, _: any, paperIdx: number) => {
+                                return total + (paperColors[productIndex]?.[paperIdx]?.length || 0);
+                              }, 0);
+                              return totalColors;
                     })()}
                   </span>
                 </div>
+              <div className="flex justify-between">
+                          <span className="text-green-700">Papers:</span>
+                          <span className="font-semibold text-green-800">{product.papers.length}</span>
               </div>
-
-              {/* Optimization Recommendations */}
-              <div className="bg-[#27aae1]/10 p-2 rounded-lg">
-                <p className="text-xs text-[#27aae1] font-medium">
-                  {(perPaperCalc[0]?.[0]?.layout?.efficiency || 0) > 85 
-                    ? "✓ Optimal layout achieved"
-                    : (perPaperCalc[0]?.[0]?.layout?.efficiency || 0) > 70
-                    ? "⚡ Consider alternative orientations for better efficiency"
-                    : (perPaperCalc[0]?.[0]?.layout?.efficiency || 0) > 50
-                    ? "⚠️ Moderate efficiency - review sheet size or item dimensions"
-                    : "🚨 Low efficiency - significant material waste, consider optimization"}
-                </p>
+                      </div>
               </div>
             </div>
           )}
@@ -8077,628 +8017,111 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
               </div>
             </h6>
           </div>
-          {!isOperationsDashboardCollapsed && (() => {
-            // Calculate production metrics
-            const qty = formData.products[0]?.quantity || 0;
-            const layout = perPaperCalc[0]?.[0]?.layout;
-            const isDigital = formData.products[0]?.printingSelection === 'Digital';
-            
-            let sheetsNeeded, totalItemsPossible;
-            if (isDigital && layout?.selectedDigitalOption) {
-              // Use digital calculation results
-              sheetsNeeded = layout.selectedDigitalOption.parents;
-              totalItemsPossible = sheetsNeeded * layout.selectedDigitalOption.upsPerSheet;
-            } else {
-              // Use offset calculation results
-              sheetsNeeded = layout?.itemsPerSheet > 0 ? Math.ceil(qty / layout.itemsPerSheet) : 0;
-              totalItemsPossible = sheetsNeeded * (layout?.itemsPerSheet || 0);
-            }
-            
-            return (
-              <div className="p-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
-                {/* Production Metrics */}
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="bg-[#27aae1]/10 p-2 rounded">
-                    <div className="text-[#27aae1] font-medium">Required</div>
-                    <div className="font-bold text-[#27aae1]">{qty}</div>
-                  </div>
-                  <div className="bg-orange-50 p-2 rounded">
-                    <div className="text-orange-600 font-medium">Sheets</div>
-                    <div className="font-bold text-orange-800">{sheetsNeeded}</div>
-                  </div>
-                </div>
-
-                {/* Production Efficiency */}
-                <div className="border-t pt-2">
-                  <div className="flex justify-between bg-green-50 p-2 rounded border border-green-200">
-                    <span className="text-green-700 font-medium">Production Yield:</span>
-                    <span className="font-bold text-green-800">{totalItemsPossible}</span>
-                  </div>
-                  
-                  {totalItemsPossible > qty && (
-                    <div className="mt-2 space-y-1">
-                      <div className="flex justify-between bg-amber-50 p-2 rounded border border-amber-200">
-                        <span className="text-amber-700 font-medium">Overproduction:</span>
-                        <span className="font-bold text-amber-800">{totalItemsPossible - qty}</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-600">Material Waste:</span>
-                        <span className="font-semibold text-red-600">
-                          {layout?.efficiency ? (100 - layout.efficiency).toFixed(1) : "–"}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-600">Overproduction:</span>
-                        <span className="font-semibold text-amber-600">
-                          {totalItemsPossible > 0 ? (((totalItemsPossible - qty) / totalItemsPossible) * 100).toFixed(1) : "–"}%
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* Enhanced Modal Dialog */}
-      <Dialog
-        open={showSupplierDB}
-        onOpenChange={(open) => {
-          setShowSupplierDB(open);
-          if (open) {
-            fetchSuppliersAndMaterials();
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center text-2xl font-bold text-slate-800">
-              <Database className="w-8 h-8 mr-3 text-green-600" />
-              Supplier Database & Material Catalog
-            </DialogTitle>
-            <p className="text-slate-600 mt-2">Browse available materials, suppliers, and pricing information</p>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {/* Search and Filter Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Search Suppliers</label>
-                <input
-                  type="text"
-                  value={supplierSearchTerm}
-                  onChange={(e) => setSupplierSearchTerm(e.target.value)}
-                  placeholder="Search suppliers..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Filter by Supplier</label>
-                <select
-                  value={selectedSupplier}
-                  onChange={(e) => setSelectedSupplier(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="">All Suppliers</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.name}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Filter by GSM</label>
-                <select
-                  value={selectedGSM}
-                  onChange={(e) => setSelectedGSM(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="">All GSM</option>
-                  <option value="80">80 GSM</option>
-                  <option value="100">100 GSM</option>
-                  <option value="120">120 GSM</option>
-                  <option value="150">150 GSM</option>
-                  <option value="200">200 GSM</option>
-                  <option value="250">250 GSM</option>
-                  <option value="300">300 GSM</option>
-                  <option value="350">350 GSM</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Loading State */}
-            {isLoadingSuppliers ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                <span className="ml-2 text-slate-600">Loading suppliers...</span>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredMaterials
-                  .filter((material) => 
-                    supplierSearchTerm === '' || 
-                    selectedSupplier === '' || 
-                    selectedGSM === '' ||
-                    material.supplierName?.toLowerCase().includes(supplierSearchTerm.toLowerCase()) ||
-                    material.name?.toLowerCase().includes(supplierSearchTerm.toLowerCase())
-                  )
-                  .map((material, index) => (
-                    <div key={index} className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                {!isOperationsDashboardCollapsed && (
+                  <div className="p-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-semibold text-slate-800">{material.name}</h4>
-                            <p className="text-sm text-slate-600">{material.supplierName}</p>
-                          </div>
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                            {material.gsm} GSM
+                        <div className="flex justify-between">
+                          <span className="text-purple-700">Paper Cost:</span>
+                          <span className="font-semibold text-purple-800">
+                  {(() => {
+                              let totalCost = 0;
+                              product.papers.forEach((paper: any, paperIndex: number) => {
+                                let globalPaperIndex = 0;
+                                for (let pi = 0; pi < productIndex; pi++) {
+                                  globalPaperIndex += formData.products[pi].papers.length;
+                                }
+                                globalPaperIndex += paperIndex;
+                                const opPaper = formData.operational.papers[globalPaperIndex];
+                                const rec = perPaperCalc[productIndex]?.[paperIndex]?.recommendedSheets ?? 0;
+                                const entered = opPaper?.enteredSheets ?? null;
+                                const sheets = (entered != null ? entered : rec);
+                                const pricePerSheet = perPaperCalc[productIndex]?.[paperIndex]?.pricePerSheet ?? 0;
+                                totalCost += sheets * pricePerSheet;
+                              });
+                              return fmt(totalCost);
+          })()}
                           </span>
                         </div>
-                        
-                        <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-slate-600">Price per Sheet:</span>
-                            <span className="font-medium">{material.pricePerSheet ? `${material.pricePerSheet} AED` : 'Contact'}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-600">Price per Packet:</span>
-                            <span className="font-medium">{material.pricePerPacket ? `${material.pricePerPacket} AED` : 'Contact'}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-600">Sheets per Packet:</span>
-                            <span className="font-medium">{material.sheetsPerPacket || 'N/A'}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between pt-2 border-t">
-                          <div className="text-xs text-slate-500">
-                            {material.supplierCity}, {material.supplierCountry}
-                          </div>
-                          <Button 
-                            size="sm" 
-                            onClick={() => {
-                              // Apply material to current paper selection
-                              console.log('Applying material:', material);
-                              setShowSupplierDB(false);
-                            }}
-                            className="text-xs px-3 py-1"
-                          >
-                            Apply
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter className="pt-6">
-            <Button variant="outline" onClick={() => setShowSupplierDB(false)} className="px-6 py-2 rounded-xl">
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Cost Breakdown Modal */}
-      <Dialog open={showCostBreakdown} onOpenChange={setShowCostBreakdown}>
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center text-2xl font-bold text-slate-800">
-              <BarChart3 className="w-8 h-8 mr-3 text-green-600" />
-              Complete Cost Breakdown
-            </DialogTitle>
-            <p className="text-slate-600 mt-2">Detailed breakdown of all project costs and calculations</p>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {/* Paper Costs */}
-            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-              <div className="flex items-center mb-4">
-                <Package className="w-6 h-6 text-blue-600 mr-2" />
-                <h4 className="text-lg font-semibold text-blue-800">Paper Costs</h4>
-              </div>
-              <div className="space-y-3">
-                {formData.products.map((product, index) => {
-                  const opPaper = formData.operational?.papers?.[index];
-                  if (!opPaper) return null;
-                  
-                  const sheetsRequired = (product.quantity || 0) * (opPaper?.sheetsPerPacket || 1);
-                  // Use simple calculation: pricePerSheet × sheetsRequired
-                  const paperCost = (opPaper?.pricePerSheet || 0) * sheetsRequired;
-                  
-                  return (
-                    <div key={index} className="flex justify-between items-center bg-white p-3 rounded border">
-                      <span className="text-blue-700">Paper {index + 1}: {sheetsRequired} sheets × {fmt(opPaper?.pricePerSheet || 0)} per sheet</span>
-                      <span className="font-semibold text-blue-800">{fmt(paperCost)}</span>
-                    </div>
-                  );
-                })}
-                <div className="flex justify-between items-center bg-white p-3 rounded border border-t-2 border-blue-300">
-                  <span className="font-bold text-blue-800">Total Paper Cost:</span>
-                  <span className="text-lg font-bold text-blue-800">
-                    {fmt(formData.products.reduce((sum, product, index) => {
-                      const opPaper = formData.operational?.papers?.[index];
-                      if (!opPaper) return sum;
-                      const sheetsRequired = (product.quantity || 0) * (opPaper?.sheetsPerPacket || 1);
-                      // Use simple calculation: pricePerSheet × sheetsRequired
-                      const paperCost = (opPaper?.pricePerSheet || 0) * sheetsRequired;
-                      return sum + paperCost;
-                    }, 0))}
+                          <span className="text-purple-700">Finishing:</span>
+                          <span className="font-semibold text-purple-800">
+                            {(() => {
+                              let finishingCost = 0;
+                              if (product.finishing && product.finishing.length > 0) {
+                                product.finishing.forEach((finishingName: any) => {
+                                  finishingCost += calculateIndividualFinishingCost(finishingName, product, productIndex);
+                                });
+                              }
+                              return fmt(finishingCost);
+                            })()}
                   </span>
                 </div>
               </div>
-            </div>
-
-
-            {/* Units Costs */}
-            <div className="bg-pink-50 rounded-lg p-6 border border-pink-200">
-              <div className="flex items-center mb-4">
-                <BarChart3 className="w-6 h-6 text-pink-600 mr-2" />
-                <h4 className="text-lg font-semibold text-pink-800">Units Costs</h4>
-              </div>
               <div className="space-y-3">
-                <div className="flex justify-between items-center bg-white p-3 rounded border">
-                  <span className="text-pink-700">Plates Required:</span>
-                  <span className="font-semibold text-pink-800">
-                    {formData.products.reduce((sum, product) => {
-                      const colors = Number(product.colors) || 0;
-                      const sides = Number(product.sides) || 1;
-                      return sum + (Number(colors) * Number(sides));
-                    }, 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center bg-white p-3 rounded border">
-                  <span className="text-pink-700">Unit Price (from Excel Units tab):</span>
-                  <span className="font-semibold text-pink-800">AED 100.00</span>
-                </div>
-                <div className="flex justify-between items-center bg-white p-3 rounded border border-t-2 border-pink-300">
-                  <span className="font-bold text-pink-800">Total Units Cost:</span>
-                  <span className="text-lg font-bold text-pink-800">
-                    {fmt(formData.products.reduce((sum, product) => {
-                      const colors = Number(product.colors) || 0;
-                      const sides = Number(product.sides) || 1;
-                      return sum + (Number(colors) * Number(sides) * 100);
-                    }, 0))}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Finishing Costs */}
-            <div className="bg-orange-50 rounded-lg p-6 border border-orange-200">
-              <div className="flex items-center mb-4">
-                <Settings className="w-6 h-6 text-orange-600 mr-2" />
-                <h4 className="text-lg font-semibold text-orange-800">Finishing Costs</h4>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center bg-white p-3 rounded border">
-                  <span className="text-orange-700">Velvet lamination</span>
-                  <div className="flex items-center space-x-2">
-                    <input type="number" value="0" readOnly className="w-16 px-2 py-1 border rounded text-sm bg-gray-50" />
-                    <span className="text-sm text-orange-600">per unit</span>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center bg-white p-3 rounded border">
-                  <span className="text-orange-700">Cost per unit:</span>
-                  <span className="font-semibold text-orange-800">AED 0.00</span>
-                </div>
-                <div className="flex justify-between items-center bg-white p-3 rounded border">
-                  <span className="text-orange-700">Total for {formData.products.reduce((sum, product) => sum + (product.quantity || 0), 0)} units:</span>
-                  <span className="font-semibold text-orange-800">AED 0.00</span>
-                </div>
-                <div className="flex justify-between items-center bg-white p-3 rounded border border-t-2 border-orange-300">
-                  <span className="font-bold text-orange-800">Total Finishing Cost:</span>
-                  <span className="text-lg font-bold text-orange-800">{fmt(calculateFinishingCosts())}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Project Total */}
-            <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
-              <div className="flex items-center mb-4">
-                <Calculator className="w-6 h-6 text-purple-600 mr-2" />
-                <h4 className="text-lg font-semibold text-purple-800">Project Total</h4>
-              </div>
-              <div className="text-center">
+                        <div className="flex justify-between">
+                          <span className="text-purple-700">Plates:</span>
+                          <span className="font-semibold text-purple-800">
                 {(() => {
-                  const totalQuantity = formData.products.reduce((sum, product) => sum + (product.quantity || 0), 0);
-                  
-                  // Calculate total sheets needed
-                  const totalSheets = formData.products.reduce((sum, product, index) => {
-                    const opPaper = formData.operational?.papers?.[index];
-                    if (!opPaper) return sum;
-                    return sum + ((product.quantity || 0) * (opPaper?.sheetsPerPacket || 1));
+                              if (product?.printingSelection === 'Digital') return 'N/A';
+                              const totalColors = product.papers.reduce((total: any, _: any, paperIdx: number) => {
+                                return total + (paperColors[productIndex]?.[paperIdx]?.length || 0);
                   }, 0);
-                  
-                  // Calculate total plates needed
-                  const totalPlates = formData.products.reduce((sum, product) => {
-                    const colors = Number(product.colors) || 0;
-                    const sides = Number(product.sides) || 1;
-                    return sum + (Number(colors) * Number(sides));
-                  }, 0);
-                  
-                  // Calculate paper cost (from database) × number of sheets
-                  const totalPaperCost = formData.products.reduce((sum, product, index) => {
-                    const opPaper = formData.operational?.papers?.[index];
-                    if (!opPaper) return sum;
-                    const sheetsRequired = (product.quantity || 0) * (opPaper?.sheetsPerPacket || 1);
-                    // Use simple calculation: pricePerSheet × sheetsRequired
-                    const paperCost = (opPaper?.pricePerSheet || 0) * sheetsRequired;
-                    return sum + paperCost;
-                  }, 0);
-                  
-                  // Unit price from Excel Units tab: AED 100
-                  const unitPrice = 100;
-                  
-                  // Calculate total cost: Paper Cost × Number of Sheets + Unit Price × Number of Plates
-                  const totalCost = totalPaperCost + (unitPrice * totalPlates);
-                  
-                  const costPerUnit = totalQuantity > 0 ? totalCost / totalQuantity : 0;
-                  
-                  return (
-                    <>
-                      <div className="text-4xl font-bold text-purple-800 mb-2">{fmt(totalCost)}</div>
-                      <div className="text-sm text-purple-600 mb-1">Cost per Unit: {fmt(costPerUnit)}</div>
-                      <div className="text-sm text-purple-600">Total Quantity: {totalQuantity} items</div>
-                    </>
-                  );
+                              const plateCost = totalColors * 150; // Assuming 150 AED per plate
+                              return fmt(plateCost);
                 })()}
+                  </span>
               </div>
-            </div>
-          </div>
-          
-          <DialogFooter className="pt-6">
-            <Button 
-              onClick={() => setShowCostBreakdown(false)}
-              className="bg-green-600 hover:bg-green-700 px-8 py-3 rounded-xl font-medium"
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Enhanced Modal Dialog */}
-      <Dialog
-        open={openIdx != null}
-        onOpenChange={(o) => setOpenIdx(o ? openIdx : null)}
-      >
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center text-2xl font-bold text-slate-800">
-              <Calculator className="w-8 h-8 mr-3 text-blue-600" />
-              Cost Breakdown Analysis
-            </DialogTitle>
-            <p className="text-slate-600 mt-2">Detailed breakdown of all production costs</p>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {(() => {
-              const openData = formData.products[openIdx ?? 0];
-              if (!openData) return <div>No data available</div>;
-              
-              return (
-                <div className="space-y-6">
-                  {/* Cost Summary */}
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <h4 className="text-lg font-semibold text-blue-800 mb-3">Cost Summary</h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-blue-700">Base Cost:</span>
-                          <span className="font-semibold text-blue-800">{fmt(calculateTotalCost(openData?.op, openData?.quantity || 0, openData?.paper, openIdx ?? undefined))}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Additional Costs:</span>
-                          <span className="font-semibold text-blue-800">{fmt((formData.additionalCosts || []).reduce((acc: number, f: any) => acc + (f.cost || 0), 0))}</span>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Finishing Costs:</span>
-                          <span className="font-semibold text-blue-800">{fmt(calculateFinishingCosts())}</span>
-                        </div>
-                        <div className="flex justify-between border-t pt-2">
-                          <span className="font-bold text-blue-900">Total:</span>
-                          <span className="text-xl font-bold text-blue-900">{fmt(calculateTotalCost(openData?.op, openData?.quantity || 0, openData?.paper, openIdx ?? undefined) + (formData.additionalCosts || []).reduce((acc, f) => acc + (f.cost || 0), 0) + calculateFinishingCosts())}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
+                          <span className="text-purple-700">Total:</span>
+                          <span className="font-semibold text-purple-800">
+                    {(() => {
+                              let totalCost = 0;
+                              // Paper costs
+                              product.papers.forEach((paper: any, paperIndex: number) => {
+                                let globalPaperIndex = 0;
+                                for (let pi = 0; pi < productIndex; pi++) {
+                                  globalPaperIndex += formData.products[pi].papers.length;
+                                }
+                                globalPaperIndex += paperIndex;
+                                const opPaper = formData.operational.papers[globalPaperIndex];
+                                const rec = perPaperCalc[productIndex]?.[paperIndex]?.recommendedSheets ?? 0;
+                                const entered = opPaper?.enteredSheets ?? null;
+                                const sheets = (entered != null ? entered : rec);
+                                const pricePerSheet = perPaperCalc[productIndex]?.[paperIndex]?.pricePerSheet ?? 0;
+                                totalCost += sheets * pricePerSheet;
+                              });
+                              // Finishing costs
+                              if (product.finishing && product.finishing.length > 0) {
+                                product.finishing.forEach((finishingName: any) => {
+                                  totalCost += calculateIndividualFinishingCost(finishingName, product, productIndex);
+                                });
+                              }
+                              // Plate costs (offset only)
+                              if (product?.printingSelection !== 'Digital') {
+                                const totalColors = product.papers.reduce((total: any, _: any, paperIdx: number) => {
+                                  return total + (paperColors[productIndex]?.[paperIdx]?.length || 0);
+                                }, 0);
+                                totalCost += totalColors * 150; // Assuming 150 AED per plate
+                              }
+                              return fmt(totalCost);
             })()}
+                  </span>
           </div>
-          
-          <DialogFooter className="pt-6">
-            <Button 
-              variant="outline" 
-              onClick={() => setOpenIdx(null)}
-              className="border-slate-300 hover:border-slate-400 hover:bg-slate-50 px-8 py-3 rounded-xl font-medium"
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-
-      {/* Enhanced Pricing Logic Modal */}
-      <Dialog open={showPricingLogic} onOpenChange={setShowPricingLogic}>
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center text-2xl font-bold text-slate-800">
-              <Calculator className="w-8 h-8 mr-3 text-blue-600" />
-              Pricing Logic & Calculation Methods
-            </DialogTitle>
-            <p className="text-slate-600 mt-2">Understand how your costs are calculated based on different pricing scenarios.</p>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {/* Pricing Logic & Calculation Methods */}
-            <div>
-              <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                <BarChart3 className="w-5 h-5 mr-2" />
-                Pricing Logic & Calculation Methods
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-center mb-3">
-                    <Package className="w-6 h-6 text-blue-600 mr-2" />
-                    <h5 className="font-semibold text-blue-800">Packet Pricing</h5>
-            </div>
-                  <p className="text-sm text-blue-700">Buy paper in pre-packaged quantities.</p>
-          </div>
-          
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <div className="flex items-center mb-3">
-                    <Calculator className="w-6 h-6 text-green-600 mr-2" />
-                    <h5 className="font-semibold text-green-800">Sheet Pricing</h5>
-                  </div>
-                  <p className="text-sm text-green-700">Buy individual sheets at unit price.</p>
-                </div>
-                
-                <div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
-                  <div className="flex items-center mb-3">
-                    <Settings className="w-6 h-6 text-pink-600 mr-2" />
-                    <h5 className="font-semibold text-pink-800">Hybrid Pricing</h5>
-                  </div>
-                  <p className="text-sm text-pink-700">Combine both methods for optimal cost.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Calculation Rules */}
-            <div>
-              <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                <Calculator className="w-5 h-5 mr-2" />
-                Calculation Rules
-              </h4>
-              
-              <div className="space-y-4">
-                {/* Packet Only Pricing */}
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-center mb-3">
-                    <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
-                    <h5 className="font-semibold text-blue-800">Packet Only Pricing</h5>
-                  </div>
-                  <div className="bg-blue-100 rounded p-3 mb-3">
-                    <code className="text-blue-800 font-mono">Total Cost = [(Sheets needed ÷ Sheets per packet)] × Price per packet</code>
-                  </div>
-                  <p className="text-sm text-blue-700">When only packet pricing is available, we round up to the nearest whole packet. This ensures you have enough paper for your project.</p>
-                </div>
-
-                {/* Sheet Only Pricing */}
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <div className="flex items-center mb-3">
-                    <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
-                    <h5 className="font-semibold text-green-800">Sheet Only Pricing</h5>
-                  </div>
-                  <div className="bg-green-100 rounded p-3 mb-3">
-                    <code className="text-green-800 font-mono">Total Cost = Sheets needed × Price per sheet</code>
-                  </div>
-                  <p className="text-sm text-green-700">When only sheet pricing is available, you pay for exactly the number of sheets needed. No waste, but potentially higher per-sheet cost.</p>
-                </div>
-
-                {/* Hybrid Pricing */}
-                <div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
-                  <div className="flex items-center mb-3">
-                    <div className="w-8 h-8 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
-                    <h5 className="font-semibold text-pink-800">Hybrid Pricing</h5>
-                  </div>
-                  <div className="bg-pink-100 rounded p-3 mb-3">
-                    <code className="text-pink-800 font-mono">Total Cost = Full packets × Price per packet + Remaining sheets × Price per sheet</code>
-                  </div>
-                  <p className="text-sm text-pink-700">When both pricing methods are available, we optimize by using full packets first, then individual sheets for the remainder. This gives you the best of both worlds.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Practical Example */}
-            <div>
-              <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                <Calculator className="w-5 h-5 mr-2" />
-                Practical Example
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h5 className="font-medium text-slate-700 mb-3">Scenario</h5>
-                  <ul className="space-y-2 text-sm text-slate-600">
-                    <li>• Sheets needed: 25</li>
-                    <li>• Sheets per packet: 20</li>
-                    <li>• Price per packet: AED 200</li>
-                    <li>• Price per sheet: AED 15</li>
-                  </ul>
-                </div>
-                <div>
-                  <h5 className="font-medium text-slate-700 mb-3">Calculation</h5>
-                  <div className="space-y-2 text-sm text-slate-600">
-                    <div>Full packets: [25 ÷ 20] = 1</div>
-                    <div>Remaining sheets: 25 % 20 = 5</div>
-                    <div>Packet cost: 1 × AED 200 = AED 200</div>
-                    <div>Sheet cost: 5 × AED 15 = AED 75</div>
-                    <div className="font-semibold text-slate-800">Total: AED 200 + AED 75 = AED 275</div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                <div className="flex items-center">
-                  <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-white text-xs">💡</span>
-                  </div>
-                  <p className="text-sm text-yellow-800 font-medium">Pro Tip: Hybrid pricing often provides the best value by combining bulk discounts with precise quantity matching.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Why This System? */}
-            <div>
-              <h4 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                <BarChart3 className="w-5 h-5 mr-2" />
-                Why This System?
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                    <span className="text-sm text-slate-700">Cost Optimization: Always uses the most economical combination</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                    <span className="text-sm text-slate-700">Flexibility: Adapts to different supplier pricing models</span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-pink-500 rounded-full mr-3"></div>
-                    <span className="text-sm text-slate-700">Transparency: Clear breakdown of all costs</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
-                    <span className="text-sm text-slate-700">Accuracy: No rounding errors or hidden costs</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
-          
-          <DialogFooter className="pt-6">
-            <Button 
-              onClick={() => setShowPricingLogic(false)}
-              className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-xl font-medium"
-            >
-              Got it! Thanks
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                  </div>
+                )}
+              </div>
+            </div>
 
-      {/* Paper Price Modal - Enhanced */}
+                  </div>
+        );
+      })}
+                  </div>
+      ))}
+
+      {/* Paper Price Details Modal */}
       <Dialog open={showPaperPrice !== null} onOpenChange={() => setShowPaperPrice(null)}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -8722,7 +8145,7 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
               
               return (
                 <div className="space-y-6">
-                  {/* Paper Details */}
+                  {/* Paper Information */}
                   <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
                     <h4 className="text-lg font-semibold text-blue-800 mb-4">Paper Details</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -8736,34 +8159,10 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                           <span className="font-semibold text-blue-800">{sheetsRequired}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-blue-700">GSM:</span>
-                          <span className="font-semibold text-blue-800">150 gsm</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Sheets per Packet:</span>
-                          <span className="font-semibold text-blue-800">{paperData.sheetsPerPacket || 'Not set'}</span>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
                           <span className="text-blue-700">Input Size:</span>
                           <span className="font-semibold text-blue-800">{paperData.inputWidth} x {paperData.inputHeight} cm</span>
                     </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Paper Index:</span>
-                          <span className="font-semibold text-blue-800">{showPaperPrice + 1}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Output Size:</span>
-                          <span className="font-semibold text-blue-800">
-                            {outputDimensions[showPaperPrice]?.width || formData.products[showPaperPrice]?.flatSize?.width || formData.products[showPaperPrice]?.closeSize?.width || '–'} x {outputDimensions[showPaperPrice]?.height || formData.products[showPaperPrice]?.flatSize?.height || formData.products[showPaperPrice]?.closeSize?.height || '–'} cm
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Product Index:</span>
-                          <span className="font-semibold text-blue-800">{showPaperPrice + 1}</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -8791,13 +8190,13 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                             <div className="flex justify-between">
                               <span className="text-green-700">Total Cost:</span>
                               <span className="font-semibold text-green-800">
-                                {fmt(paperData.pricePerSheet ? paperData.pricePerSheet * sheetsRequired : 0)}
+                                {paperData.pricePerSheet ? `${(paperData.pricePerSheet * sheetsRequired).toFixed(2)} AED` : 'N/A'}
                               </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-green-700">Cost per Unit:</span>
                               <span className="font-semibold text-green-800">
-                                {product.quantity ? fmt((paperData.pricePerSheet ? paperData.pricePerSheet * sheetsRequired : 0) / product.quantity) : 'N/A'}
+                                {product.quantity && paperData.pricePerSheet ? `${((paperData.pricePerSheet * sheetsRequired) / product.quantity).toFixed(2)} AED` : 'N/A'}
                               </span>
                             </div>
                           </div>
@@ -8812,33 +8211,6 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                         <p className="text-yellow-700">Please set either price per sheet or price per packet in the paper specifications above.</p>
                       </div>
                     )}
-                  </div>
-
-                  {/* Additional Information */}
-                  <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                    <h4 className="text-lg font-semibold text-slate-800 mb-4">Additional Information</h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-slate-700">Calculation Method:</span>
-                          <span className="font-semibold text-slate-800">Per-Packet</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-700">Items per Sheet:</span>
-                          <span className="font-semibold text-slate-800">8</span>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-slate-700">Efficiency:</span>
-                          <span className="font-semibold text-slate-800">84.0%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-700">Layout Orientation:</span>
-                          <span className="font-semibold text-slate-800">normal</span>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               );
@@ -8855,97 +8227,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-
-
-      {/* Finishing Details Popup Modal */}
-      <Dialog open={showFinishingDetails} onOpenChange={setShowFinishingDetails}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center text-2xl font-bold text-slate-800">
-              <Settings className="w-8 h-8 mr-3 text-orange-600" />
-              Finishing Costs Breakdown
-            </DialogTitle>
-            <p className="text-slate-600 mt-2">Detailed breakdown of finishing costs and processes</p>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            {/* Finishing Options Breakdown */}
-            <div className="space-y-4">
-              {(() => {
-                // Collect all unique finishing types across all products for display
-                const allFinishingTypes = new Set<string>();
-                formData.products.forEach((product) => {
-                  if (product.finishing && product.finishing.length > 0) {
-                    product.finishing.forEach(finishingName => {
-                      allFinishingTypes.add(finishingName);
-                    });
-                  }
-                });
-
-                if (allFinishingTypes.size === 0) {
-                  return (
-                    <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-200">
-                      <div className="text-slate-500">No finishing options applied</div>
                     </div>
                   );
                 }
-
-                return Array.from(allFinishingTypes).map((finishingName, index) => {
-                  // Find which product has this finishing to get the product index for calculation
-                  const productWithFinishing = formData.products.find(product => 
-                    product.finishing && product.finishing.includes(finishingName)
-                  );
-                  const productIndex = productWithFinishing ? formData.products.indexOf(productWithFinishing) : 0;
-                  
-                  // Calculate the actual cost using the same logic as the main calculation
-                  const calculatedCost = calculateIndividualFinishingCost(finishingName, productWithFinishing, productIndex);
-                  
-                  return (
-                    <div key={index} className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <h4 className="text-lg font-semibold text-slate-800">{finishingName}</h4>
-                          <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                            {finishingName.includes('-') ? finishingName.split('-')[1] : 'Front'}
-                          </span>
-                        </div>
-                        <span className="text-xl font-bold text-slate-800">{fmt(calculatedCost)}</span>
-                      </div>
-                      
-                      <div className="space-y-2 text-sm text-slate-600">
-                        <p>Auto-calculated based on finishing type and quantity</p>
-                        <div className="bg-slate-50 rounded p-2 font-mono text-xs">
-                          Formula: {finishingName} × quantity = {fmt(calculatedCost)}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
-
-            {/* Total Finishing Cost */}
-            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-green-800">Total Finishing Cost:</span>
-                <span className="text-2xl font-bold text-green-800">{fmt(calculateFinishingCosts())}</span>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button 
-              onClick={() => setShowFinishingDetails(false)}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium"
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
 
 export default Step4Operational;

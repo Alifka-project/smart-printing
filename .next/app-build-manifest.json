@@ -11,15 +11,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(root)/layout.js"
     ],
-    "/(root)/create-quote/page": [
+    "/(root)/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(root)/create-quote/page.js"
+      "static/chunks/app/(root)/page.js"
     ],
     "/api/quotes/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/quotes/route.js"
+    ],
+    "/(root)/create-quote/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(root)/create-quote/page.js"
     ],
     "/api/materials/papers/route": [
       "static/chunks/webpack.js",
@@ -40,21 +45,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/digital/route.js"
-    ],
-    "/api/users/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/users/route.js"
-    ],
-    "/api/sales-persons/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/sales-persons/route.js"
-    ],
-    "/(root)/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(root)/page.js"
     ]
   }
 }

@@ -1,7 +1,6 @@
 {
-  "/api/materials/papers/route": "app/api/materials/papers/route.js",
-  "/api/suppliers/route": "app/api/suppliers/route.js",
   "/api/digital/route": "app/api/digital/route.js",
+  "/api/suppliers/route": "app/api/suppliers/route.js",
   "/api/offset/route": "app/api/offset/route.js",
   "/(root)/page": "app/(root)/page.js",
   "/(root)/create-quote/page": "app/(root)/create-quote/page.js"

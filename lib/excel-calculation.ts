@@ -10,6 +10,14 @@ interface DigitalCostingResult {
   paper: number;
   clicks: number;
   total: number;
+  // Grid layout details for visualization
+  gridLayout?: {
+    itemsPerRow: number;
+    itemsPerCol: number;
+    orientation: 'normal' | 'rotated';
+    sheetWidth: number;
+    sheetHeight: number;
+  };
 }
 
 interface OffsetCostingResult {
@@ -130,14 +138,39 @@ export function excelDigitalCalculation({
   ];
 
   return sheetOptions.map(option => {
-    // Calculate UPS for both orientations
-    const upsOption1 = calculateUpsOption1(option.w, option.h, piece.w, piece.h);
-    const upsOption2 = allowRotate ? calculateUpsOption2(option.w, option.h, piece.w, piece.h) : 0;
+    // Calculate UPS for both orientations with detailed grid info
+    const option1Cols = Math.floor(option.w / (piece.w + 1));
+    const option1Rows = Math.floor(option.h / (piece.h + 1));
+    const upsOption1 = option1Cols * option1Rows;
     
-    // Get best UPS per cut piece (Excel formula)
-    const upsPerCutPiece = getBestUps(upsOption1, upsOption2);
+    const option2Cols = allowRotate ? Math.floor(option.w / (piece.h + 1)) : 0;
+    const option2Rows = allowRotate ? Math.floor(option.h / (piece.w + 1)) : 0;
+    const upsOption2 = option2Cols * option2Rows;
+    
+    console.log(`📐 Digital grid calculation for ${option.label}:`, {
+      sheetSize: `${option.w}×${option.h}`,
+      productSize: `${piece.w}×${piece.h}`,
+      normal: { cols: option1Cols, rows: option1Rows, total: upsOption1 },
+      rotated: { cols: option2Cols, rows: option2Rows, total: upsOption2 },
+      winner: upsOption2 > upsOption1 ? 'ROTATED' : 'NORMAL'
+    });
+    
+    // Determine which orientation is better
+    const useRotated = upsOption2 > upsOption1;
+    const upsPerCutPiece = Math.max(upsOption1, upsOption2);
     
     if (upsPerCutPiece === 0) return null;
+
+    // Store grid layout details based on chosen orientation
+    const gridLayout = {
+      itemsPerRow: useRotated ? option2Cols : option1Cols,
+      itemsPerCol: useRotated ? option2Rows : option1Rows,
+      orientation: useRotated ? ('rotated' as const) : ('normal' as const),
+      sheetWidth: option.w,
+      sheetHeight: option.h
+    };
+    
+    console.log(`✅ Selected grid layout:`, gridLayout);
 
     // Calculate total ups per sheet = cut pieces × ups per cut piece
     const totalUpsPerSheet = option.cutPcs * upsPerCutPiece;
@@ -163,7 +196,8 @@ export function excelDigitalCalculation({
       parents: sheets,
       paper,
       clicks: price, // Price includes click cost
-      total
+      total,
+      gridLayout // Add grid layout info for visualization
     };
   }).filter(Boolean) as DigitalCostingResult[];
 }

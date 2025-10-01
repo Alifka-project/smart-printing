@@ -1171,17 +1171,44 @@ function drawPrintLayout(
   // Adjust cut piece height for gripper area (always present in print layout)
   cutPieceHeight = (scaledSheetHeight - gripperWidth) / (cutPieces === 4 ? 2 : 1);
   
-  const scaledCardWidth = productWidth * scale;
-  const scaledCardHeight = productHeight * scale;
+  // Handle card dimensions - swap if rotated orientation
+  let cardRealWidth = productWidth;
+  let cardRealHeight = productHeight;
+  if (selectedResult.gridLayout && selectedResult.gridLayout.orientation === 'rotated') {
+    cardRealWidth = productHeight;  // Swap dimensions for rotated
+    cardRealHeight = productWidth;
+    console.log('🔄 Rotating card dimensions:', {
+      original: `${productWidth}×${productHeight}`,
+      rotated: `${cardRealWidth}×${cardRealHeight}`
+    });
+  }
+  
+  const scaledCardWidth = cardRealWidth * scale;
+  const scaledCardHeight = cardRealHeight * scale;
   
   // Use the actual calculated cards per cut piece from the digital calculation
   // upsPerSheet is total cards per sheet, but we need cards per cut piece for visualization
   const cardsPerCutPiece = selectedResult.upsPerSheet / cutPieces;
   const totalCardsPerSheet = cardsPerCutPiece; // Show only one cut piece worth of cards
   
-  // Calculate optimal grid layout for the actual number of cards
-  const cardsPerRow = Math.ceil(Math.sqrt(totalCardsPerSheet));
-  const cardsPerCol = Math.ceil(totalCardsPerSheet / cardsPerRow);
+  // Use grid layout from digital calculation if available, otherwise calculate
+  let cardsPerRow, cardsPerCol;
+  if (selectedResult.gridLayout) {
+    // Use the optimized grid from digital calculation
+    cardsPerRow = selectedResult.gridLayout.itemsPerRow;
+    cardsPerCol = selectedResult.gridLayout.itemsPerCol;
+    console.log('✅ Using optimized digital grid layout:', {
+      itemsPerRow: cardsPerRow,
+      itemsPerCol: cardsPerCol,
+      orientation: selectedResult.gridLayout.orientation,
+      source: 'excelDigitalCalculation'
+    });
+  } else {
+    // Fallback: Calculate optimal grid layout for the actual number of cards
+    cardsPerRow = Math.ceil(Math.sqrt(totalCardsPerSheet));
+    cardsPerCol = Math.ceil(totalCardsPerSheet / cardsPerRow);
+    console.log('⚠️ Using fallback grid calculation:', { cardsPerRow, cardsPerCol });
+  }
   
   // Draw all cards across the entire sheet (not divided by cut pieces)
   let cardIndex = 0;
@@ -1576,46 +1603,64 @@ function drawProfessionalVisualization(
   let dynamicPressWidth = 35; // Default fallback
   let dynamicPressHeight = 50; // Default fallback
   
-  // Use outputDimensions if available (from Step 3), otherwise fall back to productData
-  let productWidth, productHeight;
-  if (formData && productIndex !== undefined && formData.outputDimensions && formData.outputDimensions[productIndex]) {
-    productWidth = formData.outputDimensions[productIndex].width;
-    productHeight = formData.outputDimensions[productIndex].height;
-    console.log('🔍 Using outputDimensions for press calculation:', {
-      width: productWidth,
-      height: productHeight,
-      productIndex,
-      source: 'outputDimensions'
-    });
-  } else if (productData && productData.flatSize && productData.flatSize.width && productData.flatSize.height) {
-    productWidth = productData.flatSize.width;
-    productHeight = productData.flatSize.height;
-    console.log('🔍 Using productData.flatSize for press calculation:', {
-      width: productWidth,
-      height: productHeight,
-      productName: productData.name,
-      source: 'productData.flatSize'
-    });
-  }
+  // IMPORTANT: For digital printing, use the sheet dimensions from digital calculation
+  const currentProduct = formData?.products?.[productIndex || 0];
+  const isDigitalPrinting = currentProduct?.printingSelection === 'Digital';
   
-  if (productWidth && productHeight) {
-    const pressDimension = calculateVisualizationPressDimensions({
-      width: productWidth,
-      height: productHeight
-    }, formData);
-    
-    if (pressDimension) {
-      dynamicPressWidth = pressDimension.width;
-      dynamicPressHeight = pressDimension.height;
-      console.log('🎯 Using dynamic press dimensions:', pressDimension);
-      console.log('📊 Press dimensions applied:', { width: dynamicPressWidth, height: dynamicPressHeight });
-    } else {
-      console.warn('⚠️ Failed to calculate dynamic press dimensions, using fallback');
-    }
+  if (isDigitalPrinting && (layout as any)?.pressWidth && (layout as any)?.pressHeight) {
+    // Use digital sheet dimensions from enhanced calculation
+    dynamicPressWidth = (layout as any).pressWidth;
+    dynamicPressHeight = (layout as any).pressHeight;
+    console.log('📱 Using digital sheet dimensions from calculation:', {
+      width: dynamicPressWidth,
+      height: dynamicPressHeight,
+      itemsPerRow: (layout as any).itemsPerRow,
+      itemsPerCol: (layout as any).itemsPerCol,
+      orientation: (layout as any).orientation,
+      source: 'digital calculation gridLayout'
+    });
   } else {
-    console.warn('⚠️ Missing product dimensions, using default press size');
-    console.log('🔍 Available productData:', productData);
-    console.log('🔍 Available formData.outputDimensions:', formData?.outputDimensions);
+    // Use outputDimensions if available (from Step 3), otherwise fall back to productData
+    let productWidth, productHeight;
+    if (formData && productIndex !== undefined && formData.outputDimensions && formData.outputDimensions[productIndex]) {
+      productWidth = formData.outputDimensions[productIndex].width;
+      productHeight = formData.outputDimensions[productIndex].height;
+      console.log('🔍 Using outputDimensions for press calculation:', {
+        width: productWidth,
+        height: productHeight,
+        productIndex,
+        source: 'outputDimensions'
+      });
+    } else if (productData && productData.flatSize && productData.flatSize.width && productData.flatSize.height) {
+      productWidth = productData.flatSize.width;
+      productHeight = productData.flatSize.height;
+      console.log('🔍 Using productData.flatSize for press calculation:', {
+        width: productWidth,
+        height: productHeight,
+        productName: productData.name,
+        source: 'productData.flatSize'
+      });
+    }
+    
+    if (productWidth && productHeight) {
+      const pressDimension = calculateVisualizationPressDimensions({
+        width: productWidth,
+        height: productHeight
+      }, formData);
+      
+      if (pressDimension) {
+        dynamicPressWidth = pressDimension.width;
+        dynamicPressHeight = pressDimension.height;
+        console.log('🎯 Using dynamic press dimensions:', pressDimension);
+        console.log('📊 Press dimensions applied:', { width: dynamicPressWidth, height: dynamicPressHeight });
+      } else {
+        console.warn('⚠️ Failed to calculate dynamic press dimensions, using fallback');
+      }
+    } else {
+      console.warn('⚠️ Missing product dimensions, using default press size');
+      console.log('🔍 Available productData:', productData);
+      console.log('🔍 Available formData.outputDimensions:', formData?.outputDimensions);
+    }
   }
 
   if (visualizationType === 'cut') {
@@ -1858,10 +1903,16 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
   const actualItemsPerSheet = layout?.itemsPerSheet || 0;
   const layoutOrientation = layout?.orientation || 'normal';
   
-  console.log('🎨 Print View Layout:', {
+  console.log('🎨 Print View Layout RECEIVED:', {
     pressDimensions: `${pressWidth}×${pressHeight}`,
-    layout: { actualItemsPerRow, actualItemsPerCol, actualItemsPerSheet, orientation: layoutOrientation },
-    productName: productName
+    layoutItemsPerRow: layout?.itemsPerRow,
+    layoutItemsPerCol: layout?.itemsPerCol,
+    actualItemsPerRow,
+    actualItemsPerCol,
+    actualItemsPerSheet,
+    orientation: layoutOrientation,
+    productName: productName,
+    fullLayout: layout
   });
   
   // Calculate printable area (after margins and gripper)
@@ -2017,13 +2068,20 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
   const productWithGapHeight = productHeight + gapWidth;
   
   // Handle rotated orientation - swap dimensions if rotated
+  // IMPORTANT: Keep proportional dimensions for accurate visualization
   let scaledProductWidth, scaledProductHeight;
+  let visualProductWidth, visualProductHeight; // Pure product dimensions for drawing
+  
   if (layout.orientation === 'rotated') {
-    scaledProductWidth = productWithGapHeight * scale; // Height becomes width
-    scaledProductHeight = productWithGapWidth * scale; // Width becomes height
+    scaledProductWidth = productWithGapHeight * scale; // Height becomes width (with gap)
+    scaledProductHeight = productWithGapWidth * scale; // Width becomes height (with gap)
+    visualProductWidth = productHeight * scale; // Pure height for drawing
+    visualProductHeight = productWidth * scale; // Pure width for drawing
   } else {
-    scaledProductWidth = productWithGapWidth * scale;
-    scaledProductHeight = productWithGapHeight * scale;
+    scaledProductWidth = productWithGapWidth * scale; // With gap
+    scaledProductHeight = productWithGapHeight * scale; // With gap
+    visualProductWidth = productWidth * scale; // Pure width for drawing
+    visualProductHeight = productHeight * scale; // Pure height for drawing
   }
   
   const scaledBleedWidth = bleedWidth * scale;
@@ -2199,8 +2257,8 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
         const availableHeight = printableH;
         
         // Calculate optimal spacing to fill the printable area
-        const totalProductWidth = layout.itemsPerRow * productWidth * scale;
-        const totalProductHeight = layout.itemsPerCol * productHeight * scale;
+        const totalProductWidth = layout.itemsPerRow * visualProductWidth;
+        const totalProductHeight = layout.itemsPerCol * visualProductHeight;
         
         // Calculate remaining space for gaps
         const remainingWidth = availableWidth - totalProductWidth;
@@ -2216,12 +2274,12 @@ function drawPrintView(ctx: CanvasRenderingContext2D, canvasWidth: number, canva
         const finalGapX = Math.max(minGap, Math.min(maxGap, optimalGapX));
         const finalGapY = Math.max(minGap, Math.min(maxGap, optimalGapY));
         
-        x = gridStartX + col * (productWidth * scale + finalGapX);
-        y = gridStartY + row * (productHeight * scale + finalGapY);
+        x = gridStartX + col * (visualProductWidth + finalGapX);
+        y = gridStartY + row * (visualProductHeight + finalGapY);
         
-        // For business cards, use actual product dimensions (without gaps) for boundary checks
-        actualProductWidth = productWidth * scale;
-        actualProductHeight = productHeight * scale;
+        // For business cards, use proportional visual dimensions for drawing
+        actualProductWidth = visualProductWidth;
+        actualProductHeight = visualProductHeight;
         
         console.log('📱 Business card optimized spacing:', {
           availableWidth: availableWidth.toFixed(1),
@@ -2806,13 +2864,20 @@ function drawGripperView(ctx: CanvasRenderingContext2D, canvasWidth: number, can
   const productWithGapHeight = productHeight + gapWidth;
   
   // Handle rotated orientation - swap dimensions if rotated
+  // IMPORTANT: Keep proportional dimensions for accurate visualization
   let scaledProductWidth, scaledProductHeight;
+  let visualProductWidth, visualProductHeight; // Pure product dimensions for drawing
+  
   if (layout.orientation === 'rotated') {
-    scaledProductWidth = productWithGapHeight * scale; // Height becomes width
-    scaledProductHeight = productWithGapWidth * scale; // Width becomes height
+    scaledProductWidth = productWithGapHeight * scale; // Height becomes width (with gap)
+    scaledProductHeight = productWithGapWidth * scale; // Width becomes height (with gap)
+    visualProductWidth = productHeight * scale; // Pure height for drawing
+    visualProductHeight = productWidth * scale; // Pure width for drawing
   } else {
-    scaledProductWidth = productWithGapWidth * scale;
-    scaledProductHeight = productWithGapHeight * scale;
+    scaledProductWidth = productWithGapWidth * scale; // With gap
+    scaledProductHeight = productWithGapHeight * scale; // With gap
+    visualProductWidth = productWidth * scale; // Pure width for drawing
+    visualProductHeight = productHeight * scale; // Pure height for drawing
   }
   
   const scaledBleedWidth = bleedWidth * scale;
@@ -2943,8 +3008,8 @@ function drawGripperView(ctx: CanvasRenderingContext2D, canvasWidth: number, can
         const availableHeight = printableH;
         
         // Calculate optimal spacing to fill the printable area
-        const totalProductWidth = layout.itemsPerRow * productWidth * scale;
-        const totalProductHeight = layout.itemsPerCol * productHeight * scale;
+        const totalProductWidth = layout.itemsPerRow * visualProductWidth;
+        const totalProductHeight = layout.itemsPerCol * visualProductHeight;
         
         // Calculate remaining space for gaps
         const remainingWidth = availableWidth - totalProductWidth;
@@ -2960,12 +3025,12 @@ function drawGripperView(ctx: CanvasRenderingContext2D, canvasWidth: number, can
         const finalGapX = Math.max(minGap, Math.min(maxGap, optimalGapX));
         const finalGapY = Math.max(minGap, Math.min(maxGap, optimalGapY));
         
-        x = gridStartX + col * (productWidth * scale + finalGapX);
-        y = gridStartY + row * (productHeight * scale + finalGapY);
+        x = gridStartX + col * (visualProductWidth + finalGapX);
+        y = gridStartY + row * (visualProductHeight + finalGapY);
         
-        // For business cards, use actual product dimensions (without gaps) for boundary checks
-        actualProductWidth = productWidth * scale;
-        actualProductHeight = productHeight * scale;
+        // For business cards, use proportional visual dimensions for drawing
+        actualProductWidth = visualProductWidth;
+        actualProductHeight = visualProductHeight;
         
         console.log('📱 Business card optimized spacing:', {
           availableWidth: availableWidth.toFixed(1),
@@ -4615,19 +4680,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
           console.warn('⚠️ Missing product dimensions for computeLayout, using default press size');
         }
         
-        const layout = computeLayout(
-          dynamicPressWidth,  // Dynamic press sheet width
-          dynamicPressHeight, // Dynamic press sheet height
-          step3ProductWidth,  // Use Step 3 dimensions
-          step3ProductHeight, // Use Step 3 dimensions
-          gripperWidth,
-          0.5, // edgeMargin
-          gapWidth,
-          bleedWidth
-        );
-        
-        console.log('🔍 computeLayout result:', layout);
-        
+        // Initialize layout - will be populated differently for digital vs offset
+        let layout: any;
         
 
         // Use new Excel-based calculation for recommended sheets
@@ -4713,12 +4767,28 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
               );
               
               recommendedSheets = cheapest.parents;
-              layout.itemsPerSheet = cheapest.upsPerSheet;
-              layout.efficiency = 95; // Digital efficiency is typically high
               
-              // Store digital results for dashboard sections
-              (layout as any).digitalResults = digitalResults;
-              (layout as any).selectedDigitalOption = cheapest;
+              // Create layout object from digital calculation results
+              if (cheapest.gridLayout) {
+                layout = {
+                  usableW: cheapest.gridLayout.sheetWidth - 1, // Subtract margins
+                  usableH: cheapest.gridLayout.sheetHeight - 1,
+                  itemsPerSheet: cheapest.upsPerSheet,
+                  efficiency: 95,
+                  orientation: cheapest.gridLayout.orientation,
+                  itemsPerRow: cheapest.gridLayout.itemsPerRow,
+                  itemsPerCol: cheapest.gridLayout.itemsPerCol,
+                  productShape: 'rectangular' as const,
+                  gripperOnLongSide: true,
+                  gripperPosition: 'top',
+                  pressWidth: cheapest.gridLayout.sheetWidth,
+                  pressHeight: cheapest.gridLayout.sheetHeight,
+                  digitalResults: digitalResults,
+                  selectedDigitalOption: cheapest
+                };
+              } else {
+                throw new Error('No grid layout data in digital results');
+              }
               
               console.log('📊 Digital calculation result:', {
                 productName: product?.productName,
@@ -4728,17 +4798,45 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                 selectedOption: cheapest.option,
                 recommendedSheets: cheapest.parents,
                 upsPerSheet: cheapest.upsPerSheet,
+                gridLayout: cheapest.gridLayout,
+                layout: layout,
+                pressSheetSize: `${cheapest.gridLayout.sheetWidth}×${cheapest.gridLayout.sheetHeight} cm`,
                 total: cheapest.total
               });
             } else {
               throw new Error('No digital results available');
             }
           } catch (error) {
-            console.error('❌ Digital calculation failed, falling back to original:', error);
+            console.error('❌ Digital calculation failed, falling back to computeLayout:', error);
+            // Fallback to computeLayout for digital
+            layout = computeLayout(
+              dynamicPressWidth,
+              dynamicPressHeight,
+              step3ProductWidth,
+              step3ProductHeight,
+              gripperWidth,
+              0.5,
+              gapWidth,
+              bleedWidth
+            );
             recommendedSheets = layout.itemsPerSheet > 0 ? Math.ceil(qty / layout.itemsPerSheet) : 0;
           }
         } else {
           // Use offset calculation for offset printing
+          // First, compute layout using offset press dimensions
+          layout = computeLayout(
+            dynamicPressWidth,  // Dynamic press sheet width
+            dynamicPressHeight, // Dynamic press sheet height
+            step3ProductWidth,  // Use Step 3 dimensions
+            step3ProductHeight, // Use Step 3 dimensions
+            gripperWidth,
+            0.5, // edgeMargin
+            gapWidth,
+            bleedWidth
+          );
+          
+          console.log('🔍 computeLayout result for offset:', layout);
+          
           try {
             // Build base parameters
             const base = { 

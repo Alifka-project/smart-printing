@@ -11,20 +11,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(root)/layout.js"
     ],
-    "/(root)/page": [
+    "/(root)/create-quote/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(root)/page.js"
+      "static/chunks/app/(root)/create-quote/page.js"
     ],
     "/api/quotes/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/quotes/route.js"
-    ],
-    "/(root)/create-quote/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(root)/create-quote/page.js"
     ],
     "/api/materials/papers/route": [
       "static/chunks/webpack.js",
@@ -36,15 +31,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/suppliers/route.js"
     ],
-    "/api/offset/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/offset/route.js"
-    ],
     "/api/digital/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/digital/route.js"
+    ],
+    "/api/offset/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/offset/route.js"
     ]
   }
 }

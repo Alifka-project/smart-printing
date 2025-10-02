@@ -4586,8 +4586,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         const gripperWidth = product?.gripper || productConfig?.defaultGripper || 0.9;
         
         // Use Step 3 product dimensions directly instead of outputDimensions
-        let step3ProductWidth = product?.flatSize?.width || productConfig?.defaultSizes?.width || 9;
-        let step3ProductHeight = product?.flatSize?.height || productConfig?.defaultSizes?.height || 5.5;
+        let step3ProductWidth = product?.flatSize?.width || productConfig?.defaultSizes?.width || 0;
+        let step3ProductHeight = product?.flatSize?.height || productConfig?.defaultSizes?.height || 0;
         
         // Use optimized gap for business cards, 0.2cm gap for cups for maximum packing, otherwise use product config
         const baseGapWidth = product?.productName === 'Cups' ? 0.2 : (product?.gap || productConfig?.defaultGap || 0.5);
@@ -5050,8 +5050,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         // The Excel formula calculates PLATES, not units
         try {
           const excelResult = calculateExcelBasedPricing({
-            productWidth: outputDimensions[productIndex]?.width || product?.flatSize?.width || 9,
-            productHeight: outputDimensions[productIndex]?.height || product?.flatSize?.height || 5.5,
+            productWidth: outputDimensions[productIndex]?.width || product?.flatSize?.width || 0,
+            productHeight: outputDimensions[productIndex]?.height || product?.flatSize?.height || 0,
             quantity: product.quantity || 0,
             paperCostPerSheet: 1, // Placeholder for plates calculation
             colors: Math.max(paperColors[productIndex]?.[0]?.length || 1, 1),
@@ -5064,8 +5064,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
           
           console.log('📊 Excel Plates calculation:', {
             productName: product?.productName,
-            productWidth: outputDimensions[productIndex]?.width || product?.flatSize?.width || 9,
-            productHeight: outputDimensions[productIndex]?.height || product?.flatSize?.height || 5.5,
+            productWidth: outputDimensions[productIndex]?.width || product?.flatSize?.width || 0,
+            productHeight: outputDimensions[productIndex]?.height || product?.flatSize?.height || 0,
             colors: Math.max(paperColors[productIndex]?.[0]?.length || 1, 1),
             sides: product.sides || '2',
             excelPlates: excelResult.excelPlates,
@@ -5084,8 +5084,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
         // Formula: =IF([@[Odd or even]]=TRUE,IF([@W]>54,50*$L$2,20*$L$2),IF([@W]>54,50*$L$2,20*$L$2)*2)
         try {
           const excelResult = calculateExcelBasedPricing({
-            productWidth: outputDimensions[productIndex]?.width || product?.flatSize?.width || 9,
-            productHeight: outputDimensions[productIndex]?.height || product?.flatSize?.height || 5.5,
+            productWidth: outputDimensions[productIndex]?.width || product?.flatSize?.width || 0,
+            productHeight: outputDimensions[productIndex]?.height || product?.flatSize?.height || 0,
             quantity: product.quantity || 0,
             paperCostPerSheet: 1, // Placeholder for units calculation
             colors: Math.max(paperColors[productIndex]?.[0]?.length || 1, 1),
@@ -5098,8 +5098,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
           
           console.log('📊 Excel Units calculation:', {
             productName: product?.productName,
-            productWidth: outputDimensions[productIndex]?.width || product?.flatSize?.width || 9,
-            productHeight: outputDimensions[productIndex]?.height || product?.flatSize?.height || 5.5,
+            productWidth: outputDimensions[productIndex]?.width || product?.flatSize?.width || 0,
+            productHeight: outputDimensions[productIndex]?.height || product?.flatSize?.height || 0,
             colors: Math.max(paperColors[productIndex]?.[0]?.length || 1, 1),
             sides: product.sides || '2',
             excelUnits: excelResult.units,
@@ -5724,8 +5724,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
       if (!product) return 0;
       
       // Get product dimensions from Step 3
-      const pieceH = outputDimensions[productIndex]?.height || product?.flatSize?.height || 9;
-      const pieceW = outputDimensions[productIndex]?.width || product?.flatSize?.width || 5.5;
+      const pieceH = outputDimensions[productIndex]?.height || product?.flatSize?.height || 0;
+      const pieceW = outputDimensions[productIndex]?.width || product?.flatSize?.width || 0;
       
       // Get quantity
       const qty = Number(product.quantity) || 0;
@@ -6526,7 +6526,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                               product: product,
                               flatSize: product?.flatSize,
                               closeSize: product?.closeSize,
-                              finalWidth: width
+                              finalWidth: width,
+                              allOutputDimensions: outputDimensions
                             });
                             return width;
                           })()}
@@ -6563,7 +6564,8 @@ const Step4Operational: FC<Step4Props> = ({ formData, setFormData }) => {
                               product: product,
                               flatSize: product?.flatSize,
                               closeSize: product?.closeSize,
-                              finalHeight: height
+                              finalHeight: height,
+                              allOutputDimensions: outputDimensions
                             });
                             return height;
                           })()}

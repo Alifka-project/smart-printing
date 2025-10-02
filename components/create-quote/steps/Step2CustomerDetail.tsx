@@ -673,7 +673,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
           // Auto-select first active sales person if none selected
           if (activeSalesPersons.length > 0 && !formData.salesPersonId) {
             setSelectedSalesPersonId(activeSalesPersons[0].salesPersonId);
-            setFormData(prev => ({
+            setFormData((prev: QuoteFormData) => ({
               ...prev,
               salesPersonId: activeSalesPersons[0].salesPersonId
             }));
@@ -690,7 +690,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
   // Update form data when sales person changes
   useEffect(() => {
     if (selectedSalesPersonId) {
-      setFormData(prev => ({
+      setFormData((prev: QuoteFormData) => ({
         ...prev,
         salesPersonId: selectedSalesPersonId
       }));
@@ -702,7 +702,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
     console.log('Step2CustomerDetail: Updating client with patch:', patch);
     console.log('Step2CustomerDetail: Current client before update:', client);
     
-    setFormData((prev) => {
+    setFormData((prev: QuoteFormData) => {
       const updatedClient = { 
         ...prev.client, 
         ...patch 
@@ -751,6 +751,16 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
       setClient({ email: searchTerm });
       setEmailSearchTerm("");
       setShowEmailSuggestions(false);
+      setIsNewCustomer(true);
+    }
+  };
+
+  // Handle manual field changes - mark as new customer when user manually edits
+  const handleManualFieldChange = (field: string, value: string) => {
+    setHasInteracted(true);
+    setClient({ [field]: value });
+    // Mark as new customer when user manually edits fields
+    if (!isNewCustomer) {
       setIsNewCustomer(true);
     }
   };
@@ -900,15 +910,24 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
       city: customer.city || '',
       state: customer.state || '',
       postalCode: customer.postalCode || '',
-      country: customer.country || 'Dubai',
+      country: customer.country || 'UAE',
       additionalInfo: customer.additionalInfo || '',
-      clientType: customer.clientType || 'Company'
+      clientType: customer.clientType || 'Company',
+      trn: customer.trn || '',
+      area: customer.area || '',
+      hasNoTrn: Boolean(customer.hasNoTrn)
     });
     
     // Update emails array with the customer's email
     if (customer.email) {
       setEmails([customer.email]);
     }
+    
+    // Update TRN checkbox state based on customer data (convert Int to boolean)
+    setHasNoTrn(Boolean(customer.hasNoTrn));
+    
+    // Set as existing customer to avoid validation errors
+    setIsNewCustomer(false);
     
     // Close all suggestion dropdowns
     setShowCompanySuggestions(false);
@@ -924,7 +943,8 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
     fetchCustomers();
   }, []);
 
-  // Close country dropdown when clicking outside
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -932,13 +952,20 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
         setShowCountryDropdown(false);
         setCountrySearchTerm("");
       }
+      if (!target.closest('.firstname-suggestions-container')) {
+        setShowFirstNameSuggestions(false);
+      }
+      if (!target.closest('.company-suggestions-container')) {
+        setShowCompanySuggestions(false);
+      }
+      if (!target.closest('.email-suggestions-container')) {
+        setShowEmailSuggestions(false);
+      }
     };
 
-    if (showCountryDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showCountryDropdown]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handlePersonNameChange = (field: "firstName" | "lastName", value: string) => {
     setClient({ [field]: value });
@@ -984,9 +1011,11 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
       setEmails([client.email]);
     }
     
-    // Sync hasNoTrn with client data
+    // Sync hasNoTrn with client data - for Individual clients, TRN is optional by default
     if (client.hasNoTrn !== undefined) {
-      setHasNoTrn(client.hasNoTrn);
+      setHasNoTrn(Boolean(client.hasNoTrn));
+    } else if (client.clientType === "Individual") {
+      setHasNoTrn(false); // Individual clients don't need TRN by default
     } else if (client.trn === null || client.trn === undefined || client.trn === "") {
       setHasNoTrn(true);
     }
@@ -1018,11 +1047,13 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
       client.companyName
     ] : [];
 
-    // TRN validation - required unless "No TRN" is selected
-    const trnRequired = !hasNoTrn && !client.trn?.trim();
+    // TRN validation - only required for Company clients, not for Individuals
+    // Skip TRN validation for existing customers as they should have this data pre-filled
+    const trnRequired = client.clientType === "Company" && !hasNoTrn && !client.trn?.trim() && isNewCustomer;
 
     // Area validation - required for delivery
-    const areaValid = client.area && client.area.trim() !== "";
+    // Skip area validation for existing customers as they should have this data pre-filled
+    const areaValid = (client.area && client.area.trim() !== "") || !isNewCustomer;
 
     const allRequired = [...essentialRequired, ...companyRequired];
     const basicValidation = allRequired.every(field => field && field.trim() !== "");
@@ -1089,8 +1120,13 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
                 companyName: "", 
                 role: "" 
               });
+              setHasNoTrn(false); // Individual clients don't need TRN checkbox
             } else {
               setClient({ clientType: value as "Company" });
+              // Reset TRN checkbox for Company clients if no TRN is provided
+              if (!client.trn?.trim()) {
+                setHasNoTrn(true);
+              }
             }
           }}
           className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4"
@@ -1137,7 +1173,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
         {/* Company and Designation (Company only) */}
         {client.clientType === "Company" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-x-8 sm:gap-y-6">
-            <div className="relative">
+            <div className="relative company-suggestions-container">
               <Label htmlFor="companyName" className="mb-2 block text-sm sm:text-base">
                 Company: <span className="text-red-500">*</span>
               </Label>
@@ -1236,7 +1272,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
 
         {/* First Name and Last Name */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-x-8 sm:gap-y-6">
-          <div className="relative">
+          <div className="relative firstname-suggestions-container">
             <Label htmlFor="firstName" className="mb-2 block text-sm sm:text-base">
               First Name: <span className="text-red-500">*</span>
             </Label>
@@ -1247,6 +1283,12 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
                 setHasInteracted(true);
                 handlePersonNameChange("firstName", e.target.value);
                 handleFirstNameChange(e.target.value);
+              }}
+              onBlur={() => {
+                // Allow a small delay before hiding suggestions to allow clicking on them
+                setTimeout(() => {
+                  setShowFirstNameSuggestions(false);
+                }, 200);
               }}
               placeholder="First Name"
               className={`inputForm w-full ${
@@ -1264,39 +1306,50 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
                     Loading customers...
                   </div>
                 ) : getFilteredFirstNameCustomers().length > 0 ? (
-                    getFilteredFirstNameCustomers().map((customer) => (
-                    <div
-                      key={customer.id}
-                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                      onClick={() => handleCustomerSelect(customer)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          {customer.clientType === 'Company' ? (
-                            <>
-                              <div className="font-medium text-gray-900">{customer.companyName || 'No Company Name'}</div>
-                              <div className="text-sm text-gray-600">{customer.contactPerson || 'No Contact Person'}</div>
-                              <div className="text-xs text-gray-500">{customer.email || 'No Email'}</div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="font-medium text-gray-900">
-                                {customer.firstName && customer.lastName 
-                                  ? `${customer.firstName} ${customer.lastName}` 
-                                  : customer.contactPerson || 'No Name'
-                                }
-                              </div>
-                              <div className="text-sm text-gray-600">{customer.email || 'No Email'}</div>
-                              <div className="text-xs text-gray-500">Individual Customer</div>
-                            </>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {customer.clientType === 'Company' ? (customer.role || 'Company') : 'Individual'}
+                    <>
+                      {getFilteredFirstNameCustomers().map((customer) => (
+                      <div
+                        key={customer.id}
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        onClick={() => handleCustomerSelect(customer)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            {customer.clientType === 'Company' ? (
+                              <>
+                                <div className="font-medium text-gray-900">{customer.companyName || 'No Company Name'}</div>
+                                <div className="text-sm text-gray-600">{customer.contactPerson || 'No Contact Person'}</div>
+                                <div className="text-xs text-gray-500">{customer.email || 'No Email'}</div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="font-medium text-gray-900">
+                                  {customer.firstName && customer.lastName 
+                                    ? `${customer.firstName} ${customer.lastName}` 
+                                    : customer.contactPerson || 'No Name'
+                                  }
+                                </div>
+                                <div className="text-sm text-gray-600">{customer.email || 'No Email'}</div>
+                                <div className="text-xs text-gray-500">Individual Customer</div>
+                              </>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {customer.clientType === 'Company' ? (customer.role || 'Company') : 'Individual'}
+                          </div>
                         </div>
                       </div>
+                    ))}
+                    <div className="px-4 py-3 border-t border-gray-100">
+                      <button
+                        onClick={() => handleAddNewCustomer('firstName', firstNameSearchTerm)}
+                        className="w-full flex items-center justify-center px-4 py-2 bg-[#27aae1] hover:bg-[#1e8bc3] text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Use "{firstNameSearchTerm}" as First Name
+                      </button>
                     </div>
-                  ))
+                    </>
                 ) : (
                   <div className="px-4 py-3">
                     <div className="text-center text-gray-500 mb-3">
@@ -1307,7 +1360,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
                       className="w-full flex items-center justify-center px-4 py-2 bg-[#27aae1] hover:bg-[#1e8bc3] text-white rounded-lg transition-colors duration-200 text-sm font-medium"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add New Customer
+                      Use "{firstNameSearchTerm}" as First Name
                     </button>
                   </div>
                 )}
@@ -1343,7 +1396,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
           
           {emails.map((email, index) => (
             <div key={index} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <div className="relative flex-1">
+              <div className={`relative flex-1 ${index === 0 ? 'email-suggestions-container' : ''}`}>
                 <Input
                   type="email"
                   value={email}
@@ -1563,38 +1616,42 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
           <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             <Label className="text-sm sm:text-base font-semibold text-gray-700">
               TRN (Tax Registration Number):
+              {client.clientType === "Individual" && (
+                <span className="text-gray-500 text-xs ml-2">(Optional for Individuals)</span>
+              )}
             </Label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="hasNoTrn"
-                checked={hasNoTrn}
-                onChange={(e) => setHasNoTrn(e.target.checked)}
-                className="w-4 h-4 text-[#ea078b] border-gray-300 rounded focus:ring-[#ea078b]"
-              />
-              <Label htmlFor="hasNoTrn" className="text-xs sm:text-sm text-gray-600">
-                No TRN
-              </Label>
-            </div>
+            {client.clientType === "Company" && (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="hasNoTrn"
+                  checked={hasNoTrn}
+                  onChange={(e) => setHasNoTrn(e.target.checked)}
+                  className="w-4 h-4 text-[#ea078b] border-gray-300 rounded focus:ring-[#ea078b]"
+                />
+                <Label htmlFor="hasNoTrn" className="text-xs sm:text-sm text-gray-600">
+                  No TRN
+                </Label>
+              </div>
+            )}
           </div>
           
-          {!hasNoTrn && (
+          {(client.clientType === "Individual" || !hasNoTrn) && (
             <div>
               <Input
                 id="trn"
                 value={client.trn || ""}
                 onChange={(e) => {
-                  setHasInteracted(true);
-                  setClient({ trn: e.target.value });
+                  handleManualFieldChange('trn', e.target.value);
                 }}
-                placeholder="Enter TRN"
+                placeholder={client.clientType === "Individual" ? "Enter TRN (optional)" : "Enter TRN"}
                 className={`inputForm w-full ${
-                  hasInteracted && !client.trn?.trim()
+                  hasInteracted && client.clientType === "Company" && !hasNoTrn && !client.trn?.trim() && isNewCustomer
                     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                     : ""
                 }`}
               />
-              {hasInteracted && !client.trn?.trim() && (
+              {hasInteracted && client.clientType === "Company" && !hasNoTrn && !client.trn?.trim() && isNewCustomer && (
                 <p className="text-red-500 text-xs sm:text-sm mt-1">TRN is required unless 'No TRN' is selected</p>
               )}
             </div>
@@ -1693,12 +1750,11 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
             <Select
               value={client.area || ""}
               onValueChange={(value) => {
-                setHasInteracted(true);
-                setClient({ area: value });
+                handleManualFieldChange('area', value);
               }}
             >
               <SelectTrigger className={`py-5 border rounded-sm focus:outline-none focus:ring-2 focus:ring-[#ea078b] focus:border-transparent transition-colors w-full ${
-                hasInteracted && !client.area?.trim()
+                hasInteracted && !client.area?.trim() && isNewCustomer
                   ? "border-red-300"
                   : "border-gray-200"
               }`}>
@@ -1716,7 +1772,7 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
                 ))}
               </SelectContent>
             </Select>
-            {hasInteracted && !client.area?.trim() && (
+            {hasInteracted && !client.area?.trim() && isNewCustomer && (
               <p className="text-red-500 text-xs sm:text-sm mt-1">Area is required</p>
             )}
           </div>
@@ -1780,8 +1836,8 @@ const Step2CustomerDetail: FC<Step2Props> = ({ formData, setFormData }) => {
                 {!emails[0]?.trim() && <li>• At least one Email</li>}
                 {!client.phone?.trim() && <li>• Phone Number</li>}
                 {client.clientType === "Company" && !client.companyName?.trim() && <li>• Company Name</li>}
-                {!hasNoTrn && !client.trn?.trim() && <li>• TRN (or select 'No TRN')</li>}
-                {!client.area?.trim() && <li>• Area</li>}
+                {client.clientType === "Company" && !hasNoTrn && !client.trn?.trim() && isNewCustomer && <li>• TRN (or select 'No TRN')</li>}
+                {!client.area?.trim() && isNewCustomer && <li>• Area</li>}
               </ul>
             </div>
           </div>

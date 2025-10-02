@@ -28,9 +28,14 @@ interface Customer {
   // New address fields
   address?: string;
   city?: string;
+  area?: string;
   state?: string;
   postalCode?: string;
   country?: string;
+  trn?: string;
+  hasNoTrn?: boolean;
+  firstName?: string;
+  lastName?: string;
 }
 
 // Real quote interface matching database structure
@@ -92,9 +97,14 @@ interface Quote {
     role?: string;
     address?: string;
     city?: string;
+    area?: string;
     state?: string;
     postalCode?: string;
     country?: string;
+    trn?: string;
+    hasNoTrn?: boolean;
+    firstName?: string;
+    lastName?: string;
   };
   
   amounts?: {

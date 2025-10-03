@@ -21,6 +21,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/quotes/route.js"
     ],
+    "/api/sales-persons/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/sales-persons/route.js"
+    ],
+    "/api/clients/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/clients/route.js"
+    ],
     "/api/materials/papers/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -40,6 +50,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/offset/route.js"
+    ],
+    "/api/users/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/users/route.js"
     ]
   }
 }

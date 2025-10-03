@@ -1,3 +1,8 @@
 {
+  "/api/sales-persons/route": "app/api/sales-persons/route.js",
+  "/api/users/route": "app/api/users/route.js",
+  "/api/digital/route": "app/api/digital/route.js",
+  "/api/offset/route": "app/api/offset/route.js",
+  "/api/suppliers/route": "app/api/suppliers/route.js",
   "/(root)/create-quote/page": "app/(root)/create-quote/page.js"
 }

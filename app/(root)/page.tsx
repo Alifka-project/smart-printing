@@ -175,13 +175,26 @@ export default function DashboardPage() {
               }
             }
             
+            // Note: totalAmount is already the final amount (with discount applied)
+            // No need to apply discount again since Step 5 now stores the final amount
+            console.log('Dashboard: Using stored final amount (discount already applied in Step 5):', {
+              quoteId: quote.quoteId,
+              storedAmount: totalAmount,
+              discountPercentage: quote.discountPercentage,
+              discountAmount: quote.discountAmount,
+              note: 'Amount is already final from Step 5'
+            });
+            
             // Debug logging for amounts
             console.log('Quote amounts debug:', {
               quoteId: quote.quoteId,
               amounts: quote.amounts,
               amountsType: typeof quote.amounts,
               isArray: Array.isArray(quote.amounts),
-              calculatedTotal: totalAmount
+              calculatedTotal: totalAmount,
+              discountPercentage: quote.discountPercentage,
+              discountAmount: quote.discountAmount,
+              appliedDiscount: quote.discountAmount
             });
             
             return {

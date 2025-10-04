@@ -1521,6 +1521,9 @@ function CreateQuoteContent() {
           ...quoteData,
           salesPersonId: formData.salesPersonId, // Ensure salesPersonId is included in updates
           colors: formData.products[0]?.colors || null, // Include colors field
+          // Include discount information
+          discountPercentage: formData.calculation.discount?.percentage || 0,
+          discountAmount: formData.calculation.discountAmount || 0,
           papers: {
             create: formData.operational.papers.map((operationalPaper, index) => {
               // Get the corresponding paper name and gsm from product papers
@@ -1619,6 +1622,9 @@ function CreateQuoteContent() {
           quoteId: quoteId,
           salesPersonId: formData.salesPersonId, // Explicitly include salesPersonId
           colors: formData.products[0]?.colors || null, // Include colors field
+          // Include discount information
+          discountPercentage: formData.calculation.discount?.percentage || 0,
+          discountAmount: formData.calculation.discountAmount || 0,
           papers: {
             create: formData.operational.papers.map((operationalPaper, index) => {
               // Get the corresponding paper name and gsm from product papers
